@@ -1,0 +1,3 @@
+[submodule "dependencies/hptimelib"]
+	path = dependencies/hptimelib
+	url = https://github.com/ralequi/hptimelib
