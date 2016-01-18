@@ -7,17 +7,15 @@
 
 enum {HELLO, SETUP, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD} ctrlMsgType;
 
-typedef struct
-{
-    uint16_t id;
-    uint16_t listenPort;
-    uint16_t core;
-    uint8_t *connectionDescription;
+typedef struct {
+	uint16_t id;
+	uint16_t listenPort;
+	uint16_t core;
+	uint8_t *connectionDescription;
 } WormSetup;
 
-typedef struct
-{
-    uint16_t id;
+typedef struct {
+	uint16_t id;
 } PongStats;
 
 
