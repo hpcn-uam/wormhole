@@ -11,7 +11,7 @@ typedef struct {
 	uint16_t id;
 	uint16_t listenPort;
 	uint16_t core;
-	uint8_t *connectionDescription;
+	uint8_t *connectionDescription; // (LISP connection description)
 } WormSetup;
 
 typedef struct {
