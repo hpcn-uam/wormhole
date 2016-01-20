@@ -7,8 +7,7 @@ extern "C" {
 
 #include "worm.h"
 
-	typedef struct
-{
+	typedef struct {
 		uint16_t Port;
 		uint32_t IP; //TODO fix para ipv6
 		int socket;
