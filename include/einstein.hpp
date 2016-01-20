@@ -22,19 +22,19 @@ class EinsConn
 	~EinsConn();
 
 	// Connects to IP and launches a worm with configuration ws
-	void createWorm(WormSetup ws, uint32_t IP);
+	void createWorm(const WormSetup ws, const uint32_t IP);
 
-	void pingWorm(uint16_t id);
+	void pingWorm(const uint16_t id);
 	void pingWorms();
 
-	void deleteWorm(uint16_t id);
+	void deleteWorm(const uint16_t id);
 	void deleteAllWorms();
 
 	void run();
 
  private:
 	// Add socket to worm
-	void connectWorm(uint16_t id, int socket);
+	void connectWorm(const uint16_t id, const int socket);
 	void threadRun();
 };
 
@@ -43,13 +43,13 @@ class Einstein
 	EinsConn ec;
 
  public:
-	Einstein(string configFileName);
+	Einstein(const string configFileName);
 	~Einstein();
 
 	void openHoles(); // Starts everything
 
  private:
-	void readConfig(string configFileName);
+	void readConfig(const string configFileName);
 
 };
 
