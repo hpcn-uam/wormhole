@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #include "worm.h"
-#include "einstein.h"
 
 	typedef struct
 {
