@@ -24,19 +24,50 @@ extern "C" {
 	} Connection;
 
 	typedef struct {
-		size_t numberConnections;
+		size_t numberOfWorms;
+		DestinationWorm *worms;
+	} DestinationWorms;
+	
+	typedef struct {
+		uint16_t id;
+		size_t numberOfTypes;
+		DataType *supportedTypes;
 		Connection *conns;
-	} Connections;
+	} DestinationWorm;
 
+	/* Name WH_connectWorm
+	 * Connect and fill the socket data.
+	 * Return 0 if OK, something else if error.
+	 */
+	uint8_t WH_connectWorm(Connection*c);
 
+	/* Name WH_getWormData
+	 * Gets worm data (IP+port).
+	 * Return 0 if OK, something else if error.
+	 */
+	uint8_t WH_getWormData(Connection*c, const uint16_t wormId);
+	
+	/* Name WH_addWormConnection
+	 * 
+	 * Return the created connection
+	 */
+	Connection* WH_addWormConnection(Connections** cns);
+
+	/* Name WH_addWormConnection
+	 * 
+	 * Return the created connection
+	 */
+	inline Connection* WH_findWorm(Connections** cns, const uint16_t wormId);
 
 	/*
 	 Dynamic Routing Library
 	*/
+	/* DUP, CAT, RR, HASH */
 	enum RoutingRule {DUPLICATE, CATEGORY, ROUNDROBIN, HASH};
 
 	/* Name WH_DymRoute_init
-	 * Starts the Dynamic Routing Library
+	 * Starts the Dynamic Routing Library, and setups connection configuration.
+	 * Also makes connections
 	 * Return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_init (const uint8_t * const routeDescription, Connections** cns);
@@ -47,7 +78,6 @@ extern "C" {
 	 */
 	Connection * WH_DymRoute_route (const MessageInfo * const mi, Connections* const cns);
 
-	void getDestinationInfo(const uint16_t id, uint32_t *ip, uint16_t *port);
 
 	/*
 	 =========================

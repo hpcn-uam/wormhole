@@ -3,6 +3,8 @@
 /*
 *Global variables
 */
+Worm2EinsConn einsConn;
+
 
 
 /*

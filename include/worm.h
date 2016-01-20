@@ -8,7 +8,7 @@ extern "C" {
 #include "common.h"
 
 	enum DataType {
-		CUSTOM, COMPOUND, ARRAY, INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64, STRING
+		CUSTOM = -2, COMPOUND, ARRAY, INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64, STRING
 	};
 
 	typedef struct {
@@ -27,9 +27,13 @@ extern "C" {
 		uint32_t size;
 		uint32_t hash;
 		uint16_t category;
-		uint16_t priority;
 		ConnectionDataType *type;
 	} MessageInfo;
+	
+	typedef struct {
+		ConnectionDataType *inputTypes;
+		ConnectionDataType *outputTypes;
+	} WormConfig;
 
 	/* Name WH_init
 	 * Starts the WormHole Library
