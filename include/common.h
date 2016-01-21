@@ -1,13 +1,13 @@
 #ifndef __WORM_COMMON_H__
 #define __WORM_COMMON_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 	enum ctrlMsgType {
 		HELLO, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD
