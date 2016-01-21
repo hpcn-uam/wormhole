@@ -13,14 +13,14 @@ extern "C" {
 
 	typedef struct {
 		enum DataType type;
-		union ext {
+		union {
 			enum DataType arrayType;
 			/*TODO:		struct
 					{
 						uint32_t size;
 						struct ConnectionDataType *elementTypes;
 					} compoundType;*/
-		}; //extended
+		} ext ; //extended
 	} ConnectionDataType;
 
 	typedef struct {

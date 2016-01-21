@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 	enum ctrlMsgType {
-		HELLO, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD
+		HELLOEINSTEIN, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD
 	};
 
 	typedef struct {
@@ -18,12 +18,16 @@ extern "C" {
 		uint16_t listenPort;
 		uint16_t core;
 		uint32_t IP; //TODO fix para ipv6
+		uint32_t connectionDescriptionLength;
 		uint8_t *connectionDescription; // (LISP connection description)
 	} WormSetup;
 
 	typedef struct {
 		uint16_t id;
 	} PongStats;
+
+int tcp_message_send(int socket, const void *message, size_t len);
+int tcp_message_recv(int socket, void *message, size_t len);
 
 #ifdef __cplusplus
 }
