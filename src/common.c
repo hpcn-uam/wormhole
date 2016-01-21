@@ -5,8 +5,8 @@
 #include <arpa/inet.h>
 
 int tcp_connect_to(char *ip, uint16_t port) {
-	int sk = socket(AF_INET, SOCK_STREAM, 0);
-	if (sk == -1) {
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd == -1) {
 		return -1;
 	}
 
@@ -16,11 +16,44 @@ int tcp_connect_to(char *ip, uint16_t port) {
 	cli_addr.sin_port = htons(port);
 	cli_addr.sin_addr.s_addr = inet_addr(ip);
 
-	if ((connect(sk, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in))) < 0) {
+	if (connect(sockfd, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in)) < 0) {
 		return -1;
 	}
 
-	return sk;
+	return sockfd;
+}
+
+int tcp_listen_on_port(uint16_t port) {
+	int sockfd;
+	struct sockaddr_in serv_addr;
+
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd == -1) {
+		return -1;
+	}
+	
+	bzero((char *) &serv_addr, sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(port);
+	serv_addr.sin_addr.s_addr = INADDR_ANY;
+
+	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) != 0) {
+		return -1;
+	}
+
+	if (listen(sockfd, 5) != 0) {
+		return -1;
+	}
+
+	return sockfd;
+}
+
+int tcp_accept(int listen_socket) {
+	// TODO: Timeout
+	struct sockaddr_in cli_addr;
+	int clilen = sizeof(cli_addr);
+	int newsockfd = accept(listen_socket, (struct sockaddr *) &cli_addr, &clilen);
+
 }
 
 int tcp_message_send(int socket, const void *message, size_t len) {

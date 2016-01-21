@@ -1,7 +1,8 @@
 #include <einstein.hpp>
-#include <cstring>
 
+#include <cstring>
 #include <arpa/inet.h>
+#include <stdexcept>
 
 Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, uint16_t core, string ip, string connectionDescription) {
 	this->ws.id = id;
@@ -41,7 +42,15 @@ void Einstein::readConfig(const string configFileName) {
 }
 
 EinsConn::EinsConn(string listenIp, uint16_t listenPort) {
-
+	
+	// Start socket to receive connections from worms
+	this->listenIp = inet_addr(listenIp.c_str());
+	this->listenPort = listenPort;
+	this->listeningSocket = tcp_listen_on_port(listenPort);
+	
+	if (this->listeningSocket == -1) {
+		throw std::runtime_error("Error listening to socket");
+	}
 }
 
 EinsConn::~EinsConn() {
@@ -52,4 +61,41 @@ void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip) {
 	// TODO: Conectarse al remoto y crear worm
 
 	this->connections.insert(make_pair(wc->ws.id, std::move(wc)));
+}
+
+void EinsConn::run() {
+	
+	// Wait for connections from worms
+	for(size_t i = 0; i < this->connections.size(); i++) {
+		int worm_socket = tcp_accept(this->listeningSocket);
+		if (worm_socket == -1) {
+			throw std::runtime_error("Error accepting connection");
+		}
+		
+		// Get hello message
+		size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
+		uint8_t hellomsg[hellomsgSize];
+
+		if (tcp_message_recv(worm_socket, hellomsg, hellomsgSize) != 0) {
+			throw std::runtime_error("Error receiving message");
+		}
+		if (*((enum ctrlMsgType *) &hellomsg) != HELLOEINSTEIN) {
+			continue;
+		}
+				
+		uint16_t wormId = *((uint16_t *) (&hellomsg + sizeof(enum ctrlMsgType)));
+		this->connections.at(wormId)->socket = worm_socket;
+
+		
+		
+		// Send configuration message
+		const void *wormSetup = static_cast<const void *>(&(this->connections.at(wormId)->ws));
+		if (tcp_message_send(worm_socket, wormSetup, sizeof(WormSetup)) != 0) {
+			throw std::runtime_error("Error sending message");
+		}
+		const void *connDescription = static_cast<const void *>(this->connections.at(wormId)->ws.connectionDescription);
+		if (tcp_message_send(worm_socket, connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
+			throw std::runtime_error("Error sending message");
+		}
+	}
 }
