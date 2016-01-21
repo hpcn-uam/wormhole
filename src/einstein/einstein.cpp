@@ -18,8 +18,8 @@ Eins2WormConn::~Eins2WormConn() {
 }
 
 Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort)
-		: ec(listenIp, listenPort) {
-		
+	: ec(listenIp, listenPort) {
+
 	this->readConfig(configFileName);
 	ec.run();
 }
@@ -36,12 +36,12 @@ void Einstein::readConfig(const string configFileName) {
 	string connectionDescription = "(LISP connection description)";
 
 	unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, listenPort, core, ip, connectionDescription));
-	
+
 	this->ec.createWorm(std::move(wc), ip);
 }
 
 EinsConn::EinsConn(string listenIp, uint16_t listenPort) {
-	
+
 }
 
 EinsConn::~EinsConn() {
@@ -50,6 +50,6 @@ EinsConn::~EinsConn() {
 
 void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip) {
 	// TODO: Conectarse al remoto y crear worm
-	
+
 	this->connections.insert(make_pair(wc->ws.id, std::move(wc)));
 }

@@ -12,7 +12,7 @@ struct Eins2WormConn
 {
 	WormSetup ws;
 	int socket;
-	
+
 	Eins2WormConn(uint16_t id, uint16_t listenPort, uint16_t core, string ip, string connectionDescription);
 	~Eins2WormConn();
 };
