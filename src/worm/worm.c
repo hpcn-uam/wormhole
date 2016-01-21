@@ -3,8 +3,8 @@
 /*
 *Global variables
 */
-Worm2EinsConn einsConn;
-
+Worm2EinsConn WH_einsConn;
+uint16_t WH_myId;
 
 
 /*

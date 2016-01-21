@@ -29,7 +29,7 @@ extern "C" {
 		uint16_t category;
 		ConnectionDataType *type;
 	} MessageInfo;
-	
+
 	typedef struct {
 		ConnectionDataType *inputTypes;
 		ConnectionDataType *outputTypes;
