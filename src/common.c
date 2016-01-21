@@ -31,7 +31,7 @@ int tcp_listen_on_port(uint16_t port) {
 	if (sockfd == -1) {
 		return -1;
 	}
-	
+
 	bzero((char *) &serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(port);

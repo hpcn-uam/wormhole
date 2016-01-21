@@ -31,19 +31,19 @@ extern "C" {
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_connect_to(char *ip, uint16_t port);
-	
+
 	/* Name tcp_listen_on_port
 	 * Starts listening in a socket using TCP over IPv4
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_listen_on_port(uint16_t port);
-	
+
 	/* Name tcp_accept
 	 * Accepts a new connection from a listen socket
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_accept(int listen_socket);
-	
+
 	/* Name tcp_message_send
 	 * Sends a full message to a socket
 	 * Return 0 if OK, something else if error.
