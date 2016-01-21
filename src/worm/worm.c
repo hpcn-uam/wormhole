@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
-#include <strings.h>
+
 
 /*
 *Global variables
@@ -28,19 +28,8 @@ uint8_t WH_init (void) {
 	WH_einsConn.Port = 5000;
 	WH_einsConn.IP = inet_addr("127.0.0.1");
 
-
-	WH_einsConn.socket = socket(AF_INET, SOCK_STREAM, 0);
+	WH_einsConn.socket = tcp_connect_to("127.0.0.1", WH_einsConn.Port);
 	if (WH_einsConn.socket == -1) {
-		return 1;
-	}
-
-	struct sockaddr_in cli_addr;
-	bzero(&cli_addr, sizeof(cli_addr));
-
-	cli_addr.sin_family = AF_INET;
-	cli_addr.sin_port = htons(WH_einsConn.Port);
-	cli_addr.sin_addr.s_addr = WH_einsConn.IP;
-	if ((connect(WH_einsConn.socket, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in))) < 0) {
 		return 1;
 	}
 
@@ -66,6 +55,8 @@ uint8_t WH_init (void) {
 	if (tcp_message_recv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength) != 0) {
 		return 1;
 	}
+	
+	// TODO: Lanzar hilo de recepción de conexiones
 
 	return 0;
 }
