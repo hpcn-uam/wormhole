@@ -26,8 +26,8 @@ extern "C" {
 		uint16_t id;
 	} PongStats;
 
-int tcp_message_send(int socket, const void *message, size_t len);
-int tcp_message_recv(int socket, void *message, size_t len);
+	int tcp_message_send(int socket, const void *message, size_t len);
+	int tcp_message_recv(int socket, void *message, size_t len);
 
 #ifdef __cplusplus
 }

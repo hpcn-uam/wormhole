@@ -35,7 +35,7 @@ extern "C" {
 		enum DataType *supportedTypes;
 		Connection *conns;
 	} DestinationWorm;
-	
+
 	typedef struct {
 		size_t numberOfWorms;
 		DestinationWorm *worms;
@@ -47,7 +47,7 @@ extern "C" {
 	 * Return 0 if OK, something else if error.
 	 */
 	uint8_t WH_connectWorm(DestinationWorm*c);
-	
+
 	/* Name WH_setupConnectionType
 	 * Setup connection type
 	 * Return 0 if OK, something else if error.
