@@ -1,0 +1,26 @@
+Entre einstein y worm
+
+Einstein copia por scp <nombreprograma> a <host>
+Einstein se conecta a <host> por ssh y lanza <nombreprograma> ponendo los siguientes datos en variable de entorno
+
+Variables entorno: IP y puerto de einstein, id
+                   Worm2EinsConn            WormSetup.id
+                   
+WH_init: HELLO y SETUP y llama a WH_DymRoute_init
+HELLO: Argumento id del worm
+SETUP: Devuelve WormSetup
+
+WH_DymRoute_init llama a WH_getWormData
+
+WH_getWormData: QUERYID y RESPONSEID
+QUERYID: Argumento id del worm
+RESPONSEID: Devuelve WormSetup
+
+WH_DymRoute_init llama a WH_connectWorm
+
+WH_connectWorm: HELLO, WORMINFO, SETUPTYPE
+HELLO
+WORMINFO: Devuelve DestinationWorm
+
+Al crear nueva conexión
+SETUPTYPE y reutilizar socket para datos
