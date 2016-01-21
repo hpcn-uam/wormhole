@@ -15,7 +15,7 @@ int tcp_connect_to(char *ip, uint16_t port) {
 	cli_addr.sin_family = AF_INET;
 	cli_addr.sin_port = htons(port);
 	cli_addr.sin_addr.s_addr = inet_addr(ip);
-	
+
 	if ((connect(sk, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in))) < 0) {
 		return -1;
 	}

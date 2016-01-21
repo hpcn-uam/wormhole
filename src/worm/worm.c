@@ -55,7 +55,7 @@ uint8_t WH_init (void) {
 	if (tcp_message_recv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength) != 0) {
 		return 1;
 	}
-	
+
 	// TODO: Lanzar hilo de recepción de conexiones
 
 	return 0;
