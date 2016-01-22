@@ -70,7 +70,7 @@ extern "C" {
 	 *
 	 * Return the created connection
 	 */
-	inline Connection* WH_findWorm(DestinationWorms* cns, const uint16_t wormId);
+	//inline Connection* WH_findWorm(DestinationWorms* cns, const uint16_t wormId);
 
 	/*
 	 Dynamic Routing Library

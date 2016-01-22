@@ -19,10 +19,13 @@ struct Eins2WormConn
 
 class EinsConn
 {
+	friend class EinsteinTester;
 	map <uint16_t, unique_ptr<Eins2WormConn>> connections;
 	uint32_t listenIp;
 	uint16_t listenPort;
 	int listeningSocket;
+	
+	int currentWormSocket;
 
  public:
 	EinsConn(const string listenIp, const uint16_t listenPort);
@@ -47,6 +50,7 @@ class EinsConn
 
 class Einstein
 {
+	friend class EinsteinTester;
 	EinsConn ec;
 
  public:

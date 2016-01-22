@@ -12,7 +12,13 @@ all: einstein libs
 
 einstein: obj/einstein.o
 
-lib/worm.so: obj/worm.o obj/common.o
+testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+testWorm: src/examples/testWorm.c obj/common.o
+	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
+
+lib/libworm.so: obj/worm.o obj/common.o
 	$(CC) $(CFLAGS) -shared -o $@ $^  $(LDFLAGS)
 
 obj:

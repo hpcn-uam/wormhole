@@ -3,6 +3,7 @@
 #include <strings.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <stdio.h>
 
 int tcp_connect_to(char *ip, uint16_t port) {
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -29,19 +30,28 @@ int tcp_listen_on_port(uint16_t port) {
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1) {
+				perror("socket");
 		return -1;
 	}
-
+	
+	int yes = 1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+    	perror("setsockopt");
+    	return -1;
+	}
+	
 	bzero((char *) &serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(port);
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) != 0) {
+		perror("bind");
 		return -1;
 	}
 
 	if (listen(sockfd, 5) != 0) {
+		perror("listen");
 		return -1;
 	}
 
