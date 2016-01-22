@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 
 /*
@@ -37,7 +38,7 @@ uint8_t WH_init (void) {
 	size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
 	uint8_t hellomsg[hellomsgSize];
 	*((enum ctrlMsgType *) &hellomsg) = HELLOEINSTEIN;
-	*((uint16_t *) (&hellomsg + sizeof(enum ctrlMsgType))) = WH_myId;
+	*((uint16_t *) (hellomsg + sizeof(enum ctrlMsgType))) = htons(WH_myId);
 
 	// Send hello message
 	if (tcp_message_send(WH_einsConn.socket, hellomsg, hellomsgSize) != 0) {
