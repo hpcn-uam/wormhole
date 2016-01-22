@@ -39,7 +39,7 @@ uint8_t WH_init (void) {
 	uint8_t hellomsg[hellomsgSize];
 	*((enum ctrlMsgType *) &hellomsg) = HELLOEINSTEIN;
 	*((uint16_t *) (hellomsg + sizeof(enum ctrlMsgType))) = htons(WH_myId);
-	
+
 	// Send hello message
 	if (tcp_message_send(WH_einsConn.socket, hellomsg, hellomsgSize) != 0) {
 		return 1;

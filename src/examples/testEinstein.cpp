@@ -8,17 +8,17 @@
 
 class EinsteinTester: public Einstein {
 
-public:	
+ public:
 	EinsteinTester();
 	~EinsteinTester();
 };
 
 EinsteinTester::EinsteinTester() : Einstein("asdf", "0.0.0.0", 5000) {
-	
-	
+
+
 	assert(ec.listenIp == inet_addr("0.0.0.0"));
 	assert(ec.listenPort == 5000);
-	
+
 	assert(ec.connections.at(1)->ws.id == 1);
 	assert(ec.connections.at(1)->ws.listenPort == 10000);
 	assert(ec.connections.at(1)->ws.core == 0);
@@ -28,7 +28,7 @@ EinsteinTester::EinsteinTester() : Einstein("asdf", "0.0.0.0", 5000) {
 
 }
 EinsteinTester::~EinsteinTester() {
-	
+
 }
 
 
@@ -37,7 +37,7 @@ int main (int argc, char **argv) {
 	try {
 		EinsteinTester einsTester;
 		std::cout << "Éxito\n";
-		
+
 	} catch (exception &e) {
 		std::cerr << "Excepción: " << e.what() << '\n';
 	}

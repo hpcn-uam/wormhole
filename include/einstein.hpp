@@ -24,7 +24,7 @@ class EinsConn
 	uint32_t listenIp;
 	uint16_t listenPort;
 	int listeningSocket;
-	
+
 	int currentWormSocket;
 
  public:
