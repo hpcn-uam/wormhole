@@ -23,11 +23,8 @@ libs: lib lib/worm.so
 lib:
 	mkdir -p lib
 
-obj/%.o: src/einstein/%.cpp obj $(INCLUDES)
+obj/%.o: src/%.cpp obj $(INCLUDES)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-obj/%.o: src/worm/%.c obj $(INCLUDES)
-	$(CC) $(CFLAGS) -c $< -o $@
 
 obj/%.o: src/%.c obj $(INCLUDES)
 	$(CC) $(CFLAGS) -c $< -o $@

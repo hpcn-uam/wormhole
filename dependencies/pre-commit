@@ -26,3 +26,4 @@ do
 		./dependencies/google-astyle/a.out -T "$file"
 	fi
 done
+exit 0
