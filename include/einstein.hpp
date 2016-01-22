@@ -25,7 +25,7 @@ class EinsConn
 	uint16_t listenPort;
 	int listeningSocket;
 
-	int currentWormSocket;
+	int *wormSockets; // TODO: Change to poll structure
 
  public:
 	EinsConn(const string listenIp, const uint16_t listenPort);

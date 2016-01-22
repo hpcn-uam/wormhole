@@ -52,18 +52,31 @@ EinsConn::EinsConn(string listenIp, uint16_t listenPort) {
 	if (this->listeningSocket == -1) {
 		throw std::runtime_error("Error listening to socket");
 	}
+
+	this->wormSockets = 0;
 }
 
 EinsConn::~EinsConn() {
 	//this->deleteAllWorms();
 	close(this->listeningSocket);
-	close(this->currentWormSocket);
+
+	if (this->wormSockets != 0) {
+		for (size_t i = 0; i < this->connections.size(); i++) {
+			close((this->wormSockets)[i]);
+		}
+		free(this->wormSockets);
+	}
 }
 
 void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip) {
 	// TODO: Conectarse al remoto y crear worm
 
 	this->connections.insert(make_pair(wc->ws.id, std::move(wc)));
+	void *ret = realloc(static_cast<void *>(wormSockets), this->connections.size());
+	if (ret == 0) {
+		throw std::runtime_error("Error reallocating socket array");
+	}
+	this->wormSockets = static_cast<int *>(ret);
 }
 
 void EinsConn::run() {
@@ -87,7 +100,7 @@ void EinsConn::run() {
 		}
 
 		uint16_t wormId = ntohs(*((uint16_t *) (hellomsg + sizeof(enum ctrlMsgType))));
-		this->connections.at(wormId)->socket = currentWormSocket;
+		connectWorm(wormId, currentWormSocket);
 
 		// Send configuration message
 		const void *wormSetup = static_cast<const void *>(&(this->connections.at(wormId)->ws));
@@ -99,4 +112,9 @@ void EinsConn::run() {
 			throw std::runtime_error("Error sending message");
 		}
 	}
+}
+
+void EinsConn::connectWorm(const uint16_t id, const int socket) {
+	this->connections.at(id)->socket = socket;
+	// TODO: Insert socket descriptor in property wormSockets
 }
