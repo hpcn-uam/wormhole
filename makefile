@@ -1,23 +1,37 @@
 CC=gcc
 CXX=g++
-COMMONFLAGS=-I include/ -Wall -Werror
-CFLAGS=$(COMMONFLAGS) -std=c99
-CXXFLAGS=$(COMMONFLAGS) -std=c++11
+FLAGS=-I include/ -Wall -Werror
+CFLAGS=$(FLAGS) -std=c99 -fPIC
+CXXFLAGS=$(FLAGS) -std=c++11
+LDFLAGS=-fPIC
 
-all: einstein worm
+INCLUDES := $(wildcard include/*.h include/*.hpp)
 
-einstein: build/einstein.o
 
-build/einstein.o: src/einstein/einstein.cpp include/einstein.hpp
+all: einstein libs
+
+einstein: obj/einstein.o
+
+lib/worm.so: obj/worm.o obj/common.o
+	$(CC) $(CFLAGS) -shared -o $@ $^  $(LDFLAGS)
+
+obj:
+	mkdir -p obj
+
+libs: lib lib/worm.so
+
+lib:
+	mkdir -p lib
+
+obj/%.o: src/einstein/%.cpp obj $(INCLUDES)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-worm: build/worm.o build/common.o
-
-build/worm.o: src/worm/worm.c include/worm.h include/worm_private.h include/common.h
+obj/%.o: src/worm/%.c obj $(INCLUDES)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-build/common.o: src/common.c include/common.h
+obj/%.o: src/%.c obj $(INCLUDES)
 	$(CC) $(CFLAGS) -c $< -o $@
+
 
 clean:
-	rm build/*
+	rm -rf obj lib

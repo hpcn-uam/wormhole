@@ -51,9 +51,10 @@ int tcp_listen_on_port(uint16_t port) {
 int tcp_accept(int listen_socket) {
 	// TODO: Timeout
 	struct sockaddr_in cli_addr;
-	int clilen = sizeof(cli_addr);
+	socklen_t clilen = sizeof(cli_addr);
 	int newsockfd = accept(listen_socket, (struct sockaddr *) &cli_addr, &clilen);
 
+	return newsockfd;
 }
 
 int tcp_message_send(int socket, const void *message, size_t len) {

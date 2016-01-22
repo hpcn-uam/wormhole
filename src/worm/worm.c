@@ -60,3 +60,16 @@ uint8_t WH_init (void) {
 
 	return 0;
 }
+
+
+
+
+/* Name WH_addWormConnection
+	 *
+	 * Return the created connection
+	 */
+inline Connection* WH_findWorm(DestinationWorms* cns, const uint16_t wormId)
+{
+
+	return NULL;
+}
