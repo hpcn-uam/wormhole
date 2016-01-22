@@ -52,7 +52,7 @@ EinsConn::EinsConn(string listenIp, uint16_t listenPort) {
 	if (this->listeningSocket == -1) {
 		throw std::runtime_error("Error listening to socket");
 	}
-	
+
 	this->wormSockets = 0;
 }
 
@@ -64,7 +64,7 @@ EinsConn::~EinsConn() {
 		for (size_t i = 0; i < this->connections.size(); i++) {
 			close((this->wormSockets)[i]);
 		}
-		free(this->wormSockets);		
+		free(this->wormSockets);
 	}
 }
 
