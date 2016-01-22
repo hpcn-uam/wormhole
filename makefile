@@ -18,7 +18,7 @@ lib/worm.so: obj/worm.o obj/common.o
 obj:
 	mkdir -p obj
 
-libs: lib lib/worm.so
+libs: lib lib/libworm.so
 
 lib:
 	mkdir -p lib
