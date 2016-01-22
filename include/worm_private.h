@@ -85,12 +85,31 @@ extern "C" {
 	 */
 	uint8_t WH_DymRoute_init (const uint8_t * const routeDescription, DestinationWorms** cns);
 
+
+	/* Name WH_DymRoute_init
+	 * Starts the Dynamic Routing Library, and setups connection configuration.
+	 * Also makes connections
+	 * Return 0 if OK, something else if error.
+	 */
+	uint8_t WH_DymRoute_route_create (FILE* f, const uint8_t * const routeDescription, DestinationWorms** cns);
+	/* Name WH_DymRoute_init
+	 * Starts the Dynamic Routing Library, and setups connection configuration.
+	 * Also makes connections
+	 * Return 0 if OK, something else if error.
+	 */
+	uint8_t WH_DymRoute_route_createFunc (FILE* f, const uint8_t * const routeDescription, DestinationWorms** cns);
+
 	/* Name WH_DymRoute_route
 	 * Enrute a message
 	 * Return the number of msgs sent
 	 */
 	uint8_t WH_DymRoute_route (const MessageInfo * const mi, DestinationWorms* const cns);
 
+	/* Name WH_DymRoute_precompiled_route
+	 * Enrute a message
+	 * Return the number of msgs sent
+	 */
+	uint8_t (*WH_DymRoute_precompiled_route) (const MessageInfo * const mi, DestinationWorms* const cns);
 
 	/* Name WH_DymRoute_send
 	 * Sends a message to the network
