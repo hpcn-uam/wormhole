@@ -91,13 +91,13 @@ extern "C" {
 	 * Also makes connections
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_DymRoute_route_create (FILE* f, const uint8_t * const routeDescription, DestinationWorms** cns);
+	//uint8_t WH_DymRoute_route_create (FILE* f, const uint8_t * const routeDescription, DestinationWorms** cns);
 	/* Name WH_DymRoute_init
 	 * Starts the Dynamic Routing Library, and setups connection configuration.
 	 * Also makes connections
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_DymRoute_route_createFunc (FILE* f, const uint8_t * const routeDescription, DestinationWorms** cns);
+	//uint8_t WH_DymRoute_route_createFunc (FILE* f, const uint8_t * const routeDescription, DestinationWorms** cns);
 
 	/* Name WH_DymRoute_route
 	 * Enrute a message
