@@ -88,7 +88,7 @@ extern "C" {
 	 * Also makes connections
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms **cns);
+	uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *cns);
 
 
 	/* Name WH_DymRoute_init

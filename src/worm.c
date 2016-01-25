@@ -16,7 +16,7 @@ Worm2EinsConn WH_einsConn;
 uint16_t WH_myId;
 WormSetup WH_mySetup;
 
-
+DestinationWorms WH_myDstWorms;
 /*
 *===============
 */
@@ -106,3 +106,11 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 
 	return 0;
 }
+
+uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *cns)
+{
+
+	return 0;
+}
+
+

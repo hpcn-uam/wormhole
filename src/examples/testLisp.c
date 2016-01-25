@@ -11,6 +11,7 @@
 extern Worm2EinsConn WH_einsConn;
 extern uint16_t WH_myId;
 extern WormSetup WH_mySetup;
+extern DestinationWorms WH_myDstWorms;
 
 #define TESTLIST "1"
 
@@ -22,13 +23,10 @@ int main(int argc, char **argv)
 	assert(!memcmp(WH_mySetup.connectionDescription, TESTLIST, strlen(TESTLIST)));
 	fprintf(stderr, "Éxito setup\n");
 
-	WormSetup otherWorm;
+	st = WH_DymRoute_init(WH_mySetup.connectionDescription, &WH_myDstWorms);
+	assert(st == 0);
+	fprintf(stderr, "Éxito Configurando enrutado\n");
 
 
 
-	for (int i = 0; i < 100; i++) {
-		WH_getWormData(&otherWorm, 1);
-	}
-
-	fprintf(stderr, "Éxito getWormData\n");
 }
