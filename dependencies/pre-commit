@@ -17,6 +17,7 @@ fi
 
 #Limpiamos el repositorio
 #make clean
+gtags
 
 flag=0
 
