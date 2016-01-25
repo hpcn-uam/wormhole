@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
-Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, uint16_t core, string ip, string connectionDescription) {
+Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription) {
 	this->ws.id = id;
 	this->ws.listenPort = listenPort;
 	this->ws.core = core;
@@ -31,16 +31,44 @@ Einstein::~Einstein() {
 }
 
 void Einstein::readConfig(const string configFileName) {
+
 	// TODO: Leer realmente el fichero
 	uint16_t id = 1;
 	uint16_t listenPort = 10000;
-	uint16_t core = 0;
+	int16_t core = 0;
 	string ip = "127.0.0.1";
-	string connectionDescription = "(LISP connection description)";
+	//string connectionDescription = "(LISP connection description)";
+	
+	FILE *configFile = fopen(configFileName.c_str(), "r");
+	if (configFile == 0) {
+		throw std::runtime_error("Config file doesn't exist");
+	}
+	
+	char configLine[4096];
+	char programName[4096];
+	char host[4096];
+	char connectionDescription[4096];
+	
+	while (!feof(configFile)) {
+		fgets(configLine, 4096, configFile);
+		int st = sscanf(configLine, "%hu %s %s %hd", &id, programName, host, &core);
+		if (st == EOF) {
+			break;
+		} else if (st != 4) {
+			cerr << "Only " << st << "fields were found" << '\n';
+			throw std::runtime_error("Bad config file");
+		}
+		fgets(connectionDescription, 4096, configFile);
 
-	unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, listenPort, core, ip, connectionDescription));
+		if (connectionDescription[0] != '\t') {
+			throw std::runtime_error("Bad config file");
+		}
+		
+		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, listenPort, core, ip, string(connectionDescription + 1)));
 
-	this->ec.createWorm(std::move(wc), ip);
+		this->ec.createWorm(std::move(wc), ip);
+	}
+	fclose(configFile);
 }
 
 EinsConn::EinsConn(string listenIp, uint16_t listenPort) {

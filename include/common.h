@@ -16,7 +16,7 @@ extern "C" {
 	typedef struct {
 		uint16_t id;
 		uint16_t listenPort;
-		uint16_t core;
+		int16_t core;
 		uint32_t IP; //TODO fix para ipv6
 		uint32_t connectionDescriptionLength;
 		uint8_t *connectionDescription; // (LISP connection description)

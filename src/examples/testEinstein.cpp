@@ -13,7 +13,7 @@ class EinsteinTester: public Einstein {
 	~EinsteinTester();
 };
 
-EinsteinTester::EinsteinTester() : Einstein("asdf", "0.0.0.0", 5000) {
+EinsteinTester::EinsteinTester() : Einstein("src/examples/test.conf", "0.0.0.0", 5000) {
 
 
 	assert(ec.listenIp == inet_addr("0.0.0.0"));
@@ -21,7 +21,7 @@ EinsteinTester::EinsteinTester() : Einstein("asdf", "0.0.0.0", 5000) {
 
 	assert(ec.connections.at(1)->ws.id == 1);
 	assert(ec.connections.at(1)->ws.listenPort == 10000);
-	assert(ec.connections.at(1)->ws.core == 0);
+	assert(ec.connections.at(1)->ws.core == -1);
 	assert(ec.connections.at(1)->ws.IP == inet_addr("127.0.0.1"));
 	assert(ec.connections.at(1)->ws.connectionDescriptionLength == 29);
 	assert( !memcmp(ec.connections.at(1)->ws.connectionDescription, "(LISP connection description)", 29) );
