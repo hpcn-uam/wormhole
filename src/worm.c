@@ -25,8 +25,7 @@ DestinationWorms WH_myDstWorms;
 uint8_t WH_init(void)
 {
 
-	// TODO: Deshardcodear y leer de variables de entorno
-	WH_myId = 1;
+	WH_myId = atoi(getenv("WORM_ID"));
 
 	WH_einsConn.Port = atoi(getenv("EINSTEIN_PORT"));
 	WH_einsConn.IP = inet_addr(getenv("EINSTEIN_IP"));
