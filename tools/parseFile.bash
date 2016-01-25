@@ -10,23 +10,26 @@ do
 	cat $f | while read in
 	do
 
-		if [[ flag -eq 0 ]]
+		if [[ $in == *"struct "* || $in == *"enum"* || $in == *"union"* ]]
 		then
 
-			if [[ $in == *"struct"* || $in == *"enum"* ]]
+			if [[ $in == *"{"* ]]
 			then
-				echo "${in}"
-				flag=1
+				((flag+=1))
+#				echo AAAAAADDDD $flag
 			fi
-		else
+		fi
+
+		if [ $flag -gt 0 ]
+		then
                         echo "${in}"
 		fi
 
-
                 if [[ $in == *"}"* ]]
-                then
-                        flag=0
-                fi
+        	then
+      		        ((flag-=1))
+#			echo LEEEESS $flag
+               	fi
 
 	done
 

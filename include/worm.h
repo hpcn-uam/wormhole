@@ -15,8 +15,7 @@ extern "C" {
 		enum DataType type;
 		union {
 			enum DataType arrayType;
-			/*TODO:		struct
-					{
+			/*TODO:		struct {
 						uint32_t size;
 						struct ConnectionDataType *elementTypes;
 					} compoundType;*/

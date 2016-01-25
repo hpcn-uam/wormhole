@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+/***************************************/
+extern uint8_t _binary_h_structures_start;
+extern uint8_t _binary_h_structures_end;
+/***************************************/
+
 	enum wormMsgType {
 		HELLO, WORMINFO, SETUPTYPE
 	};
