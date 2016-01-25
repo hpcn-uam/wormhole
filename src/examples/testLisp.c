@@ -12,12 +12,14 @@ extern Worm2EinsConn WH_einsConn;
 extern uint16_t WH_myId;
 extern WormSetup WH_mySetup;
 
+#define TESTLIST "1"
+
 int main(int argc, char **argv)
 {
 	int st = WH_init();
 	assert(st == 0);
 
-	assert(!memcmp(WH_mySetup.connectionDescription, "1", 29));
+	assert(!memcmp(WH_mySetup.connectionDescription, TESTLIST, strlen(TESTLIST)));
 	fprintf(stderr, "Éxito setup\n");
 
 	WormSetup otherWorm;
