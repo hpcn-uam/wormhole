@@ -76,6 +76,15 @@ void Einstein::readConfig(const string configFileName)
 		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, listenPort, core, ip, string(connectionDescription + 1)));
 
 		this->ec.createWorm(std::move(wc), ip);
+		
+		// TODO: Copiar ejecutable al remoto y ejecutar esto
+		fprintf(stderr, "ssh -T einstein@%s 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
+									"export WORM_ID=%hu;"
+									"export EINSTEIN_PORT=%hu;"
+									"export EINSTEIN_IP=%s;"
+									"sh %s/run.sh > /dev/null 2>&1'",
+									host, programName, id, this->ec.listenPort,
+									this->ec.listenIpStr.c_str(), programName);
 	}
 
 	fclose(configFile);
@@ -84,6 +93,7 @@ void Einstein::readConfig(const string configFileName)
 EinsConn::EinsConn(string listenIp, uint16_t listenPort)
 {
 	// Start socket to receive connections from worms
+	this->listenIpStr = listenIp;
 	this->listenIp = inet_addr(listenIp.c_str());
 	this->listenPort = listenPort;
 	this->listeningSocket = tcp_listen_on_port(listenPort);
