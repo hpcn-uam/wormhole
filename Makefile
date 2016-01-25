@@ -8,39 +8,46 @@ export LDFLAGS=-fPIC
 INCLUDES := $(wildcard include/*.h include/*.hpp)
 
 
-all: einstein libs
+all: Dependencies einstein libs Examples
 
 einstein: obj/einstein.o
 
-testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
+Examples: bin/testEinstein bin/testWorm
+
+bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-testWorm: src/examples/testWorm.c obj/common.o
+bin/testWorm: src/examples/testWorm.c obj/common.o
 	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o
 	$(CC) $(CFLAGS) -shared -o $@ $^  $(LDFLAGS)
 
+Dependencies: obj lib bin
+
 obj:
 	mkdir -p obj
-
-libs: lib lib/libworm.so
 
 lib:
 	mkdir -p lib
 
+bin:
+	mkdir -p bin
+
+libs: lib lib/libworm.so
+
 buildTools:
 	$(MAKE) -C tools
 
-obj/%.o: src/%.cpp obj $(INCLUDES)
+obj/%.o: src/%.cpp $(INCLUDES)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-obj/%.o: src/%.c obj $(INCLUDES)
+obj/%.o: src/%.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
 clean:
-	rm -rf obj lib
+	rm -rf obj lib bin
 
 
 #Custom Data .o
