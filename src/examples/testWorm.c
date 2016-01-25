@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 	assert(WH_mySetup.listenPort == 10000);
 	assert(WH_mySetup.core == -1);
 	assert(WH_mySetup.IP == inet_addr("127.0.0.1"));
-	assert(WH_mySetup.connectionDescriptionLength == 29);
+	assert(WH_mySetup.connectionDescriptionLength == strlen(TESTLIST));
 	assert(!memcmp(WH_mySetup.connectionDescription, TESTLIST, strlen(TESTLIST)));
 	fprintf(stderr, "Éxito setup\n");
 

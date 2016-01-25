@@ -68,6 +68,7 @@ void Einstein::readConfig(const string configFileName)
 		}
 
 		fgets(connectionDescription, 4096, configFile);
+		connectionDescription[strlen(connectionDescription) - 1] = 0;
 
 		if (connectionDescription[0] != '\t') {
 			throw std::runtime_error("Bad config file");
@@ -76,15 +77,15 @@ void Einstein::readConfig(const string configFileName)
 		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, listenPort, core, ip, string(connectionDescription + 1)));
 
 		this->ec.createWorm(std::move(wc), ip);
-		
+
 		// TODO: Copiar ejecutable al remoto y ejecutar esto
 		fprintf(stderr, "ssh -T einstein@%s 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
-									"export WORM_ID=%hu;"
-									"export EINSTEIN_PORT=%hu;"
-									"export EINSTEIN_IP=%s;"
-									"sh %s/run.sh > /dev/null 2>&1'",
-									host, programName, id, this->ec.listenPort,
-									this->ec.listenIpStr.c_str(), programName);
+				"export WORM_ID=%hu;"
+				"export EINSTEIN_PORT=%hu;"
+				"export EINSTEIN_IP=%s;"
+				"sh %s/run.sh > /dev/null 2>&1'",
+				host, programName, id, this->ec.listenPort,
+				this->ec.listenIpStr.c_str(), programName);
 	}
 
 	fclose(configFile);
