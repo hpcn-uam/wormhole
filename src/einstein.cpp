@@ -38,17 +38,17 @@ void Einstein::readConfig(const string configFileName) {
 	int16_t core = 0;
 	string ip = "127.0.0.1";
 	//string connectionDescription = "(LISP connection description)";
-	
+
 	FILE *configFile = fopen(configFileName.c_str(), "r");
 	if (configFile == 0) {
 		throw std::runtime_error("Config file doesn't exist");
 	}
-	
+
 	char configLine[4096];
 	char programName[4096];
 	char host[4096];
 	char connectionDescription[4096];
-	
+
 	while (!feof(configFile)) {
 		fgets(configLine, 4096, configFile);
 		int st = sscanf(configLine, "%hu %s %s %hd", &id, programName, host, &core);
@@ -63,7 +63,7 @@ void Einstein::readConfig(const string configFileName) {
 		if (connectionDescription[0] != '\t') {
 			throw std::runtime_error("Bad config file");
 		}
-		
+
 		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, listenPort, core, ip, string(connectionDescription + 1)));
 
 		this->ec.createWorm(std::move(wc), ip);
