@@ -26,8 +26,8 @@ uint8_t WH_init (void) {
 
 	// TODO: Deshardcodear y leer de variables de entorno
 	WH_myId = 1;
-	WH_einsConn.Port = 5000;
-	WH_einsConn.IP = inet_addr("127.0.0.1");
+	WH_einsConn.Port = atoi(getenv("EINSTEIN_PORT"));
+	WH_einsConn.IP = inet_addr(getenv("EINSTEIN_IP"));
 
 	WH_einsConn.socket = tcp_connect_to("127.0.0.1", WH_einsConn.Port);
 	if (WH_einsConn.socket == -1) {
