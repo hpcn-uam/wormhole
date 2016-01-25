@@ -1,6 +1,6 @@
 export CC=gcc
 export CXX=g++
-export FLAGS=-I include/ -Wall -Werror
+export FLAGS=-I include/ -Wall -Werror -g
 export CFLAGS=$(FLAGS) -std=c99 -fPIC
 export CXXFLAGS=$(FLAGS) -std=c++11
 export LDFLAGS=-fPIC

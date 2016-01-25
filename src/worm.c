@@ -79,11 +79,13 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId) {
 	if (tcp_message_send(WH_einsConn.socket, (uint8_t *)&ctrlMsg, sizeof(enum ctrlMsgType)) != 0) {
 		return 1;
 	}
-	
-	if (tcp_message_recv(WH_einsConn.socket, (uint8_t *)&ctrlMsg, sizeof(WormSetup)) != 0) {
+	if (tcp_message_send(WH_einsConn.socket, (void *)&wormId, sizeof(uint16_t)) != 0) {
 		return 1;
 	}
 	
+	if (tcp_message_recv(WH_einsConn.socket, (uint8_t *)&ctrlMsg, sizeof(enum ctrlMsgType)) != 0) {
+		return 1;
+	}
 	if (ctrlMsg != CTRL_OK) {
 		return 1;
 	}
@@ -91,6 +93,5 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId) {
 	if (tcp_message_recv(WH_einsConn.socket, (uint8_t *)ws, sizeof(WormSetup)) != 0) {
 		return 1;
 	}
-	
 	return 0;
 }

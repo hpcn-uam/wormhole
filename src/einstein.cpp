@@ -78,7 +78,8 @@ void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip) {
 	// TODO: Conectarse al remoto y crear worm
 
 	this->connections.insert(make_pair(wc->ws.id, std::move(wc)));
-	void *ret = realloc(static_cast<void *>(wormSockets), this->connections.size() * sizeof(int));
+	this->numWormSockets = this->connections.size();
+	void *ret = realloc(static_cast<void *>(wormSockets), this->numWormSockets * sizeof(int));
 	if (ret == 0) {
 		throw std::runtime_error("Error reallocating socket array");
 	}
@@ -128,7 +129,7 @@ void EinsConn::run() {
 			throw std::runtime_error("Error sending message");
 		}
 	}
-	
+
 	for (;;) {
 		pollWorms();
 	}
@@ -156,8 +157,8 @@ void EinsConn::pollWorms() {
 			--i;
 		}
 	}
-	this->numFilledPolls = i - 1;
-	
+	this->numFilledPolls = i;
+
 	int st;
 	st = poll(this->fdinfo, this->numFilledPolls, 1);
 	if (st == -1) {
@@ -177,50 +178,47 @@ void EinsConn::pollWorms() {
 				if (tcp_message_recv(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&ctrlMsg), sizeof(enum ctrlMsgType)) != 0) {
 					throw std::runtime_error("Error receiving message from worm");
 				}
-				
-				// Check message and do corresponding action		
+				// Check message and do corresponding action
 				switch (ctrlMsg) {
-					case QUERYID:
-						// Get worm id
-						uint16_t wormId;
-						if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t)) != 0) {
-							throw std::runtime_error("Error receiving message");
-						}
-						
-						// Send worm configuration message
-						try {
+				case QUERYID:
+					// Get worm id
+					uint16_t wormId;
+					if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t)) != 0) {
+						throw std::runtime_error("Error receiving message");
+					}
 
-							const void *wormSetup = static_cast<const void *>(&(this->connections.at(wormId)->ws));
-							
-							enum ctrlMsgType okMsg = CTRL_OK;
-							if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&okMsg), sizeof(enum ctrlMsgType)) != 0) {
-								throw std::runtime_error("Error receiving message from worm");
-							}
+					// Send worm configuration message
+					try {
 
-							if (tcp_message_send(this->fdinfo[i].fd, wormSetup, sizeof(WormSetup)) != 0) {
-								throw std::runtime_error("Error sending message");
-							}
-						} catch (std::out_of_range &e) {
-							// Send error
-							enum ctrlMsgType errorMsg = CTRL_ERROR;
-							if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
-								throw std::runtime_error("Error receiving message from worm");
-							}
+						const void *wormSetup = static_cast<const void *>(&(this->connections.at(wormId)->ws));
+						enum ctrlMsgType okMsg = CTRL_OK;
+						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&okMsg), sizeof(enum ctrlMsgType)) != 0) {
+							throw std::runtime_error("Error receiving message from worm");
 						}
-						break;
-						
-					case DOWNLINK:
-						// TODO
-					case OVERLOAD:
-						// TODO
-					case UNDERLOAD:
-						// TODO
-					default:
+						if (tcp_message_send(this->fdinfo[i].fd, wormSetup, sizeof(WormSetup)) != 0) {
+							throw std::runtime_error("Error sending message");
+						}
+					} catch (std::out_of_range &e) {
 						// Send error
 						enum ctrlMsgType errorMsg = CTRL_ERROR;
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
 							throw std::runtime_error("Error receiving message from worm");
 						}
+					}
+					break;
+
+				case DOWNLINK:
+					// TODO
+				case OVERLOAD:
+					// TODO
+				case UNDERLOAD:
+					// TODO
+				default:
+					// Send error
+					enum ctrlMsgType errorMsg = CTRL_ERROR;
+					if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
+						throw std::runtime_error("Error receiving message from worm");
+					}
 				}
 
 
