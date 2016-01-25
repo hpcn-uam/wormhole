@@ -38,41 +38,41 @@ extern "C" {
 	 * Starts the WormHole Library
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_init (void);
+	uint8_t WH_init(void);
 
 	/* Name WH_halt
 	 * Stops and free the WormHole Library
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_halt (void);
+	uint8_t WH_halt(void);
 
 	/* Name WH_recv
 	 * TODO
 	 * Params:
 	 * Return the number of bytes readed, 0 if ERROR or none.
 	 */
-	uint32_t WH_recv (void *data, MessageInfo *mi);
+	uint32_t WH_recv(void *data, MessageInfo *mi);
 
 	/* Name WH_send
 	 * TODO
 	 * Params:
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_send (const void *const data, const MessageInfo *const mi);
+	uint8_t WH_send(const void *const data, const MessageInfo *const mi);
 
 	/* Name WH_recv_blk
 	 * TODO
 	 * Params:
 	 * Return the number of bytes readed, 0 if ERROR or none.
 	 */
-	uint32_t WH_recv_blk (void **data, MessageInfo **mi, uint16_t num);
+	uint32_t WH_recv_blk(void **data, MessageInfo **mi, uint16_t num);
 
 	/* Name WH_send_blk
 	 * TODO
 	 * Params:
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_send_blk (const void **const data, const MessageInfo **const mi, const uint16_t num);
+	uint8_t WH_send_blk(const void **const data, const MessageInfo **const mi, const uint16_t num);
 
 
 #ifdef __cplusplus

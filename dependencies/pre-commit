@@ -23,7 +23,7 @@ for file in $(git diff-index --cached --name-only HEAD)
 do
 	if [ $(echo $file | grep -ce '\.[hc]p*$') -ne 0 ]
 	then
-		./dependencies/google-astyle/a.out --style=linux -T -d -U -F -p -k3 -j "$file"
+		./dependencies/google-astyle/a.out --style=linux -T -H -U -F -p -k3 -j "$file"
 	fi
 done
 exit 0

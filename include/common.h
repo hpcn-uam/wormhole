@@ -30,31 +30,31 @@ extern "C" {
 	 * Connects to a host using TCP over IPv4
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
-	int tcp_connect_to (char *ip, uint16_t port);
+	int tcp_connect_to(char *ip, uint16_t port);
 
 	/* Name tcp_listen_on_port
 	 * Starts listening in a socket using TCP over IPv4
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
-	int tcp_listen_on_port (uint16_t port);
+	int tcp_listen_on_port(uint16_t port);
 
 	/* Name tcp_accept
 	 * Accepts a new connection from a listen socket
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
-	int tcp_accept (int listen_socket);
+	int tcp_accept(int listen_socket);
 
 	/* Name tcp_message_send
 	 * Sends a full message to a socket
 	 * Return 0 if OK, something else if error.
 	 */
-	int tcp_message_send (int socket, const void *message, size_t len);
+	int tcp_message_send(int socket, const void *message, size_t len);
 
 	/* Name tcp_message_recv
 	 * Receives a full message from a socket
 	 * Return 0 if OK, something else if error.
 	 */
-	int tcp_message_recv (int socket, void *message, size_t len);
+	int tcp_message_recv(int socket, void *message, size_t len);
 
 #ifdef __cplusplus
 }
