@@ -21,9 +21,9 @@ g++ *cpp
 cd -
 for file in $(git diff-index --cached --name-only HEAD)
 do
-	if [ $(echo $file | grep -ce '\.[hc]') -ne 0 ]
+	if [ $(echo $file | grep -ce '\.[hc]p*$') -ne 0 ]
 	then
-		./dependencies/google-astyle/a.out -T "$file"
+		./dependencies/google-astyle/a.out --style=linux -T -d -U -F -p -k3 -j "$file"
 	fi
 done
 exit 0
