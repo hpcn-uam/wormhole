@@ -15,6 +15,7 @@ extern WormSetup WH_mySetup;
 int main(int argc, char **argv)
 {
 	int st = WH_init();
+	assert(st == 0);
 
 	assert(!memcmp(WH_mySetup.connectionDescription, "1", 29));
 	fprintf(stderr, "Éxito setup\n");
