@@ -54,6 +54,9 @@ EinsConn::EinsConn(string listenIp, uint16_t listenPort) {
 	}
 
 	this->wormSockets = 0;
+	this->fdinfo = 0;
+	this->numWormSockets = 0;
+	this->previousPollIndex = 0;
 }
 
 EinsConn::~EinsConn() {
@@ -66,17 +69,30 @@ EinsConn::~EinsConn() {
 		}
 		free(this->wormSockets);
 	}
+	if (this->fdinfo != 0) {
+		free(this->fdinfo);
+	}
 }
 
 void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip) {
 	// TODO: Conectarse al remoto y crear worm
 
 	this->connections.insert(make_pair(wc->ws.id, std::move(wc)));
-	void *ret = realloc(static_cast<void *>(wormSockets), this->connections.size());
+	void *ret = realloc(static_cast<void *>(wormSockets), this->connections.size() * sizeof(int));
 	if (ret == 0) {
 		throw std::runtime_error("Error reallocating socket array");
 	}
+	bzero(ret, sizeof(int) * this->numWormSockets);
 	this->wormSockets = static_cast<int *>(ret);
+	
+	
+	ret = realloc(static_cast<void *>(fdinfo), this->connections.size() * sizeof(struct pollfd));
+	if (ret == 0) {
+		throw std::runtime_error("Error reallocating poll array");
+	}
+	bzero(ret, sizeof(struct pollfd) * this->numWormSockets);
+	this->fdinfo = static_cast<struct pollfd *>(ret);
+
 }
 
 void EinsConn::run() {
@@ -116,5 +132,53 @@ void EinsConn::run() {
 
 void EinsConn::connectWorm(const uint16_t id, const int socket) {
 	this->connections.at(id)->socket = socket;
+	
+	// Add socket to the list used for polling
+	int socketIndex = distance(this->connections.begin() ,this->connections.find(id));
+	wormSockets[socketIndex] = socket;
+	
 	// TODO: Insert socket descriptor in property wormSockets
+}
+
+void EinsConn::pollWorms() {
+
+	for (int i = 0; i < this->numWormSockets; ++i) {
+		memset(&(this->fdinfo[i]), 0, sizeof(struct pollfd));
+		this->fdinfo[i].fd = this->wormSockets[i];
+		this->fdinfo[i].events = POLLIN | POLLHUP | POLLRDNORM | POLLNVAL;
+	}
+	int st;
+	st = poll(this->fdinfo, this->numWormSockets, 1);
+	if (st == -1) {
+		throw std::runtime_error("Failed poll");
+	} else if (st) {
+		// Check all sockets from the socket next to the one that received data in the previous iteration
+		for (int i = this->previousPollIndex + 1, count = 0; count < this->numWormSockets; ++i, count++) {
+			if (i == this->numWormSockets) {
+				i = 0;
+			}
+			
+
+			if (this->wormSockets[i] == -1) {
+				// TODO: Try to reconnect. If it doesn't work launch worm again
+			}
+			if (this->fdinfo[i].revents & POLLIN) {
+				// TODO: Receive message (QUERYID | DOWNLINK | OVERLOAD | UNDERLOAD)
+				
+				// TODO: Check message and do corresponding action
+
+			} else if (this->fdinfo[i].revents & POLLHUP || this->fdinfo[i].revents & POLLRDNORM || this->fdinfo[i].revents & POLLNVAL) {
+				this->wormSockets[i] = -1;
+			}
+		}
+	} else {
+		for (int i = 0; i < this->numWormSockets; ++i) {
+			if (this->wormSockets[i] == -1) {
+				// TODO: Try to reconnect. If it doesn't work launch worm again
+
+			}
+		}
+	}
+
+
 }

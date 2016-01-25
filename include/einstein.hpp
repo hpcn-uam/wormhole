@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <poll.h>
 
 using namespace std;
 
@@ -25,8 +26,11 @@ class EinsConn
 	uint16_t listenPort;
 	int listeningSocket;
 
-	int *wormSockets; // TODO: Change to poll structure
-
+	int *wormSockets; // Sockets for polling
+	struct pollfd *fdinfo;
+	int numWormSockets;
+	int previousPollIndex;
+	
  public:
 	EinsConn(const string listenIp, const uint16_t listenPort);
 	~EinsConn();
@@ -45,6 +49,7 @@ class EinsConn
  private:
 	// Add socket to worm
 	void connectWorm(const uint16_t id, const int socket);
+	void pollWorms();
 	void threadRun();
 };
 
