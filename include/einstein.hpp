@@ -30,7 +30,8 @@ class EinsConn
 	struct pollfd *fdinfo;
 	int numWormSockets;
 	int previousPollIndex;
-	
+	int numFilledPolls;
+
  public:
 	EinsConn(const string listenIp, const uint16_t listenPort);
 	~EinsConn();
@@ -50,6 +51,7 @@ class EinsConn
 	// Add socket to worm
 	void connectWorm(const uint16_t id, const int socket);
 	void pollWorms();
+	void listen();
 	void threadRun();
 };
 

@@ -84,8 +84,8 @@ void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip) {
 	}
 	bzero(ret, sizeof(int) * this->numWormSockets);
 	this->wormSockets = static_cast<int *>(ret);
-	
-	
+
+
 	ret = realloc(static_cast<void *>(fdinfo), this->connections.size() * sizeof(struct pollfd));
 	if (ret == 0) {
 		throw std::runtime_error("Error reallocating poll array");
@@ -128,51 +128,109 @@ void EinsConn::run() {
 			throw std::runtime_error("Error sending message");
 		}
 	}
+	
+	for (;;) {
+		pollWorms();
+	}
 }
 
 void EinsConn::connectWorm(const uint16_t id, const int socket) {
 	this->connections.at(id)->socket = socket;
-	
+
 	// Add socket to the list used for polling
 	int socketIndex = distance(this->connections.begin() ,this->connections.find(id));
 	wormSockets[socketIndex] = socket;
-	
+
 	// TODO: Insert socket descriptor in property wormSockets
 }
 
 void EinsConn::pollWorms() {
 
-	for (int i = 0; i < this->numWormSockets; ++i) {
+	int i = 0, j = 0;
+	for (i = 0, j = 0; i < this->numWormSockets; ++i, ++j) {
 		memset(&(this->fdinfo[i]), 0, sizeof(struct pollfd));
-		this->fdinfo[i].fd = this->wormSockets[i];
-		this->fdinfo[i].events = POLLIN | POLLHUP | POLLRDNORM | POLLNVAL;
+		if (this->wormSockets[j] != -1) {
+			this->fdinfo[i].fd = this->wormSockets[j];
+			this->fdinfo[i].events = POLLIN | POLLHUP | POLLRDNORM | POLLNVAL;
+		} else {
+			--i;
+		}
 	}
+	this->numFilledPolls = i - 1;
+	
 	int st;
-	st = poll(this->fdinfo, this->numWormSockets, 1);
+	st = poll(this->fdinfo, this->numFilledPolls, 1);
 	if (st == -1) {
 		throw std::runtime_error("Failed poll");
 	} else if (st) {
 		// Check all sockets from the socket next to the one that received data in the previous iteration
-		for (int i = this->previousPollIndex + 1, count = 0; count < this->numWormSockets; ++i, count++) {
-			if (i == this->numWormSockets) {
+		for (int i = this->previousPollIndex + 1, count = 0; count < this->numFilledPolls; ++i, count++) {
+			if (i == this->numFilledPolls) {
 				i = 0;
 			}
-			
 
 			if (this->wormSockets[i] == -1) {
 				// TODO: Try to reconnect. If it doesn't work launch worm again
 			}
 			if (this->fdinfo[i].revents & POLLIN) {
-				// TODO: Receive message (QUERYID | DOWNLINK | OVERLOAD | UNDERLOAD)
+				enum ctrlMsgType ctrlMsg;
+				if (tcp_message_recv(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&ctrlMsg), sizeof(enum ctrlMsgType)) != 0) {
+					throw std::runtime_error("Error receiving message from worm");
+				}
 				
-				// TODO: Check message and do corresponding action
+				// Check message and do corresponding action		
+				switch (ctrlMsg) {
+					case QUERYID:
+						// Get worm id
+						uint16_t wormId;
+						if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t)) != 0) {
+							throw std::runtime_error("Error receiving message");
+						}
+						
+						// Send worm configuration message
+						try {
+
+							const void *wormSetup = static_cast<const void *>(&(this->connections.at(wormId)->ws));
+							
+							enum ctrlMsgType okMsg = CTRL_OK;
+							if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&okMsg), sizeof(enum ctrlMsgType)) != 0) {
+								throw std::runtime_error("Error receiving message from worm");
+							}
+
+							if (tcp_message_send(this->fdinfo[i].fd, wormSetup, sizeof(WormSetup)) != 0) {
+								throw std::runtime_error("Error sending message");
+							}
+						} catch (std::out_of_range &e) {
+							// Send error
+							enum ctrlMsgType errorMsg = CTRL_ERROR;
+							if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
+								throw std::runtime_error("Error receiving message from worm");
+							}
+						}
+						break;
+						
+					case DOWNLINK:
+						// TODO
+					case OVERLOAD:
+						// TODO
+					case UNDERLOAD:
+						// TODO
+					default:
+						// Send error
+						enum ctrlMsgType errorMsg = CTRL_ERROR;
+						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
+							throw std::runtime_error("Error receiving message from worm");
+						}
+				}
+
+
 
 			} else if (this->fdinfo[i].revents & POLLHUP || this->fdinfo[i].revents & POLLRDNORM || this->fdinfo[i].revents & POLLNVAL) {
 				this->wormSockets[i] = -1;
 			}
 		}
 	} else {
-		for (int i = 0; i < this->numWormSockets; ++i) {
+		for (int i = 0; i < this->numFilledPolls; ++i) {
 			if (this->wormSockets[i] == -1) {
 				// TODO: Try to reconnect. If it doesn't work launch worm again
 

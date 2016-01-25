@@ -63,7 +63,7 @@ extern uint8_t _binary_h_structures_end;
 	 * Gets worm data (IP+port).
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_getWormData(Connection*c, const uint16_t wormId);
+	uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId);
 
 	/* Name WH_addWormConnection
 	 *
