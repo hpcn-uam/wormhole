@@ -51,25 +51,25 @@ extern "C" {
 	 * Connect and fill the socket data.
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_connectWorm(DestinationWorm*c);
+	uint8_t WH_connectWorm (DestinationWorm *c);
 
 	/* Name WH_setupConnectionType
 	 * Setup connection type
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_setupConnectionType(Connection*c, const ConnectionDataType * const type);
+	uint8_t WH_setupConnectionType (Connection *c, const ConnectionDataType *const type);
 
 	/* Name WH_getWormData
 	 * Gets worm data (IP+port).
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId);
+	uint8_t WH_getWormData (WormSetup *ws, const uint16_t wormId);
 
 	/* Name WH_addWormConnection
 	 *
 	 * Return the created connection
 	 */
-	Connection* WH_addWormConnection(DestinationWorm* cns);
+	Connection *WH_addWormConnection (DestinationWorm *cns);
 
 	/* Name WH_addWormConnection
 	 *
@@ -88,7 +88,7 @@ extern "C" {
 	 * Also makes connections
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_DymRoute_init (const uint8_t * const routeDescription, DestinationWorms** cns);
+	uint8_t WH_DymRoute_init (const uint8_t *const routeDescription, DestinationWorms **cns);
 
 
 	/* Name WH_DymRoute_init
@@ -108,19 +108,19 @@ extern "C" {
 	 * Enrute a message
 	 * Return the number of msgs sent
 	 */
-	uint8_t WH_DymRoute_route (const MessageInfo * const mi, DestinationWorms* const cns);
+	uint8_t WH_DymRoute_route (const MessageInfo *const mi, DestinationWorms *const cns);
 
 	/* Name WH_DymRoute_precompiled_route
 	 * Enrute a message
 	 * Return the number of msgs sent
 	 */
-	uint8_t (*WH_DymRoute_precompiled_route) (const MessageInfo * const mi, DestinationWorms* const cns);
+	uint8_t (*WH_DymRoute_precompiled_route) (const MessageInfo *const mi, DestinationWorms *const cns);
 
 	/* Name WH_DymRoute_send
 	 * Sends a message to the network
 	 * Return the number of msgs sent
 	 */
-	uint8_t WH_DymRoute_send (const void * const data, size_t numBytes, const Connection * const cn);
+	uint8_t WH_DymRoute_send (const void *const data, size_t numBytes, const Connection *const cn);
 
 
 	/*

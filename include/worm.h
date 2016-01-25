@@ -72,7 +72,7 @@ extern "C" {
 	 * Params:
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_send_blk (const void **const data, const MessageInfo ** const mi, const uint16_t num);
+	uint8_t WH_send_blk (const void **const data, const MessageInfo **const mi, const uint16_t num);
 
 
 #ifdef __cplusplus
