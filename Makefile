@@ -12,12 +12,15 @@ all: Dependencies einstein libs Examples
 
 einstein: obj/einstein.o
 
-Examples: bin/testEinstein bin/testWorm
+Examples: bin/testEinstein bin/testWorm bin/testLisp
 
 bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 bin/testWorm: src/examples/testWorm.c obj/common.o
+	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
+
+bin/testLisp: src/examples/testLisp.c obj/common.o
 	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o
