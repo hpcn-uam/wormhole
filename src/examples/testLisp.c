@@ -14,6 +14,7 @@ extern WormSetup WH_mySetup;
 extern DestinationWorms WH_myDstWorms;
 
 #define TESTLIST "1"
+#define TESTDATA "1234567890"
 
 int main(int argc, char **argv)
 {
@@ -27,6 +28,16 @@ int main(int argc, char **argv)
 	assert(st == 0);
 	fprintf(stderr, "Éxito Configurando enrutado\n");
 
+	MessageInfo mi;
+	ConnectionDataType type;
+	type.type = ARRAY;
+	type.ext.arrayType = INT8;
 
+	mi.size = strlen(TESTDATA) + 1;
+	mi.type = &type;
+
+	st = WH_send(TESTDATA, &mi);
+	assert(st == 0);
+	fprintf(stderr, "Mensajes enrutados!\n");
 
 }
