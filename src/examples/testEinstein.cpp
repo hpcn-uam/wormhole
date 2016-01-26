@@ -14,17 +14,17 @@ class EinsteinTester: public Einstein
 	~EinsteinTester();
 };
 
-EinsteinTester::EinsteinTester() : Einstein("../src/examples/test.conf", "127.0.0.1", 5000)
+EinsteinTester::EinsteinTester() : Einstein("../src/examples/test.conf", "150.244.58.77", 5000)
 {
 
 
-	assert(ec.listenIp == inet_addr("127.0.0.1"));
+	assert(ec.listenIp == inet_addr("150.244.58.77"));
 	assert(ec.listenPort == 5000);
 
 	assert(ec.connections.at(1)->ws.id == 1);
 	assert(ec.connections.at(1)->ws.listenPort == 10000);
 	assert(ec.connections.at(1)->ws.core == -1);
-	assert(ec.connections.at(1)->ws.IP == inet_addr("127.0.0.1"));
+	assert(ec.connections.at(1)->ws.IP == inet_addr("150.244.58.77"));
 	assert(ec.connections.at(1)->ws.connectionDescriptionLength == 29);
 	assert(!memcmp(ec.connections.at(1)->ws.connectionDescription, "1", 29));
 

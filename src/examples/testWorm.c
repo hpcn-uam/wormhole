@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 	//assert(WH_myId == 1);
 
 	assert(WH_einsConn.Port == 5000);
-	assert(WH_einsConn.IP == inet_addr("127.0.0.1"));
+	//assert(WH_einsConn.IP == inet_addr("127.0.0.1"));
 
 	//assert(WH_mySetup.id == 1);
 	assert(WH_mySetup.listenPort == 10000);
