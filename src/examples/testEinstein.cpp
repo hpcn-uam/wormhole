@@ -11,10 +11,16 @@ class EinsteinTester: public Einstein
 
  public:
 	EinsteinTester();
+	EinsteinTester(string configFilePath, string einsteinIp);
 	~EinsteinTester();
 };
 
-EinsteinTester::EinsteinTester() : Einstein("../src/examples/test.conf", "150.244.58.77", 5000)
+EinsteinTester::EinsteinTester() : EinsteinTester("../src/examples/test.conf", "150.244.58.77")
+{
+
+}
+
+EinsteinTester::EinsteinTester(string configFilePath, string einsteinIp) : Einstein(configFilePath, einsteinIp, 5000)
 {
 
 
@@ -38,11 +44,22 @@ EinsteinTester::~EinsteinTester()
 
 int main(int argc, char **argv)
 {
-	try {
-		EinsteinTester einsTester;
-		std::cout << "Éxito\n";
+	if (argc != 3) {
+		try {
+			EinsteinTester einsTester();
+			std::cout << "Éxito\n";
 
-	} catch (exception &e) {
-		std::cerr << "Excepción: " << e.what() << '\n';
+		} catch (exception &e) {
+			std::cerr << "Excepción: " << e.what() << '\n';
+		}
+
+	} else {
+		try {
+			EinsteinTester einsTester(argv[1], argv[2]);
+			std::cout << "Éxito\n";
+
+		} catch (exception &e) {
+			std::cerr << "Excepción: " << e.what() << '\n';
+		}
 	}
 }

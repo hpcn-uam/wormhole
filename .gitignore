@@ -4,6 +4,7 @@
 *.obj
 *.elf
 obj/
+bin/
 
 *.orig
 

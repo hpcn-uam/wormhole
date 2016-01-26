@@ -12,7 +12,7 @@ all: Dependencies einstein libs Examples
 
 einstein: obj/einstein.o
 
-Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz
+Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz
 
 bin/testWorm.tgz: bin/testWorm lib/libworm.so src/run.sh
 	mkdir -p bin/tmp/testWorm/lib
@@ -22,7 +22,16 @@ bin/testWorm.tgz: bin/testWorm lib/libworm.so src/run.sh
 	cd bin/tmp;	tar -czf testWorm.tgz testWorm
 	mv bin/tmp/testWorm.tgz bin/testWorm.tgz
 	rm -rf bin/tmp
-	
+
+bin/testLisp.tgz: bin/testLisp lib/libworm.so src/examples/lisprun.sh
+	mkdir -p bin/tmp/testLisp/lib
+	cp bin/testLisp bin/tmp/testLisp
+	cp lib/libworm.so bin/tmp/testLisp/lib
+	cp src/examples/lisprun.sh bin/tmp/testLisp/run.sh
+	cd bin/tmp;	tar -czf testLisp.tgz testLisp
+	mv bin/tmp/testLisp.tgz bin/testLisp.tgz
+	rm -rf bin/tmp
+
 bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
