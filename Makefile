@@ -12,8 +12,17 @@ all: Dependencies einstein libs Examples
 
 einstein: obj/einstein.o
 
-Examples: bin/testEinstein bin/testWorm bin/testLisp
+Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz
 
+bin/testWorm.tgz: bin/testWorm lib/libworm.so src/run.sh
+	mkdir -p bin/tmp/testWorm/lib
+	cp bin/testWorm bin/tmp/testWorm
+	cp lib/libworm.so bin/tmp/testWorm/lib
+	cp src/run.sh bin/tmp/testWorm
+	cd bin/tmp;	tar -czf testWorm.tgz testWorm
+	mv bin/tmp/testWorm.tgz bin/testWorm.tgz
+	rm -rf bin/tmp
+	
 bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 

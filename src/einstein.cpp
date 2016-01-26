@@ -87,12 +87,15 @@ void Einstein::readConfig(const string configFileName)
 
 		// TODO: Copiar ejecutable al remoto y ejecutar esto
 		char executable[4096];
-		sprintf(executable, "ssh -T %s 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
+		sprintf(executable, "scp %s.tgz %s:~", programName, host);
+		system(executable);
+		
+		sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
 				"export WORM_ID=%hu;"
 				"export EINSTEIN_PORT=%hu;"
 				"export EINSTEIN_IP=%s;"
 				"nohup sh %s/run.sh > /dev/null 2>&1 &'",
-				host, programName, id, this->ec.listenPort,
+				host, programName, programName, id, this->ec.listenPort,
 				this->ec.listenIpStr.c_str(), programName);
 		system(executable);
 	}
