@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./testLisp/testLisp
+./testLisp/testLisp &> /tmp/lisp.out

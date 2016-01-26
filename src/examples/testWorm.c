@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
 	WormSetup otherWorm;
 
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 1; i++) {
 		int id = (i % 3) + 1;
 		WH_getWormData(&otherWorm, id);
 		assert(otherWorm.id == id);

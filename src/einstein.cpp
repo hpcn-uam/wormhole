@@ -62,6 +62,7 @@ void Einstein::readConfig(const string configFileName)
 		if (fgets(configLine, 4096, configFile) == 0) {
 			break;
 		}
+
 		int st = sscanf(configLine, "%hu %s %s %hd", &id, programName, host, &core);
 
 		if (st == EOF) {
@@ -75,12 +76,13 @@ void Einstein::readConfig(const string configFileName)
 		if (fgets(connectionDescription, 4096, configFile) == 0) {
 			throw std::runtime_error("Missing worm routing");
 		}
+
 		connectionDescription[strlen(connectionDescription) - 1] = 0;
 
 		if (connectionDescription[0] != '\t') {
 			throw std::runtime_error("Missing worm routing");
 		}
-		
+
 		cerr << "Description: " << connectionDescription + 1 << "|\n";
 
 		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1), string(host), string(programName)));
@@ -163,21 +165,23 @@ void EinsConn::run()
 	for (auto connIterator = this->connections.begin(); connIterator != this->connections.end(); connIterator++) {
 		deployWorm(*(connIterator->second));
 	}
+
 	// Wait for connections from worms
 	for (size_t i = 0; i < this->connections.size(); i++) {
 		if (setupWorm() != 0) {
 			i--;
 		}
 	}
-	
+
 	cerr << "Completed setup of all worms\n";
-	
+
 	for (;;) {
 		pollWorms();
 	}
 }
 
-int EinsConn::setupWorm() {
+int EinsConn::setupWorm()
+{
 	int currentWormSocket = tcp_accept(this->listeningSocket);
 
 	if (currentWormSocket == -1) {
@@ -211,6 +215,7 @@ int EinsConn::setupWorm() {
 	if (tcp_message_send(currentWormSocket, connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
 		throw std::runtime_error("Error sending message");
 	}
+
 	cerr << "Completed setup of worm " << wormId << '\n';
 	return 0;
 }
@@ -226,11 +231,12 @@ void EinsConn::connectWorm(const uint16_t id, const int socket)
 	// TODO: Insert socket descriptor in property wormSockets
 }
 
-void EinsConn::deployWorm(Eins2WormConn &wc) {
+void EinsConn::deployWorm(Eins2WormConn &wc)
+{
 	char executable[4096];
 	sprintf(executable, "scp %s.tgz %s:~", wc.programName.c_str(), wc.host.c_str());
 	system(executable);
-	
+
 	sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
 			"export WORM_ID=%hu;"
 			"export EINSTEIN_PORT=%hu;"
@@ -252,14 +258,15 @@ void EinsConn::pollWorms()
 		if (this->wormSockets[j] == -1) {
 			// Relaunch worm
 			auto connIterator = connections.begin();
+
 			for (int k = 0; k < j; ++k) {
 				connIterator++;
 			}
-			
-			deployWorm(*(connIterator->second));
-			setupWorm();
+
+			//deployWorm(*(connIterator->second));
+			//setupWorm();
 		}
-		
+
 		this->fdinfo[i].fd = this->wormSockets[j];
 		this->fdinfo[i].events = POLLIN | POLLHUP | POLLRDNORM | POLLNVAL;
 	}

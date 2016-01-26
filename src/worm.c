@@ -244,7 +244,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 			DestinationWorm *worm = WH_findWorm(wms, nextNode);
 
 			if (worm == NULL) {
-				puts("TODO");
+				fputs("TODO\n", stderr);
 			}
 
 			i--;
