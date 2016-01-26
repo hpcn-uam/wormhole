@@ -67,18 +67,6 @@ uint8_t WH_init(void)
 	return 0;
 }
 
-
-
-
-/* Name WH_addWormConnection
-	 *
-	 * Return the created connection
-	 */
-inline Connection *WH_findWorm(DestinationWorms *cns, const uint16_t wormId)
-{
-
-	return NULL;
-}
 uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 {
 	enum ctrlMsgType ctrlMsg = QUERYID;
@@ -179,9 +167,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	/*Write headers to the file*/
 	fwrite(_WH_DymRoute_CC_includes, strlen(_WH_DymRoute_CC_includes), 1, f);
-
 	fwrite(&_binary_obj_structures_h_start, &_binary_obj_structures_h_end - &_binary_obj_structures_h_start, 1, f);
-
 	fwrite(_WH_DymRoute_CC_FuncStart, strlen(_WH_DymRoute_CC_FuncStart), 1, f);
 
 	int ret = WH_DymRoute_route_create(f, routeDescription, wms);
@@ -192,6 +178,10 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 	if (!ret) {
 		sprintf(tmpString, "gcc /tmp/%d.c -o /tmp/%d.so -shared -fPIC ", myPid, myPid);
 		ret = system(tmpString);
+	}
+
+	if (!ret) {
+		ret = WH_DymRoute_route_create(f, routeDescription, wms);
 	}
 
 	/*Link the .SO*/
@@ -229,9 +219,42 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
  * Starts the Dynamic Routing Library, and setups connection configuration.
  * Return 0 if OK, something else if error.
  */
-uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wmscns)
+uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	return 0;
+	uint8_t ret = 0;
+	uint16_t parentesys = 0;
+	uint16_t i = 0;
+	uint16_t nextNode = 0;
+
+	while (routeDescription[i] != '\0') {
+		if (routeDescription[i] == ')') {
+			parentesys--;
+
+		} else if (routeDescription[i] == '(') {
+			parentesys++;
+			ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+
+		} else if (parentesys == 0 && (routeDescription[i] >= '0' && routeDescription[i] <= '9')) {
+			nextNode = atoi((char *)(routeDescription + i));
+
+			while (atoi((char *)(routeDescription + i)) != 0) {
+				i++;
+			}
+
+			DestinationWorm *worm = WH_findWorm(wms, nextNode);
+
+			if (worm == NULL) {
+				puts("TODO");
+			}
+
+			i--;
+		}
+
+		i++;
+	}
+
+
+	return ret;
 }
 
 /* Name WH_DymRoute_route_createFunc
@@ -243,5 +266,19 @@ uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescript
 	return 0;
 }
 
+
+/* Name WH_findWorm
+ * Return the worm mached (if no exists)
+ */
+DestinationWorm *WH_findWorm(DestinationWorms *wms, const uint16_t wormId)
+{
+	for (size_t i = 0; i < wms->numberOfWorms; i++) {
+		if (wms->worms[i].id == wormId) {
+			return wms->worms + i;
+		}
+	}
+
+	return NULL;
+}
 
 /************************************************************/

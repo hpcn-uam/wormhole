@@ -66,11 +66,10 @@ extern "C" {
 	 */
 	Connection *WH_addWormConnection(DestinationWorm *cns);
 
-	/* Name WH_addWormConnection
-	 *
-	 * Return the created connection
+	/* Name WH_findWorm
+	 * Return the worm mached (if no exists)
 	 */
-	//inline Connection* WH_findWorm(DestinationWorms* cns, const uint16_t wormId);
+	DestinationWorm *WH_findWorm(DestinationWorms *wms, const uint16_t wormId);
 
 	/*
 	 Dynamic Routing Library
