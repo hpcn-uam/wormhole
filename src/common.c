@@ -85,9 +85,9 @@ int tcp_message_send(int socket, const void *message, size_t len)
 	do {
 		sent_now = send(socket, message + sent, len - sent, MSG_NOSIGNAL);
 		sent += sent_now;
-	} while (sent != len && sent_now != -1);
+	} while (sent != len && sent_now != -1 && sent_now != 0);
 
-	if (sent_now == -1) {
+	if (sent_now == -1 || sent_now == 0) {
 		return 1;
 	}
 
@@ -102,9 +102,9 @@ int tcp_message_recv(int socket, void *message, size_t len)
 	do {
 		received_now = recv(socket, message + received, len - received, MSG_NOSIGNAL);
 		received += received_now;
-	} while (received != len && received_now != -1);
+	} while (received != len && received_now != -1 && received_now != 0);
 
-	if (received_now == -1) {
+	if (received_now == -1 || received_now == 0) {
 		return 1;
 	}
 
