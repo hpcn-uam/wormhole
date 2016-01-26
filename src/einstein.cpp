@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <cstdlib>
 
-Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription)
+Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName)
 {
 	this->ws.id = id;
 	this->ws.listenPort = listenPort;
@@ -16,6 +16,8 @@ Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, str
 	this->ws.connectionDescriptionLength = connectionDescription.size();
 	this->ws.connectionDescription = static_cast<uint8_t *>(malloc(connectionDescription.size()));
 	memcpy(this->ws.connectionDescription, connectionDescription.c_str(), connectionDescription.size());
+	this->host = host;
+	this->programName = programName;
 }
 
 Eins2WormConn::~Eins2WormConn()
@@ -81,23 +83,10 @@ void Einstein::readConfig(const string configFileName)
 		
 		cerr << "Description: " << connectionDescription + 1 << "|\n";
 
-		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1)));
+		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1), string(host), string(programName)));
 
 		this->ec.createWorm(std::move(wc), ip);
 
-		// TODO: Copiar ejecutable al remoto y ejecutar esto
-		char executable[4096];
-		sprintf(executable, "scp %s.tgz %s:~", programName, host);
-		system(executable);
-		
-		sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
-				"export WORM_ID=%hu;"
-				"export EINSTEIN_PORT=%hu;"
-				"export EINSTEIN_IP=%s;"
-				"nohup sh %s/run.sh > /dev/null 2>&1 &'",
-				host, programName, programName, id, this->ec.listenPort,
-				this->ec.listenIpStr.c_str(), programName);
-		system(executable);
 	}
 
 	cerr << "Launched all worms\n";
@@ -170,43 +159,15 @@ void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip)
 
 void EinsConn::run()
 {
-
+	// Deploy worms
+	for (auto connIterator = this->connections.begin(); connIterator != this->connections.end(); connIterator++) {
+		deployWorm(*(connIterator->second));
+	}
 	// Wait for connections from worms
 	for (size_t i = 0; i < this->connections.size(); i++) {
-		int currentWormSocket = tcp_accept(this->listeningSocket);
-
-		if (currentWormSocket == -1) {
-			throw std::runtime_error("Error accepting connection");
+		if (setupWorm() != 0) {
+			i--;
 		}
-
-		// Get hello message
-		size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
-		uint8_t hellomsg[hellomsgSize];
-
-		if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize) != 0) {
-			throw std::runtime_error("Error receiving message");
-		}
-
-		if (* ((enum ctrlMsgType *) &hellomsg) != HELLOEINSTEIN) {
-			continue;
-		}
-
-		uint16_t wormId = ntohs(* ((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))));
-		connectWorm(wormId, currentWormSocket);
-
-		// Send configuration message
-		const void *wormSetup = static_cast<const void *>(& (this->connections.at(wormId)->ws));
-
-		if (tcp_message_send(currentWormSocket, wormSetup, sizeof(WormSetup)) != 0) {
-			throw std::runtime_error("Error sending message");
-		}
-
-		const void *connDescription = static_cast<const void *>(this->connections.at(wormId)->ws.connectionDescription);
-
-		if (tcp_message_send(currentWormSocket, connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
-			throw std::runtime_error("Error sending message");
-		}
-		cerr << "Completed setup of worm " << wormId << '\n';
 	}
 	
 	cerr << "Completed setup of all worms\n";
@@ -214,6 +175,44 @@ void EinsConn::run()
 	for (;;) {
 		pollWorms();
 	}
+}
+
+int EinsConn::setupWorm() {
+	int currentWormSocket = tcp_accept(this->listeningSocket);
+
+	if (currentWormSocket == -1) {
+		throw std::runtime_error("Error accepting connection");
+	}
+
+	// Get hello message
+	size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
+	uint8_t hellomsg[hellomsgSize];
+
+	if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize) != 0) {
+		throw std::runtime_error("Error receiving message");
+	}
+
+	if (* ((enum ctrlMsgType *) &hellomsg) != HELLOEINSTEIN) {
+		return 1;
+	}
+
+	uint16_t wormId = ntohs(* ((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))));
+	connectWorm(wormId, currentWormSocket);
+
+	// Send configuration message
+	const void *wormSetup = static_cast<const void *>(& (this->connections.at(wormId)->ws));
+
+	if (tcp_message_send(currentWormSocket, wormSetup, sizeof(WormSetup)) != 0) {
+		throw std::runtime_error("Error sending message");
+	}
+
+	const void *connDescription = static_cast<const void *>(this->connections.at(wormId)->ws.connectionDescription);
+
+	if (tcp_message_send(currentWormSocket, connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
+		throw std::runtime_error("Error sending message");
+	}
+	cerr << "Completed setup of worm " << wormId << '\n';
+	return 0;
 }
 
 void EinsConn::connectWorm(const uint16_t id, const int socket)
@@ -227,6 +226,21 @@ void EinsConn::connectWorm(const uint16_t id, const int socket)
 	// TODO: Insert socket descriptor in property wormSockets
 }
 
+void EinsConn::deployWorm(Eins2WormConn &wc) {
+	char executable[4096];
+	sprintf(executable, "scp %s.tgz %s:~", wc.programName.c_str(), wc.host.c_str());
+	system(executable);
+	
+	sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
+			"export WORM_ID=%hu;"
+			"export EINSTEIN_PORT=%hu;"
+			"export EINSTEIN_IP=%s;"
+			"nohup sh %s/run.sh > /dev/null 2>&1 &'",
+			wc.host.c_str(), wc.programName.c_str(), wc.programName.c_str(), wc.ws.id, this->listenPort,
+			this->listenIpStr.c_str(), wc.programName.c_str());
+	system(executable);
+}
+
 void EinsConn::pollWorms()
 {
 
@@ -235,13 +249,19 @@ void EinsConn::pollWorms()
 	for (i = 0, j = 0; i < this->numWormSockets; ++i, ++j) {
 		memset(& (this->fdinfo[i]), 0, sizeof(struct pollfd));
 
-		if (this->wormSockets[j] != -1) {
-			this->fdinfo[i].fd = this->wormSockets[j];
-			this->fdinfo[i].events = POLLIN | POLLHUP | POLLRDNORM | POLLNVAL;
-
-		} else {
-			--i;
+		if (this->wormSockets[j] == -1) {
+			// Relaunch worm
+			auto connIterator = connections.begin();
+			for (int k = 0; k < j; ++k) {
+				connIterator++;
+			}
+			
+			deployWorm(*(connIterator->second));
+			setupWorm();
 		}
+		
+		this->fdinfo[i].fd = this->wormSockets[j];
+		this->fdinfo[i].events = POLLIN | POLLHUP | POLLRDNORM | POLLNVAL;
 	}
 
 	this->numFilledPolls = i;
@@ -268,7 +288,7 @@ void EinsConn::pollWorms()
 
 				if (tcp_message_recv(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&ctrlMsg), sizeof(enum ctrlMsgType)) != 0) {
 					// Closed socket
-					this->fdinfo[i].fd = -1;
+					this->wormSockets[i] = -1;
 					continue;
 				}
 
@@ -280,7 +300,7 @@ void EinsConn::pollWorms()
 
 					if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t)) != 0) {
 						// Closed socket
-						this->fdinfo[i].fd = -1;
+						this->wormSockets[i] = -1;
 						continue;
 					}
 
@@ -292,13 +312,13 @@ void EinsConn::pollWorms()
 
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&okMsg), sizeof(enum ctrlMsgType)) != 0) {
 							// Closed socket
-							this->fdinfo[i].fd = -1;
+							this->wormSockets[i] = -1;
 							continue;
 						}
 
 						if (tcp_message_send(this->fdinfo[i].fd, wormSetup, sizeof(WormSetup)) != 0) {
 							// Closed socket
-							this->fdinfo[i].fd = -1;
+							this->wormSockets[i] = -1;
 							continue;
 						}
 
@@ -308,7 +328,7 @@ void EinsConn::pollWorms()
 
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
 							// Closed socket
-							this->fdinfo[i].fd = -1;
+							this->wormSockets[i] = -1;
 							continue;
 						}
 					}
@@ -330,7 +350,7 @@ void EinsConn::pollWorms()
 
 					if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
 						// Closed socket
-						this->fdinfo[i].fd = -1;
+						this->wormSockets[i] = -1;
 						continue;
 					}
 				}

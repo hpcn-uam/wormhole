@@ -12,8 +12,10 @@ using namespace std;
 struct Eins2WormConn {
 	WormSetup ws;
 	int socket;
+	string host;
+	string programName;
 
-	Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription);
+	Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName);
 	~Eins2WormConn();
 };
 
@@ -54,11 +56,14 @@ class EinsConn
 	void pollWorms();
 	void listen();
 	void threadRun();
+	int setupWorm();
+	void deployWorm(Eins2WormConn &wc);
 };
 
 class Einstein
 {
 	friend class EinsteinTester;
+	friend class EinsConn;
 	EinsConn ec;
 
  public:
@@ -69,7 +74,6 @@ class Einstein
 
  private:
 	void readConfig(const string configFileName);
-
 };
 
 #endif
