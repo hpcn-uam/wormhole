@@ -8,11 +8,6 @@
 extern "C" {
 #endif
 
-	/***************************************/
-	extern uint8_t _binary_h_structures_start;
-	extern uint8_t _binary_h_structures_end;
-	/***************************************/
-
 	enum wormMsgType {
 		HELLO, WORMINFO, SETUPTYPE
 	};
@@ -90,19 +85,17 @@ extern "C" {
 	 */
 	uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *cns);
 
+	/* Name WH_DymRoute_route_create
+	 * Starts the Dynamic Routing Library, and setups connection configuration.
+	 * Return 0 if OK, something else if error.
+	 */
+	uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
-	/* Name WH_DymRoute_init
-	 * Starts the Dynamic Routing Library, and setups connection configuration.
-	 * Also makes connections
+	/* Name WH_DymRoute_route_createFunc
+	 * Searchs for a Function, and calls the correct function.
 	 * Return 0 if OK, something else if error.
 	 */
-	//uint8_t WH_DymRoute_route_create (FILE* f, const uint8_t * const routeDescription, DestinationWorms** cns);
-	/* Name WH_DymRoute_init
-	 * Starts the Dynamic Routing Library, and setups connection configuration.
-	 * Also makes connections
-	 * Return 0 if OK, something else if error.
-	 */
-	//uint8_t WH_DymRoute_route_createFunc (FILE* f, const uint8_t * const routeDescription, DestinationWorms** cns);
+	uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
 	/* Name WH_DymRoute_route
 	 * Enrute a message

@@ -110,6 +110,21 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 	Dynamic Routing Library
 *************************************************************/
 
+/***************************************/
+extern uint8_t _binary_obj_structures_h_start;
+extern uint8_t _binary_obj_structures_h_end;
+const char *_WH_DymRoute_CC_includes = "\n"
+									   "#include<stdint.h>\n"
+									   "#include<stdio.h>\n";
+const char *_WH_DymRoute_CC_FuncStart = "\n\n"
+										"uint8_t WH_DymRoute_precompiled_route (const MessageInfo *const mi, DestinationWorms *const cns)\n{\n"
+										"int ret = 1;\n";
+const char *_WH_DymRoute_CC_FuncEnd = "\n"
+									  "return ret;"
+									  "}\n";
+void *_WH_DymRoute_libHandle;
+/***************************************/
+
 /* Name WH_DymRoute_precompiled_route
  * Enrute a message
  * Return the number of msgs sent
@@ -144,10 +159,61 @@ uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi, D
  * Also makes connections
  * Return 0 if OK, something else if error.
  */
-uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *cns)
+uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *wms)
 {
+	pid_t myPid = getpid();
+	char *tmpString = malloc(1024);
+	char *errorString;
 
-	return 0;
+	if (!tmpString) {
+		return -1;
+	}
+
+	sprintf(tmpString, "/tmp/%d.c", myPid);
+	FILE *f = fopen(tmpString, "w+");
+
+	if (!f) {
+		free(tmpString);
+		return -2;
+	}
+
+	/*Write headers to the file*/
+	fwrite(_WH_DymRoute_CC_includes, strlen(_WH_DymRoute_CC_includes), 1, f);
+
+	fwrite(&_binary_obj_structures_h_start, &_binary_obj_structures_h_end - &_binary_obj_structures_h_start, 1, f);
+
+	fwrite(_WH_DymRoute_CC_FuncStart, strlen(_WH_DymRoute_CC_FuncStart), 1, f);
+
+	int ret = WH_DymRoute_route_create(f, routeDescription, wms);
+	fwrite(_WH_DymRoute_CC_FuncEnd, strlen(_WH_DymRoute_CC_FuncEnd), 1, f);
+	fclose(f);
+
+	/*Compile the .c*/
+	if (!ret) {
+		sprintf(tmpString, "gcc /tmp/%d.c -o /tmp/%d.so -shared -fPIC ", myPid, myPid);
+		ret = system(tmpString);
+	}
+
+	/*Link the .SO*/
+	if (!ret) {
+		sprintf(tmpString, "/tmp/%d.so", myPid);
+		_WH_DymRoute_libHandle = dlopen(tmpString, RTLD_NOW);
+
+		if (!_WH_DymRoute_libHandle) {
+			free(tmpString);
+			return -5;
+		}
+
+		WH_DymRoute_precompiled_route = dlsym(_WH_DymRoute_libHandle, "WH_DymRoute_precompiled_route");
+
+		if ((errorString = dlerror()) != NULL)  {
+			fputs(errorString, stderr);
+			ret = -6;
+		}
+	}
+
+	free(tmpString);
+	return ret;
 }
 
 /* Name WH_DymRoute_send
@@ -157,6 +223,24 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const Connection *const cn)
 {
 	return -1;
+}
+
+/* Name WH_DymRoute_route_create
+ * Starts the Dynamic Routing Library, and setups connection configuration.
+ * Return 0 if OK, something else if error.
+ */
+uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wmscns)
+{
+	return 0;
+}
+
+/* Name WH_DymRoute_route_createFunc
+ * Searchs for a Function, and calls the correct function.
+ * Return 0 if OK, something else if error.
+ */
+uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+{
+	return 0;
 }
 
 

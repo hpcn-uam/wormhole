@@ -1,7 +1,11 @@
 #ifndef __WORM_COMMON_H__
 #define __WORM_COMMON_H__
 
+#include <dlfcn.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 

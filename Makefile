@@ -3,7 +3,7 @@ export CXX=g++
 export FLAGS=-I include/ -Wall -Werror -g
 export CFLAGS=$(FLAGS) -std=c99 -fPIC
 export CXXFLAGS=$(FLAGS) -std=c++11
-export LDFLAGS=-fPIC
+export LDFLAGS=-fPIC -ldl
 
 INCLUDES := $(wildcard include/*.h include/*.hpp)
 
@@ -21,10 +21,10 @@ bin/testWorm: src/examples/testWorm.c obj/common.o
 	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
 
 bin/testLisp: src/examples/testLisp.c obj/common.o
-	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o
-	$(CC) $(CFLAGS) -shared -o $@ $^  $(LDFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^
 
 Dependencies: obj lib bin
 
