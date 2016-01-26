@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 {
 	if (argc != 3) {
 		try {
-			EinsteinTester einsTester();
+			EinsteinTester einsTester;
 			std::cout << "Éxito\n";
 
 		} catch (exception &e) {
