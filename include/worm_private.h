@@ -108,19 +108,13 @@ extern "C" {
 	 * Enrute a message
 	 * Return the number of msgs sent
 	 */
-	uint8_t WH_DymRoute_route(const MessageInfo *const mi, DestinationWorms *const cns);
-
-	/* Name WH_DymRoute_precompiled_route
-	 * Enrute a message
-	 * Return the number of msgs sent
-	 */
-	uint8_t (*WH_DymRoute_precompiled_route)(const MessageInfo *const mi, DestinationWorms *const cns);
+	uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi, DestinationWorms *wms);
 
 	/* Name WH_DymRoute_send
 	 * Sends a message to the network
-	 * Return the number of msgs sent
+	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_DymRoute_send(const void *const data, size_t numBytes, const Connection *const cn);
+	uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const Connection *const cn);
 
 
 	/*

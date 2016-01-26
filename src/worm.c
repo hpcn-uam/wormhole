@@ -106,10 +106,58 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 	return 0;
 }
 
+/************************************************************
+	Dynamic Routing Library
+*************************************************************/
+
+/* Name WH_DymRoute_precompiled_route
+ * Enrute a message
+ * Return the number of msgs sent
+ */
+uint8_t (*WH_DymRoute_precompiled_route)(const MessageInfo *const mi, DestinationWorms *const cns) = 0;
+
+/* Name WH_send
+ * TODO
+ * Params:
+ * Return 0 if OK, something else if error.
+ */
+uint8_t WH_send(const void *const data, const MessageInfo *const mi)
+{
+	return !WH_DymRoute_route(data, mi, &WH_myDstWorms);
+}
+/* Name WH_DymRoute_route
+* Enrute a message
+* Return the number of msgs sent
+*/
+uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi, DestinationWorms *wms)
+{
+	if (WH_DymRoute_precompiled_route == 0) {
+		return 0;
+
+	} else {
+		return WH_DymRoute_precompiled_route(mi, &WH_myDstWorms);
+	}
+}
+
+/* Name WH_DymRoute_init
+ * Starts the Dynamic Routing Library, and setups connection configuration.
+ * Also makes connections
+ * Return 0 if OK, something else if error.
+ */
 uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *cns)
 {
 
 	return 0;
 }
 
+/* Name WH_DymRoute_send
+ * Sends a message to the network
+ * Return 0 if OK, something else if error.
+  */
+uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const Connection *const cn)
+{
+	return -1;
+}
 
+
+/************************************************************/

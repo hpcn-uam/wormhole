@@ -17,6 +17,7 @@ fi
 
 #Limpiamos el repositorio
 #make clean
+gtags
 
 flag=0
 
@@ -33,7 +34,7 @@ do
 	((flag += TMP))
 done
 
-if [ $flag -eq 1 ]; then
+if [ $flag -ge 1 ]; then
 	echo "Some code has been formated, try your commit again..."
 fi
 
