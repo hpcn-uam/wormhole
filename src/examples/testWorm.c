@@ -19,12 +19,12 @@ int main(int argc, char **argv)
 	int st = WH_init();
 	assert(st == 0);
 
-	assert(WH_myId == 1);
+	//assert(WH_myId == 1);
 
 	assert(WH_einsConn.Port == 5000);
 	assert(WH_einsConn.IP == inet_addr("127.0.0.1"));
 
-	assert(WH_mySetup.id == 1);
+	//assert(WH_mySetup.id == 1);
 	assert(WH_mySetup.listenPort == 10000);
 	assert(WH_mySetup.core == -1);
 	assert(WH_mySetup.IP == inet_addr("127.0.0.1"));

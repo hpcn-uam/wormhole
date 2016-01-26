@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <stdexcept>
 #include <unistd.h>
+#include <cstdlib>
 
 Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription)
 {
@@ -56,7 +57,9 @@ void Einstein::readConfig(const string configFileName)
 	char connectionDescription[4096];
 
 	while (!feof(configFile)) {
-		fgets(configLine, 4096, configFile);
+		if (fgets(configLine, 4096, configFile) == 0) {
+			break;
+		}
 		int st = sscanf(configLine, "%hu %s %s %hd", &id, programName, host, &core);
 
 		if (st == EOF) {
@@ -67,26 +70,34 @@ void Einstein::readConfig(const string configFileName)
 			throw std::runtime_error("Bad config file");
 		}
 
-		fgets(connectionDescription, 4096, configFile);
+		if (fgets(connectionDescription, 4096, configFile) == 0) {
+			throw std::runtime_error("Missing worm routing");
+		}
 		connectionDescription[strlen(connectionDescription) - 1] = 0;
 
 		if (connectionDescription[0] != '\t') {
-			throw std::runtime_error("Bad config file");
+			throw std::runtime_error("Missing worm routing");
 		}
+		
+		cerr << "Description: " << connectionDescription + 1 << "|\n";
 
 		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, listenPort, core, ip, string(connectionDescription + 1)));
 
 		this->ec.createWorm(std::move(wc), ip);
 
 		// TODO: Copiar ejecutable al remoto y ejecutar esto
-		fprintf(stderr, "ssh -T einstein@%s 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
+		char executable[4096];
+		sprintf(executable, "ssh -T %s 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
 				"export WORM_ID=%hu;"
 				"export EINSTEIN_PORT=%hu;"
 				"export EINSTEIN_IP=%s;"
-				"sh %s/run.sh > /dev/null 2>&1'",
+				"nohup sh %s/run.sh > /dev/null 2>&1 &'",
 				host, programName, id, this->ec.listenPort,
 				this->ec.listenIpStr.c_str(), programName);
+		system(executable);
 	}
+
+	cerr << "Launched all worms\n";
 
 	fclose(configFile);
 }
@@ -192,8 +203,11 @@ void EinsConn::run()
 		if (tcp_message_send(currentWormSocket, connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
 			throw std::runtime_error("Error sending message");
 		}
+		cerr << "Completed setup of worm " << wormId << '\n';
 	}
-
+	
+	cerr << "Completed setup of all worms\n";
+	
 	for (;;) {
 		pollWorms();
 	}
@@ -250,7 +264,9 @@ void EinsConn::pollWorms()
 				enum ctrlMsgType ctrlMsg;
 
 				if (tcp_message_recv(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&ctrlMsg), sizeof(enum ctrlMsgType)) != 0) {
-					throw std::runtime_error("Error receiving message from worm");
+					// Closed socket
+					this->fdinfo[i].fd = -1;
+					continue;
 				}
 
 				// Check message and do corresponding action
@@ -260,7 +276,9 @@ void EinsConn::pollWorms()
 					uint16_t wormId;
 
 					if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t)) != 0) {
-						throw std::runtime_error("Error receiving message");
+						// Closed socket
+						this->fdinfo[i].fd = -1;
+						continue;
 					}
 
 					// Send worm configuration message
@@ -270,11 +288,15 @@ void EinsConn::pollWorms()
 						enum ctrlMsgType okMsg = CTRL_OK;
 
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&okMsg), sizeof(enum ctrlMsgType)) != 0) {
-							throw std::runtime_error("Error receiving message from worm");
+							// Closed socket
+							this->fdinfo[i].fd = -1;
+							continue;
 						}
 
 						if (tcp_message_send(this->fdinfo[i].fd, wormSetup, sizeof(WormSetup)) != 0) {
-							throw std::runtime_error("Error sending message");
+							// Closed socket
+							this->fdinfo[i].fd = -1;
+							continue;
 						}
 
 					} catch (std::out_of_range &e) {
@@ -282,7 +304,9 @@ void EinsConn::pollWorms()
 						enum ctrlMsgType errorMsg = CTRL_ERROR;
 
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
-							throw std::runtime_error("Error receiving message from worm");
+							// Closed socket
+							this->fdinfo[i].fd = -1;
+							continue;
 						}
 					}
 
@@ -302,7 +326,9 @@ void EinsConn::pollWorms()
 					enum ctrlMsgType errorMsg = CTRL_ERROR;
 
 					if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
-						throw std::runtime_error("Error receiving message from worm");
+						// Closed socket
+						this->fdinfo[i].fd = -1;
+						continue;
 					}
 				}
 
