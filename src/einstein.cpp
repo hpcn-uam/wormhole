@@ -40,7 +40,7 @@ void Einstein::readConfig(const string configFileName)
 
 	// TODO: Leer realmente el fichero
 	uint16_t id = 1;
-	uint16_t listenPort = 10000;
+	uint16_t baseListenPort = 10000;
 	int16_t core = 0;
 	string ip = "127.0.0.1";
 	//string connectionDescription = "(LISP connection description)";
@@ -81,7 +81,7 @@ void Einstein::readConfig(const string configFileName)
 		
 		cerr << "Description: " << connectionDescription + 1 << "|\n";
 
-		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, listenPort, core, ip, string(connectionDescription + 1)));
+		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1)));
 
 		this->ec.createWorm(std::move(wc), ip);
 
