@@ -20,7 +20,6 @@ extern "C" {
 
 	typedef struct {
 		uint16_t port;
-		uint16_t id;
 		uint32_t ip; //TODO fix para ipv6
 		int socket;
 		ConnectionDataType type;
@@ -33,7 +32,7 @@ extern "C" {
 		size_t numberOfTypes;
 		/*TODO: fix para multiples conexiones con un tipo por conexion*/
 		enum DataType *supportedTypes;
-		Connection *conns;
+		Connection conns;
 	} DestinationWorm;
 
 	typedef struct {
@@ -61,15 +60,25 @@ extern "C" {
 	uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId);
 
 	/* Name WH_addWormConnection
-	 *
 	 * Return the created connection
 	 */
 	Connection *WH_addWormConnection(DestinationWorm *cns);
+
+	/* Name WH_addWorm
+	 * Return the created connection
+	 */
+	DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId);
 
 	/* Name WH_findWorm
 	 * Return the worm mached (if no exists)
 	 */
 	DestinationWorm *WH_findWorm(DestinationWorms *wms, const uint16_t wormId);
+
+	/* Name WH_findWormIndex
+	 * Return the worm index in DestinationWorms
+	 */
+	size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId);
+
 
 	/*
 	 Dynamic Routing Library

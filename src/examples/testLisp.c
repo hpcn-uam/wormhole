@@ -25,6 +25,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Éxito setup\n");
 
 	st = WH_DymRoute_init(WH_mySetup.connectionDescription, &WH_myDstWorms);
+	printf("> %d\n", st);
 	assert(st == 0);
 	fprintf(stderr, "Éxito Configurando enrutado\n");
 

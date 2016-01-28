@@ -16,7 +16,7 @@ Worm2EinsConn WH_einsConn;
 uint16_t WH_myId;
 WormSetup WH_mySetup;
 
-DestinationWorms WH_myDstWorms;
+DestinationWorms WH_myDstWorms = {0};
 /*
 *===============
 */
@@ -31,7 +31,6 @@ uint8_t WH_init(void)
 	WH_einsConn.IP = inet_addr(getenv("EINSTEIN_IP"));
 
 	WH_einsConn.socket = tcp_connect_to(getenv("EINSTEIN_IP"), WH_einsConn.Port);
-
 
 	if (WH_einsConn.socket == -1) {
 		return 1;
@@ -101,15 +100,20 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 /***************************************/
 extern uint8_t _binary_obj_structures_h_start;
 extern uint8_t _binary_obj_structures_h_end;
+
 const char *_WH_DymRoute_CC_includes = "\n"
 									   "#include<stdint.h>\n"
 									   "#include<stdio.h>\n";
 const char *_WH_DymRoute_CC_FuncStart = "\n\n"
-										"uint8_t WH_DymRoute_precompiled_route (const MessageInfo *const mi, DestinationWorms *const cns)\n{\n"
-										"int ret = 1;\n";
+										"uint8_t WH_DymRoute_precompiled_route (const void *const data, const MessageInfo *const mi, DestinationWorms *const cns)\n{\n"
+										"int ret = 0;\n"
+										"DestinationWorm *dw;\n";
 const char *_WH_DymRoute_CC_FuncEnd = "\n"
 									  "return ret;"
 									  "}\n";
+const char *_WH_DymRoute_CC_send =    "ret += WH_DymRoute_send(data, mi, &(dw->conns));\n";
+const char *_WH_DymRoute_CC_setDw =   "dw = cns->worms+%d;\n";
+
 void *_WH_DymRoute_libHandle;
 /***************************************/
 
@@ -117,7 +121,7 @@ void *_WH_DymRoute_libHandle;
  * Enrute a message
  * Return the number of msgs sent
  */
-uint8_t (*WH_DymRoute_precompiled_route)(const MessageInfo *const mi, DestinationWorms *const cns) = 0;
+uint8_t (*WH_DymRoute_precompiled_route)(const void *const data, const MessageInfo *const mi, DestinationWorms *const cns) = 0;
 
 /* Name WH_send
  * TODO
@@ -138,7 +142,7 @@ uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi, D
 		return 0;
 
 	} else {
-		return WH_DymRoute_precompiled_route(mi, &WH_myDstWorms);
+		return WH_DymRoute_precompiled_route(data, mi, &WH_myDstWorms);
 	}
 }
 
@@ -191,14 +195,14 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 		if (!_WH_DymRoute_libHandle) {
 			free(tmpString);
-			return -5;
+			return 5;
 		}
 
 		WH_DymRoute_precompiled_route = dlsym(_WH_DymRoute_libHandle, "WH_DymRoute_precompiled_route");
 
 		if ((errorString = dlerror()) != NULL)  {
 			fputs(errorString, stderr);
-			ret = -6;
+			ret = 6;
 		}
 	}
 
@@ -237,14 +241,18 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 		} else if (parentesys == 0 && (routeDescription[i] >= '0' && routeDescription[i] <= '9')) {
 			nextNode = atoi((char *)(routeDescription + i));
 
-			while (atoi((char *)(routeDescription + i)) != 0) {
+			while (routeDescription[i] >= '0' && routeDescription[i] <= '9') {
 				i++;
 			}
 
-			DestinationWorm *worm = WH_findWorm(wms, nextNode);
+			DestinationWorm *worm = WH_addWorm(wms, nextNode);
 
-			if (worm == NULL) {
-				fputs("TODO\n", stderr);
+			if (!worm) {
+				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
+				fprintf(f, _WH_DymRoute_CC_send);
+
+			} else {
+				return 77;    //some random error code
 			}
 
 			i--;
@@ -263,7 +271,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
  */
 uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	return 0;
+	return -1;
 }
 
 
@@ -279,6 +287,59 @@ DestinationWorm *WH_findWorm(DestinationWorms *wms, const uint16_t wormId)
 	}
 
 	return NULL;
+}
+
+
+/* Name WH_findWormIndex
+	* Return the worm index in DestinationWorms
+	*/
+size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId)
+{
+	for (size_t i = 0; i < wms->numberOfWorms; i++) {
+		if (wms->worms[i].id == wormId) {
+			return i;
+		}
+	}
+
+	return 0;
+}
+
+
+/* Name WH_addWorm
+	* Return the created connection
+	*/
+DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId)
+{
+	DestinationWorm *worm = NULL;
+	worm = WH_findWorm(wms, wormId);
+
+	if (!worm) {
+		return worm;
+	}
+
+	wms->numberOfWorms++;
+
+	if (wms->numberOfWorms == 1) {
+		wms->worms = malloc(sizeof(DestinationWorm));
+
+	} else {
+		wms->worms = realloc(wms->worms, sizeof(DestinationWorm) * wms->numberOfWorms);
+	}
+
+	worm = calloc(sizeof(DestinationWorm), 1); //TODO REVISAR
+	worm->id = wormId;
+
+	WormSetup wSetup;
+	WH_getWormData(&wSetup, wormId);
+
+	worm->conns.port = wSetup.listenPort;
+	worm->conns.ip = wSetup.IP;
+
+	//TODO: Obtener información de los tipos disponibles.
+
+
+	wms->worms[wms->numberOfWorms - 1] = *worm;
+	return wms->worms + (wms->numberOfWorms - 1);
 }
 
 /************************************************************/
