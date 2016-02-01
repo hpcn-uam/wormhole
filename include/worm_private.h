@@ -111,6 +111,12 @@ extern "C" {
 	 */
 	uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
+	/* Name WH_DymRoute_route_createFuncCat
+	 * Adds a "c code" for category splitting.
+	 * Return 0 if OK, something else if error.
+	 */
+	uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
+
 	/* Name WH_DymRoute_route
 	 * Enrute a message
 	 * Return the number of msgs sent
