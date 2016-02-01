@@ -317,6 +317,8 @@ void EinsConn::pollWorms()
 						const void *wormSetup = static_cast<const void *>(& (this->connections.at(wormId)->ws));
 						enum ctrlMsgType okMsg = CTRL_OK;
 
+						cerr << "Received request for information of worm " << wormId << endl;
+
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&okMsg), sizeof(enum ctrlMsgType)) != 0) {
 							// Closed socket
 							this->wormSockets[i] = -1;
@@ -332,6 +334,7 @@ void EinsConn::pollWorms()
 					} catch (std::out_of_range &e) {
 						// Send error
 						enum ctrlMsgType errorMsg = CTRL_ERROR;
+						cerr << "Worm " << wormId << " does not exist" << endl;
 
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
 							// Closed socket

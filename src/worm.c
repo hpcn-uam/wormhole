@@ -21,9 +21,10 @@ DestinationWorms WH_myDstWorms = {0};
 *===============
 */
 
-
 uint8_t WH_init(void)
 {
+	WH_myDstWorms.numberOfWorms = 0;
+	WH_myDstWorms.worms = malloc(sizeof(DestinationWorm));
 
 	WH_myId = atoi(getenv("WORM_ID"));
 
@@ -96,7 +97,7 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 /************************************************************
 	Dynamic Routing Library
 *************************************************************/
-
+#define _DYM_ROUTE_DEBUG_
 /***************************************/
 extern uint8_t _binary_obj_structures_h_start;
 extern uint8_t _binary_obj_structures_h_end;
@@ -184,10 +185,6 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 		ret = system(tmpString);
 	}
 
-	if (!ret) {
-		ret = WH_DymRoute_route_create(f, routeDescription, wms);
-	}
-
 	/*Link the .SO*/
 	if (!ret) {
 		sprintf(tmpString, "/tmp/%d.so", myPid);
@@ -216,6 +213,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
   */
 uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const Connection *const cn)
 {
+	fprintf(stderr, "Sending %d bytes to %d\n", mi->size, cn->ip);
 	return -1;
 }
 
@@ -247,9 +245,13 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 
 			DestinationWorm *worm = WH_addWorm(wms, nextNode);
 
-			if (!worm) {
+			if (worm) {
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
 				fprintf(f, _WH_DymRoute_CC_send);
+
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Sending to %d\n", nextNode);
+#endif
 
 			} else {
 				return 77;    //some random error code
@@ -271,7 +273,27 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
  */
 uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	return -1;
+	uint16_t i = 1;
+
+	if (routeDescription[0] != '(') {
+#ifdef _DYM_ROUTE_DEBUG_
+		fprintf(stderr, "ROUTEDEBUG: Route CreateFunc, unexpected call");
+#endif
+		return WH_DymRoute_route_create(f, routeDescription + i, wms);
+	}
+
+	switch (routeDescription[i]) {
+	case 'd':
+	case 'D':
+		// DUP Function
+		return WH_DymRoute_route_create(f, routeDescription + i, wms);
+
+	default:
+#ifdef _DYM_ROUTE_DEBUG_
+		fprintf(stderr, "ROUTEDEBUG: Unexpected routing function.");
+#endif
+		return -1;
+	}
 }
 
 
@@ -313,24 +335,27 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId)
 	DestinationWorm *worm = NULL;
 	worm = WH_findWorm(wms, wormId);
 
-	if (!worm) {
+	if (worm) {
+#ifdef _DYM_ROUTE_DEBUG_
+		fprintf(stderr, "ROUTEaddworm: Worm %d found in list\n", wormId);
+#endif
 		return worm;
 	}
 
 	wms->numberOfWorms++;
-
-	if (wms->numberOfWorms == 1) {
-		wms->worms = malloc(sizeof(DestinationWorm));
-
-	} else {
-		wms->worms = realloc(wms->worms, sizeof(DestinationWorm) * wms->numberOfWorms);
-	}
+	wms->worms = realloc(wms->worms, sizeof(DestinationWorm) * wms->numberOfWorms);
 
 	worm = calloc(sizeof(DestinationWorm), 1); //TODO REVISAR
 	worm->id = wormId;
 
 	WormSetup wSetup;
-	WH_getWormData(&wSetup, wormId);
+
+	if (WH_getWormData(&wSetup, wormId)) {
+#ifdef _DYM_ROUTE_DEBUG_
+		fprintf(stderr, "ROUTEaddworm: Worm %d no data retrived\n", wormId);
+#endif
+		return NULL;
+	}
 
 	worm->conns.port = wSetup.listenPort;
 	worm->conns.ip = wSetup.IP;
