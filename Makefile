@@ -1,9 +1,9 @@
 export CC=gcc
 export CXX=g++
-export FLAGS=-I include/ -Wall -Werror -g
-export CFLAGS=$(FLAGS) -std=c99 -fPIC
-export CXXFLAGS=$(FLAGS) -std=c++11
-export LDFLAGS=-fPIC -ldl
+export FLAGS=-I include/ -Wall -Werror -g -lpthread
+export CFLAGS=$(FLAGS) -std=gnu99 -fPIC
+export CXXFLAGS=$(FLAGS) -std=gnu++11
+export LDFLAGS=-fPIC -ldl -lpthread
 
 INCLUDES := $(wildcard include/*.h include/*.hpp)
 
@@ -12,7 +12,7 @@ all: Dependencies einstein libs Examples
 
 einstein: obj/einstein.o
 
-Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz
+Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testSendAsync bin/testRecvAsync
 
 bin/testWorm.tgz: bin/testWorm lib/libworm.so src/run.sh
 	mkdir -p bin/tmp/testWorm/lib
@@ -40,6 +40,13 @@ bin/testWorm: src/examples/testWorm.c obj/common.o
 
 bin/testLisp: src/examples/testLisp.c obj/common.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
+
+bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
+	$(CC) $(CFLAGS) -o $@ $^
+
+bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
+	$(CC) $(CFLAGS) -o $@ $^
+
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^
