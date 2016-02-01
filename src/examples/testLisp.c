@@ -13,7 +13,7 @@ extern uint16_t WH_myId;
 extern WormSetup WH_mySetup;
 extern DestinationWorms WH_myDstWorms;
 
-#define TESTLIST "(DUP 1 2 3 3 2 2 1)"
+#define TESTLIST "(DUP 1 2 3 (RR 1 2 (DUP 3 3)))"
 #define TESTDATA "1234567890"
 
 int main(int argc, char **argv)

@@ -112,8 +112,18 @@ const char *_WH_DymRoute_CC_FuncStart = "\n\n"
 const char *_WH_DymRoute_CC_FuncEnd = "\n"
 									  "return ret;"
 									  "}\n";
-const char *_WH_DymRoute_CC_send =    "ret += WH_DymRoute_send(data, mi, &(dw->conns));\n";
+const char *_WH_DymRoute_CC_send =    "ret += WH_DymRoute_send(data, mi, dw);\n";
 const char *_WH_DymRoute_CC_setDw =   "dw = cns->worms+%d;\n";
+
+//RR special
+const char *_WH_DymRoute_CC_RRswitch   =    "static uint16_t rr%d=0;\n"
+		"switch(rr%d){\n";
+const char *_WH_DymRoute_CC_RRcase     =    "case %d :\n";
+const char *_WH_DymRoute_CC_RRbreak    =    "break;\n";
+const char *_WH_DymRoute_CC_RRend      =    "default:\n"
+		"return -1;"
+		"}\n"
+		"rr%d=(rr%d+1) %% %d;\n";
 
 void *_WH_DymRoute_libHandle;
 /***************************************/
@@ -211,9 +221,10 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
  * Sends a message to the network
  * Return 0 if OK, something else if error.
   */
-uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const Connection *const cn)
+uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const DestinationWorm *const dw)
 {
-	fprintf(stderr, "Sending %d bytes to %d\n", mi->size, cn->ip);
+	//TODO search info
+	//fprintf(stderr, "Sending %d bytes to %d\n", mi->size, cn->ip);
 	return -1;
 }
 
@@ -234,7 +245,11 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 
 		} else if (routeDescription[i] == '(') {
 			parentesys++;
-			ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+
+			if (parentesys == 1) {
+				fprintf(stderr, "PROCESSING: |%s|\n", routeDescription + i);
+				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+			}
 
 		} else if (parentesys == 0 && (routeDescription[i] >= '0' && routeDescription[i] <= '9')) {
 			nextNode = atoi((char *)(routeDescription + i));
@@ -288,12 +303,94 @@ uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescript
 		// DUP Function
 		return WH_DymRoute_route_create(f, routeDescription + i, wms);
 
+	case 'r':
+	case 'R':
+		// Round Robin Function
+		return WH_DymRoute_route_createFuncRR(f, routeDescription + i, wms);
+
 	default:
 #ifdef _DYM_ROUTE_DEBUG_
 		fprintf(stderr, "ROUTEDEBUG: Unexpected routing function.");
 #endif
 		return -1;
 	}
+}
+
+/* Name WH_DymRoute_route_createFuncRR
+ * Adds a "c code" for round robin.
+ * Return 0 if OK, something else if error.
+ * Used Constants:
+	_WH_DymRoute_CC_RRswitch %rrid %rrid
+	_WH_DymRoute_CC_RRcase %idcase
+	_WH_DymRoute_CC_RRbreak
+	_WH_DymRoute_CC_RRend %rrid %rrid %ntotal
+ */
+uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+{
+	uint8_t ret = 0;
+	uint16_t parentesys = 0;
+	uint16_t i = 0;
+	uint16_t nextNode = 0;
+
+	static uint16_t rrCallId = 0;
+	uint16_t myrrCallId = rrCallId++;
+	uint16_t rrCaseId = 0;
+
+	fprintf(f, _WH_DymRoute_CC_RRswitch, myrrCallId, myrrCallId);
+
+	while (routeDescription[i] != '\0') {
+		if (routeDescription[i] == ')') {
+			parentesys--;
+
+		} else if (routeDescription[i] == '(') {
+
+			if (parentesys == 0) {
+				fprintf(f, _WH_DymRoute_CC_RRcase, rrCaseId);
+
+				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+
+				rrCaseId++;
+				fprintf(f, _WH_DymRoute_CC_RRbreak);
+			}
+
+			parentesys++;
+
+		} else if (parentesys == 0 && (routeDescription[i] >= '0' && routeDescription[i] <= '9')) {
+			nextNode = atoi((char *)(routeDescription + i));
+
+			while (routeDescription[i] >= '0' && routeDescription[i] <= '9') {
+				i++;
+			}
+
+			DestinationWorm *worm = WH_addWorm(wms, nextNode);
+
+			if (worm) {
+
+				fprintf(f, _WH_DymRoute_CC_RRcase, rrCaseId);
+				//RR
+				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
+				fprintf(f, _WH_DymRoute_CC_send);
+
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: %d in RR list\n", nextNode);
+#endif
+
+				rrCaseId++;
+				fprintf(f, _WH_DymRoute_CC_RRbreak);
+
+			} else {
+				return 77;    //some random error code
+			}
+
+			i--;
+		}
+
+		i++;
+	}
+
+	fprintf(f, _WH_DymRoute_CC_RRend, myrrCallId, myrrCallId, rrCaseId);
+
+	return ret;
 }
 
 
@@ -336,9 +433,6 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId)
 	worm = WH_findWorm(wms, wormId);
 
 	if (worm) {
-#ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEaddworm: Worm %d found in list\n", wormId);
-#endif
 		return worm;
 	}
 

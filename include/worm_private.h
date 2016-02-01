@@ -105,6 +105,12 @@ extern "C" {
 	 */
 	uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
+	/* Name WH_DymRoute_route_createFuncRR
+	 * Adds a "c code" for round robin.
+	 * Return 0 if OK, something else if error.
+	 */
+	uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
+
 	/* Name WH_DymRoute_route
 	 * Enrute a message
 	 * Return the number of msgs sent
@@ -115,7 +121,7 @@ extern "C" {
 	 * Sends a message to the network
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const Connection *const cn);
+	uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const DestinationWorm *const cn);
 
 
 	/*
