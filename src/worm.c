@@ -40,7 +40,8 @@ uint8_t WH_init(void)
 	// Fill hello message with worm id
 	size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
 	uint8_t hellomsg[hellomsgSize];
-	* ((enum ctrlMsgType *) &hellomsg) = HELLOEINSTEIN;
+	enum ctrlMsgType *msgType = (enum ctrlMsgType *)hellomsg;
+	*msgType = HELLOEINSTEIN;
 	* ((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))) = htons(WH_myId);
 
 	// Send hello message
