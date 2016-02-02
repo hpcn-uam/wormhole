@@ -117,14 +117,23 @@ const char *_WH_DymRoute_CC_send =    "ret += WH_DymRoute_send(data, mi, dw);\n"
 const char *_WH_DymRoute_CC_setDw =   "dw = cns->worms+%d;\n";
 
 //RR special
-const char *_WH_DymRoute_CC_RRswitch   =    "static uint16_t rr%d=0;\n"
+//const char *_WH_DymRoute_CC_RRstatic    =    "static uint16_t rr%d=0;\n";
+const char *_WH_DymRoute_CC_RRswitch    =    "static uint16_t rr%d=0;\n"
 		"switch(rr%d){\n";
-const char *_WH_DymRoute_CC_RRcase     =    "case %d :\n";
-const char *_WH_DymRoute_CC_RRbreak    =    "break;\n";
-const char *_WH_DymRoute_CC_RRend      =    "default:\n"
-		"return -1;"
+const char *_WH_DymRoute_CC_RRcase      =    "case %d :\n{ ";
+const char *_WH_DymRoute_CC_RRbreak     =    "break;\n} ";
+const char *_WH_DymRoute_CC_RRend       =    "default:\n"
+		"ret++;"
 		"}\n"
 		"rr%d=(rr%d+1) %% %d;\n";
+
+//Cat special
+const char *_WH_DymRoute_CC_Catswitch   =    "switch(mi->category){\n";
+const char *_WH_DymRoute_CC_Catcase     =    "case %d :\n{ ";
+const char *_WH_DymRoute_CC_Catbreak    =    "break;\n} ";
+const char *_WH_DymRoute_CC_Catend      =    "default:\n"
+		"ret++;"
+		"}\n";
 
 void *_WH_DymRoute_libHandle;
 /***************************************/
@@ -142,7 +151,7 @@ uint8_t (*WH_DymRoute_precompiled_route)(const void *const data, const MessageIn
  */
 uint8_t WH_send(const void *const data, const MessageInfo *const mi)
 {
-	return !WH_DymRoute_route(data, mi, &WH_myDstWorms);
+	return WH_DymRoute_route(data, mi, &WH_myDstWorms);
 }
 /* Name WH_DymRoute_route
 * Enrute a message
@@ -226,7 +235,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 {
 	//TODO search info
 	//fprintf(stderr, "Sending %d bytes to %d\n", mi->size, cn->ip);
-	return -1;
+	return 0;
 }
 
 /* Name WH_DymRoute_route_create
@@ -236,7 +245,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
 	uint8_t ret = 0;
-	uint16_t parentesys = 0;
+	int16_t parentesys = 0;
 	uint16_t i = 0;
 	uint16_t nextNode = 0;
 
@@ -244,11 +253,17 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 		if (routeDescription[i] == ')') {
 			parentesys--;
 
+			if (parentesys < 0) {
+				break;
+			}
+
 		} else if (routeDescription[i] == '(') {
 			parentesys++;
 
 			if (parentesys == 1) {
-				fprintf(stderr, "PROCESSING: |%s|\n", routeDescription + i);
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
+#endif
 				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
 			}
 
@@ -302,12 +317,20 @@ uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescript
 	case 'd':
 	case 'D':
 		// DUP Function
+		fprintf(stderr, "ROUTEDEBUG: Calling DUP...\n");
 		return WH_DymRoute_route_create(f, routeDescription + i, wms);
 
 	case 'r':
 	case 'R':
 		// Round Robin Function
+		fprintf(stderr, "ROUTEDEBUG: Calling RR...\n");
 		return WH_DymRoute_route_createFuncRR(f, routeDescription + i, wms);
+
+	case 'c':
+	case 'C':
+		// Category Function
+		fprintf(stderr, "ROUTEDEBUG: Calling CAT...\n");
+		return WH_DymRoute_route_createFuncCat(f, routeDescription + i, wms);
 
 	default:
 #ifdef _DYM_ROUTE_DEBUG_
@@ -329,7 +352,7 @@ uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescript
 uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
 	uint8_t ret = 0;
-	uint16_t parentesys = 0;
+	int16_t parentesys = 0;
 	uint16_t i = 0;
 	uint16_t nextNode = 0;
 
@@ -337,17 +360,26 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 	uint16_t myrrCallId = rrCallId++;
 	uint16_t rrCaseId = 0;
 
+//_WH_DymRoute_CC_RRstatic
+
 	fprintf(f, _WH_DymRoute_CC_RRswitch, myrrCallId, myrrCallId);
 
 	while (routeDescription[i] != '\0') {
 		if (routeDescription[i] == ')') {
 			parentesys--;
 
+			if (parentesys < 0) {
+				break;
+			}
+
 		} else if (routeDescription[i] == '(') {
 
 			if (parentesys == 0) {
 				fprintf(f, _WH_DymRoute_CC_RRcase, rrCaseId);
 
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
+#endif
 				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
 
 				rrCaseId++;
@@ -391,6 +423,65 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 
 	fprintf(f, _WH_DymRoute_CC_RRend, myrrCallId, myrrCallId, rrCaseId);
 
+	return ret;
+}
+
+/* Name WH_DymRoute_route_createFuncCat
+ * Adds a "c code" for round robin.
+ * Return 0 if OK, something else if error.
+ * Used Constants:
+		_WH_DymRoute_CC_Catswitch
+		_WH_DymRoute_CC_Catcase     %caseId
+		_WH_DymRoute_CC_Catbreak
+		_WH_DymRoute_CC_Catend
+ */
+uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+{
+	uint8_t ret = 0;
+	int16_t parentesys = 0;
+	uint16_t i = 0;
+
+	uint16_t myCat = 0;
+
+	fprintf(f, _WH_DymRoute_CC_Catswitch);
+
+	while (routeDescription[i] != '\0') {
+		if (routeDescription[i] == ')') {
+			parentesys--;
+
+			if (parentesys < 0) {
+				break;
+			}
+
+		} else if (routeDescription[i] == '(') {
+
+			if (parentesys == 0) {
+				if (!sscanf((char *)routeDescription + i, "%*[^0-9]%hu%*[^0-9].%*[^0-9]", &myCat)) {
+					fprintf(stderr, "ERROR: La definición de categoria es incorrecta\n");
+					return -1;
+				}
+
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Category switching: %d\n", myCat);
+#endif
+				fprintf(f, _WH_DymRoute_CC_Catcase, myCat);
+
+			} else if (parentesys == 1) {
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
+#endif
+				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+
+				fprintf(f, _WH_DymRoute_CC_Catbreak);
+			}
+
+			parentesys++;
+		}
+
+		i++;
+	}
+
+	fprintf(f, _WH_DymRoute_CC_Catend);
 	return ret;
 }
 
