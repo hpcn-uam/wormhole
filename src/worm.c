@@ -121,7 +121,7 @@ uint8_t WH_init(void)
 	return 0;
 }
 
-static void *WH_thread(void *arg)
+void *WH_thread(void *arg)
 {
 	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
 

@@ -82,7 +82,7 @@ extern "C" {
 	/* Name WH_thread
 	 * A worm Thread listening for info/petitions.
 	 */
-	static void *WH_thread(void *arg);
+	void *WH_thread(void *arg);
 
 	/*
 	 Dynamic Routing Library
