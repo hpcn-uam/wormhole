@@ -42,7 +42,7 @@ bin/testLisp: src/examples/testLisp.c obj/common.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 
 bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $<
 
 bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
 	$(CC) $(CFLAGS) -o $@ $^

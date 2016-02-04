@@ -35,7 +35,7 @@ extern "C" {
 		int sockfd;
 		size_t buf_len;
 		size_t write_pos[2];
-		pthread_spinlock_t to_access[2];
+		int to_access[2];
 		uint8_t *buff[2];
 		
 		pthread_spinlock_t lock;
@@ -64,7 +64,7 @@ extern "C" {
 	 * Sends a full message to a socket
 	 * Return 0 if OK, something else if error.
 	 */
-	int tcp_message_send(int socket, const void *message, size_t len);
+	inline int tcp_message_send(int socket, const void *message, size_t len);
 
 	/* Name tcp_message_recv
 	 * Receives a full message from a socket
@@ -91,7 +91,7 @@ extern "C" {
 	 * Sends a full message to a socket
 	 * Return 0 if OK, something else if error.
 	 */
-	int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len);
+	inline int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len);
 
 	/* Name tcp_message_recv_async
 	 * Receives a full message from a socket

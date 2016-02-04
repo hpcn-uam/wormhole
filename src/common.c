@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
+
+size_t current_send_buf = 0;
 
 int tcp_connect_to(char *ip, uint16_t port)
 {
@@ -80,7 +83,7 @@ int tcp_accept(int listen_socket)
 	return newsockfd;
 }
 
-int tcp_message_send(int socket, const void *message, size_t len)
+inline int tcp_message_send(int socket, const void *message, size_t len)
 {
 	ssize_t sent = 0;
 	ssize_t sent_now;
@@ -125,60 +128,63 @@ void *send_fun(void *args) {
 	size_t current_buf = 0;
 	
 	for (;; current_buf = (current_buf + 1) % 2) {
-		//int writing = 0;
+		int writing = 0;
 		
 		// Wait until the buffer can be sent
-		/*do {
-			//usleep(13);
-			//pthread_spin_lock(&(sock->lock));
+		do {
+			struct timespec ts;
+			ts.tv_sec = 0;
+			ts.tv_nsec = 100;
+			nanosleep(&ts, 0);
+			pthread_spin_lock(&(sock->lock));
 			if (sock->to_access[current_buf]) {
 				writing = 1;
 			}
-			//pthread_spin_unlock(&(sock->lock));
-		} while (!writing);*/
-		//while(!(sock->to_access[current_buf]));
-		pthread_spin_lock(&(sock->to_access[current_buf]));
+			pthread_spin_unlock(&(sock->lock));
+		} while (!writing);
 		
 		tcp_message_send(sock->sockfd, sock->buff[current_buf], sock->write_pos[current_buf]);
 		
-		//pthread_spin_lock(&(sock->lock));
+		pthread_spin_lock(&(sock->lock));
 		sock->to_access[current_buf] = 0;
-		//pthread_spin_unlock(&(sock->lock));
+		pthread_spin_unlock(&(sock->lock));
 
 	}
 }
 
-int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len) {
-	static size_t current_buf = 0;
+inline int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len) {
 	void *msgptr = (void *)message;
 	
-	while (unlikely(sock->buf_len - sock->write_pos[current_buf] < len)) {
-		memcpy(sock->buff[current_buf], msgptr, sock->buf_len - sock->write_pos[current_buf]);
-		msgptr += sock->buf_len - sock->write_pos[current_buf];
-		len -= sock->buf_len - sock->write_pos[current_buf];
+	while (unlikely(sock->buf_len - sock->write_pos[current_send_buf] < len)) {
+		memcpy(sock->buff[current_send_buf], msgptr, sock->buf_len - sock->write_pos[current_send_buf]);
+		msgptr += sock->buf_len - sock->write_pos[current_send_buf];
+		len -= sock->buf_len - sock->write_pos[current_send_buf];
 		
-		sock->write_pos[current_buf] = sock->buf_len;
+		sock->write_pos[current_send_buf] = sock->buf_len;
 		
-		//pthread_spin_lock(&(sock->lock));
-		sock->to_access[current_buf] = 1;
-		current_buf = (current_buf + 1) % 2;
-		//pthread_spin_unlock(&(sock->lock));	
+		pthread_spin_lock(&(sock->lock));
+		sock->to_access[current_send_buf] = 1;
+
+		current_send_buf = (current_send_buf + 1) % 2;
 			
 		// Wait until the buffer has been sent
-		//while (sock->to_access[current_buf]);
-		while(pthread_spin_unlock(&(sock->to_access[current_buf])) != 0);
-		// {
-		//	pthread_spin_unlock(&(sock->lock));	
-		//	//usleep(13);
-		//	pthread_spin_lock(&(sock->lock));
-		//}
-		//pthread_spin_unlock(&(sock->lock));
+		while (sock->to_access[current_send_buf]) {
+			pthread_spin_unlock(&(sock->lock));	
+			struct timespec ts;
+			ts.tv_sec = 0;
+			ts.tv_nsec = 100;
+			nanosleep(&ts, 0);
+			pthread_spin_lock(&(sock->lock));
+		}
+		pthread_spin_unlock(&(sock->lock));
 
-		sock->write_pos[current_buf] = 0;
+
+
+		sock->write_pos[current_send_buf] = 0;
 	}
 	
-	memcpy(sock->buff[current_buf] + sock->write_pos[current_buf], msgptr, len);
-	sock->write_pos[current_buf] += len;
+	memcpy(sock->buff[current_send_buf] + sock->write_pos[current_send_buf], msgptr, len);
+	sock->write_pos[current_send_buf] += len;
 
 	return 0;
 }
@@ -200,7 +206,7 @@ void *recv_fun(void *args) {
 		// Wait until the buffer has been sent
 		while (sock->to_access[current_buf]) {
 			pthread_spin_unlock(&(sock->lock));	
-			usleep(13);
+			//usleep(13);
 			pthread_spin_lock(&(sock->lock));
 		}
 		pthread_spin_unlock(&(sock->lock));
