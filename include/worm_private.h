@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 	enum wormMsgType {
-		HELLO, WORMINFO, SETUPTYPE
+		HELLO, WORMINFO, SETUPWORMCONN
 	};
 
 	typedef struct {

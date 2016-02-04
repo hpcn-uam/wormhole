@@ -180,7 +180,22 @@ void *WH_thread(void *arg)
 					continue;
 				}
 
-				close(socket);
+				close(socket); //cerramos el socket
+				break;
+
+			case SETUPWORMCONN: //Establecemos una conexión completa con otro worm
+
+				WH_myRcvWorms.worms = realloc(WH_myRcvWorms.worms, (WH_myRcvWorms.numberOfWorms + 1) * sizeof(DestinationWorm));
+
+				//Recivimos un destinationWorm
+				if (tcp_message_recv(socket, WH_myRcvWorms.worms + WH_myRcvWorms.numberOfWorms, sizeof(DestinationWorm))) {
+					fputs("Error configurando socket", stderr);
+					continue;
+				}
+
+				WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].conns.socket = socket;
+
+				WH_myRcvWorms.numberOfWorms++;
 				break;
 			}
 
