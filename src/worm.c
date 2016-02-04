@@ -180,6 +180,7 @@ void *WH_thread(void *arg)
 					continue;
 				}
 
+				close(socket);
 				break;
 			}
 
