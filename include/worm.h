@@ -30,8 +30,8 @@ extern "C" {
 	} MessageInfo;
 
 	typedef struct {
+		size_t numInputTypes;
 		ConnectionDataType *inputTypes;
-		ConnectionDataType *outputTypes;
 	} WormConfig;
 
 	/* Name WH_setup_types
