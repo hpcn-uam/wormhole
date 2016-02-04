@@ -31,7 +31,7 @@ extern "C" {
 		uint16_t id;
 		size_t numberOfTypes;
 		/*TODO: fix para multiples conexiones con un tipo por conexion*/
-		enum DataType *supportedTypes;
+		ConnectionDataType *supportedTypes;
 		Connection conns;
 	} DestinationWorm;
 
@@ -79,6 +79,10 @@ extern "C" {
 	 */
 	size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId);
 
+	/* Name WH_thread
+	 * A worm Thread listening for info/petitions.
+	 */
+	static void *WH_thread(void *arg);
 
 	/*
 	 Dynamic Routing Library

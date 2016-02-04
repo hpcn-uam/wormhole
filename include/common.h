@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 	enum ctrlMsgType {
-		HELLOEINSTEIN, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR
+		HELLOEINSTEIN, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR, HALT
 	};
 
 	typedef struct {
@@ -37,7 +37,7 @@ extern "C" {
 		size_t write_pos[2];
 		size_t to_access[2];
 		uint8_t *buff[2];
-		
+
 		pthread_spinlock_t lock;
 		pthread_t thread;
 	} AsyncSocket;

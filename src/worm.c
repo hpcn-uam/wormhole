@@ -17,10 +17,52 @@ uint16_t WH_myId;
 WormSetup WH_mySetup;
 
 DestinationWorms WH_myDstWorms = {0};
+
+size_t WH_numberOfTypes = 0;
+ConnectionDataType *WH_supportedTypes = NULL;
+
+pthread_t WH_wormThread;
 /*
 *===============
 */
 
+/* Name WH_setup_types
+ * Setups the available types of this Worm.
+ * 	If this function is never called, only UINT8-Array would be supported.
+ * Return 0 if OK, something else if error.
+ */
+uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
+{
+	ConnectionDataType *sTypes = malloc(sizeof(ConnectionDataType) * nTypes);
+
+	if (!sTypes) {
+		return 1;
+	}
+
+	memcpy(sTypes, types, sizeof(ConnectionDataType)*nTypes);
+
+	if (WH_supportedTypes != NULL) {
+		ConnectionDataType *tmp;
+		tmp = WH_supportedTypes;
+
+		if (WH_numberOfTypes > nTypes) {
+			WH_numberOfTypes = nTypes;
+		}
+
+		WH_supportedTypes = sTypes;
+		free(tmp);
+	}
+
+	WH_supportedTypes = sTypes;
+	WH_numberOfTypes = nTypes;
+
+	return 0;
+}
+
+/* Name WH_init
+* Starts the WormHole Library
+* Return 0 if OK, something else if error.
+*/
 uint8_t WH_init(void)
 {
 	WH_myDstWorms.numberOfWorms = 0;
@@ -62,9 +104,37 @@ uint8_t WH_init(void)
 		return 1;
 	}
 
-	// TODO: Lanzar hilo de recepción de conexiones
+	//TypeSetup
+	if (WH_supportedTypes == NULL) {
+		ConnectionDataType tmpType;
+		tmpType.type = ARRAY;
+		tmpType.ext.arrayType = UINT8;
+		WH_setup_types(1, &tmpType);
+	}
+
+	// Lanzar hilo de recepción de conexiones
+	if (pthread_create(&WH_wormThread, NULL, WH_thread, NULL)) {
+		return 1;
+	}
 
 	return 0;
+}
+
+static void *WH_thread(void *arg)
+{
+	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
+
+	if (listeningSocket == -1) {
+		perror("Error opening socket");
+		exit(-1);
+	}
+
+	while (1) {
+		//poll for incomming connections/requests.
+
+	}
+
+	return NULL;
 }
 
 uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
