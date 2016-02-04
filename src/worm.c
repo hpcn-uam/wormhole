@@ -17,9 +17,9 @@ uint16_t WH_myId;
 WormSetup WH_mySetup;
 
 DestinationWorms WH_myDstWorms = {0};
+DestinationWorms WH_myRcvWorms = {0};
 
-size_t WH_numberOfTypes = 0;
-ConnectionDataType *WH_supportedTypes = NULL;
+WormConfig WH_myConfig = {0};
 
 pthread_t WH_wormThread;
 /*
@@ -41,20 +41,20 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
 
 	memcpy(sTypes, types, sizeof(ConnectionDataType)*nTypes);
 
-	if (WH_supportedTypes != NULL) {
+	if (WH_myConfig.inputTypes != NULL) {
 		ConnectionDataType *tmp;
-		tmp = WH_supportedTypes;
+		tmp = WH_myConfig.inputTypes;
 
-		if (WH_numberOfTypes > nTypes) {
-			WH_numberOfTypes = nTypes;
+		if (WH_myConfig.numInputTypes > nTypes) {
+			WH_myConfig.numInputTypes = nTypes;
 		}
 
-		WH_supportedTypes = sTypes;
+		WH_myConfig.inputTypes = sTypes;
 		free(tmp);
 	}
 
-	WH_supportedTypes = sTypes;
-	WH_numberOfTypes = nTypes;
+	WH_myConfig.inputTypes = sTypes;
+	WH_myConfig.numInputTypes = nTypes;
 
 	return 0;
 }
@@ -67,6 +67,9 @@ uint8_t WH_init(void)
 {
 	WH_myDstWorms.numberOfWorms = 0;
 	WH_myDstWorms.worms = malloc(sizeof(DestinationWorm));
+
+	WH_myRcvWorms.numberOfWorms = 0;
+	WH_myRcvWorms.worms = malloc(sizeof(DestinationWorm));
 
 	WH_myId = atoi(getenv("WORM_ID"));
 
@@ -106,7 +109,7 @@ uint8_t WH_init(void)
 	}
 
 	//TypeSetup
-	if (WH_supportedTypes == NULL) {
+	if (WH_myConfig.inputTypes == NULL) {
 		ConnectionDataType tmpType;
 		tmpType.type = ARRAY;
 		tmpType.ext.arrayType = UINT8;
@@ -127,9 +130,9 @@ uint8_t WH_init(void)
 void *WH_thread(void *arg)
 {
 	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
-	struct timeval ts;
-	ts.tv_sec  =   0;
-	ts.tv_usec = 250000;
+	//struct timeval ts;
+	//ts.tv_sec  =   0;
+	//ts.tv_usec = 250000;
 
 	if (listeningSocket == -1) {
 		perror("Error opening socket");
@@ -145,7 +148,42 @@ void *WH_thread(void *arg)
 			fputs("Error abriendo socket", stderr);
 
 		} else {
-			fputs("Error abriendo socket", stderr);
+			enum wormMsgType type;
+
+			if (tcp_message_recv(socket, &type, sizeof(type))) {
+				fputs("Error abriendo socket", stderr);
+				continue;
+			}
+
+			switch (type) {
+			case HELLO: //Contestamos a Hello
+			default:
+				type = WORMINFO; //Con Worm Info
+
+				if (tcp_message_send(socket, &type, sizeof(type))) {
+					fputs("Error contestando socket", stderr);
+					continue;
+				}
+
+				if (tcp_message_send(socket, &WH_mySetup, sizeof(WH_mySetup))) { //Con wormSetup
+					fputs("Error contestando socket", stderr);
+					continue;
+				}
+
+				if (tcp_message_send(socket, &WH_myConfig, sizeof(WH_myConfig))) { //Con wormConfig
+					fputs("Error contestando socket", stderr);
+					continue;
+				}
+
+				if (tcp_message_send(socket, WH_myConfig.inputTypes, sizeof(ConnectionDataType)*WH_myConfig.numInputTypes)) { //Con wormConfig
+					fputs("Error contestando socket", stderr);
+					continue;
+				}
+
+				close(socket);
+				break;
+			}
+
 		}
 	}
 
