@@ -35,7 +35,7 @@ extern "C" {
 		int sockfd;
 		size_t buf_len;
 		size_t write_pos[2];
-		size_t to_access[2];
+		pthread_spinlock_t to_access[2];
 		uint8_t *buff[2];
 
 		pthread_spinlock_t lock;

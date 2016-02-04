@@ -195,8 +195,8 @@ int EinsConn::setupWorm()
 	if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize) != 0) {
 		throw std::runtime_error("Error receiving message");
 	}
-
-	if (* ((enum ctrlMsgType *) &hellomsg) != HELLOEINSTEIN) {
+	enum ctrlMsgType *msgType = reinterpret_cast<enum ctrlMsgType *>(hellomsg);
+	if (*msgType != HELLOEINSTEIN) {
 		return 1;
 	}
 
