@@ -182,7 +182,7 @@ void EinsConn::run()
 
 int EinsConn::setupWorm()
 {
-	int currentWormSocket = tcp_accept(this->listeningSocket);
+	int currentWormSocket = tcp_accept(this->listeningSocket, NULL);
 
 	if (currentWormSocket == -1) {
 		throw std::runtime_error("Error accepting connection");

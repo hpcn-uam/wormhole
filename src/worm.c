@@ -121,9 +121,15 @@ uint8_t WH_init(void)
 	return 0;
 }
 
+/* Name WH_thread
+ * A worm Thread listening for info/petitions.
+ */
 void *WH_thread(void *arg)
 {
 	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
+	struct timeval ts;
+	ts.tv_sec  =   0;
+	ts.tv_usec = 250000;
 
 	if (listeningSocket == -1) {
 		perror("Error opening socket");
@@ -132,7 +138,15 @@ void *WH_thread(void *arg)
 
 	while (1) {
 		//poll for incomming connections/requests.
+		//int socket = tcp_accept(listeningSocket,&ts);
+		int socket = tcp_accept(listeningSocket, NULL);
 
+		if (socket < 0) {
+			fputs("Error abriendo socket", stderr);
+
+		} else {
+			fputs("Error abriendo socket", stderr);
+		}
 	}
 
 	return NULL;
@@ -175,7 +189,8 @@ extern uint8_t _binary_obj_structures_h_end;
 
 const char *_WH_DymRoute_CC_includes = "\n"
 									   "#include<stdint.h>\n"
-									   "#include<stdio.h>\n";
+									   "#include<stdio.h>\n"
+									   "#include <pthread.h>\n";
 const char *_WH_DymRoute_CC_FuncStart = "\n\n"
 										"uint8_t WH_DymRoute_precompiled_route (const void *const data, const MessageInfo *const mi, DestinationWorms *const cns)\n{\n"
 										"int ret = 0;\n"
@@ -271,7 +286,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	/*Compile the .c*/
 	if (!ret) {
-		sprintf(tmpString, "gcc /tmp/%d.c -o /tmp/%d.so -shared -fPIC ", myPid, myPid);
+		sprintf(tmpString, "gcc -O3 -Wall /tmp/%d.c -o /tmp/%d.so -shared -lpthread -fPIC ", myPid, myPid);
 		ret = system(tmpString);
 	}
 

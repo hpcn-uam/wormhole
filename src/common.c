@@ -70,29 +70,25 @@ int tcp_listen_on_port(uint16_t port)
 	return sockfd;
 }
 
-int tcp_accept(int listen_socket)
+int tcp_accept(int listen_socket, struct timeval *timeout)
 {
 	//TIMEOUT
-	struct timeval timeout;
-	timeout.tv_sec = 10;
-	timeout.tv_usec = 0;
+	if (timeout) {
+		if (setsockopt(listen_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)timeout,
+					   sizeof(struct timeval)) < 0) {
+			fputs("setsockopt failed\n", stderr);
+		}
 
-	if (setsockopt(listen_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
-				   sizeof(timeout)) < 0) {
-		fputs("setsockopt failed\n", stderr);
-	}
-
-	if (setsockopt(listen_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
-				   sizeof(timeout)) < 0) {
-		fputs("setsockopt failed\n", stderr);
+		if (setsockopt(listen_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)timeout,
+					   sizeof(struct timeval)) < 0) {
+			fputs("setsockopt failed\n", stderr);
+		}
 	}
 
 	// TODO: Timeout
 	struct sockaddr_in cli_addr;
 	socklen_t clilen = sizeof(cli_addr);
-	fputs("w8ing...", stderr);
 	int newsockfd = accept(listen_socket, (struct sockaddr *) &cli_addr, &clilen);
-	fputs("Done!q...", stderr);
 
 	return newsockfd;
 }
@@ -352,7 +348,7 @@ int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock, size_t buf_
 
 int tcp_accept_async(int listen_socket, AsyncSocket *sock, size_t buf_len)
 {
-	sock->sockfd = tcp_accept(listen_socket);
+	sock->sockfd = tcp_accept(listen_socket, NULL);
 
 	if (sock->sockfd == -1) {
 		return 1;

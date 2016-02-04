@@ -59,7 +59,7 @@ extern "C" {
 	 * Accepts a new connection from a listen socket
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
-	int tcp_accept(int listen_socket);
+	int tcp_accept(int listen_socket, struct timeval *timeout);
 
 	/* Name tcp_message_send
 	 * Sends a full message to a socket
