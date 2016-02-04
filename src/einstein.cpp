@@ -182,7 +182,7 @@ void EinsConn::run()
 
 int EinsConn::setupWorm()
 {
-	int currentWormSocket = tcp_accept(this->listeningSocket);
+	int currentWormSocket = tcp_accept(this->listeningSocket, NULL);
 
 	if (currentWormSocket == -1) {
 		throw std::runtime_error("Error accepting connection");
@@ -195,7 +195,9 @@ int EinsConn::setupWorm()
 	if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize) != 0) {
 		throw std::runtime_error("Error receiving message");
 	}
+
 	enum ctrlMsgType *msgType = reinterpret_cast<enum ctrlMsgType *>(hellomsg);
+
 	if (*msgType != HELLOEINSTEIN) {
 		return 1;
 	}
@@ -235,7 +237,10 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 {
 	char executable[4096];
 	sprintf(executable, "scp %s.tgz %s:~", wc.programName.c_str(), wc.host.c_str());
-	system(executable);
+
+	if (system(executable)) {
+		cerr << "error executing comand..." << endl;
+	}
 
 	sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
 			"export WORM_ID=%hu;"
@@ -244,7 +249,10 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 			"nohup sh %s/run.sh > /dev/null 2>&1 &'",
 			wc.host.c_str(), wc.programName.c_str(), wc.programName.c_str(), wc.ws.id, this->listenPort,
 			this->listenIpStr.c_str(), wc.programName.c_str());
-	system(executable);
+
+	if (system(executable)) {
+		cerr << "error executing comand..." << endl;
+	}
 }
 
 void EinsConn::pollWorms()

@@ -10,6 +10,11 @@ do
 	cat $f | while read in
 	do
 
+		if [[ $in == *"WH_DymRoute_send"*";"* ]] #Functions
+		then
+			echo "${in}"
+		fi
+
 		if [[ $in == *"struct "* || $in == *"enum"* || $in == *"union"* ]]
 		then
 

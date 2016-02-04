@@ -17,10 +17,52 @@ uint16_t WH_myId;
 WormSetup WH_mySetup;
 
 DestinationWorms WH_myDstWorms = {0};
+
+size_t WH_numberOfTypes = 0;
+ConnectionDataType *WH_supportedTypes = NULL;
+
+pthread_t WH_wormThread;
 /*
 *===============
 */
 
+/* Name WH_setup_types
+ * Setups the available types of this Worm.
+ * 	If this function is never called, only UINT8-Array would be supported.
+ * Return 0 if OK, something else if error.
+ */
+uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
+{
+	ConnectionDataType *sTypes = malloc(sizeof(ConnectionDataType) * nTypes);
+
+	if (!sTypes) {
+		return 1;
+	}
+
+	memcpy(sTypes, types, sizeof(ConnectionDataType)*nTypes);
+
+	if (WH_supportedTypes != NULL) {
+		ConnectionDataType *tmp;
+		tmp = WH_supportedTypes;
+
+		if (WH_numberOfTypes > nTypes) {
+			WH_numberOfTypes = nTypes;
+		}
+
+		WH_supportedTypes = sTypes;
+		free(tmp);
+	}
+
+	WH_supportedTypes = sTypes;
+	WH_numberOfTypes = nTypes;
+
+	return 0;
+}
+
+/* Name WH_init
+* Starts the WormHole Library
+* Return 0 if OK, something else if error.
+*/
 uint8_t WH_init(void)
 {
 	WH_myDstWorms.numberOfWorms = 0;
@@ -63,9 +105,51 @@ uint8_t WH_init(void)
 		return 1;
 	}
 
-	// TODO: Lanzar hilo de recepción de conexiones
+	//TypeSetup
+	if (WH_supportedTypes == NULL) {
+		ConnectionDataType tmpType;
+		tmpType.type = ARRAY;
+		tmpType.ext.arrayType = UINT8;
+		WH_setup_types(1, &tmpType);
+	}
+
+	// Lanzar hilo de recepción de conexiones
+	if (pthread_create(&WH_wormThread, NULL, WH_thread, NULL)) {
+		return 1;
+	}
 
 	return 0;
+}
+
+/* Name WH_thread
+ * A worm Thread listening for info/petitions.
+ */
+void *WH_thread(void *arg)
+{
+	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
+	struct timeval ts;
+	ts.tv_sec  =   0;
+	ts.tv_usec = 250000;
+
+	if (listeningSocket == -1) {
+		perror("Error opening socket");
+		exit(-1);
+	}
+
+	while (1) {
+		//poll for incomming connections/requests.
+		//int socket = tcp_accept(listeningSocket,&ts);
+		int socket = tcp_accept(listeningSocket, NULL);
+
+		if (socket < 0) {
+			fputs("Error abriendo socket", stderr);
+
+		} else {
+			fputs("Error abriendo socket", stderr);
+		}
+	}
+
+	return NULL;
 }
 
 uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
@@ -105,7 +189,8 @@ extern uint8_t _binary_obj_structures_h_end;
 
 const char *_WH_DymRoute_CC_includes = "\n"
 									   "#include<stdint.h>\n"
-									   "#include<stdio.h>\n";
+									   "#include<stdio.h>\n"
+									   "#include <pthread.h>\n";
 const char *_WH_DymRoute_CC_FuncStart = "\n\n"
 										"uint8_t WH_DymRoute_precompiled_route (const void *const data, const MessageInfo *const mi, DestinationWorms *const cns)\n{\n"
 										"int ret = 0;\n"
@@ -201,7 +286,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	/*Compile the .c*/
 	if (!ret) {
-		sprintf(tmpString, "gcc /tmp/%d.c -o /tmp/%d.so -shared -fPIC ", myPid, myPid);
+		sprintf(tmpString, "gcc -O3 -Wall /tmp/%d.c -o /tmp/%d.so -shared -lpthread -fPIC ", myPid, myPid);
 		ret = system(tmpString);
 	}
 

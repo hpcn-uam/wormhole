@@ -34,6 +34,13 @@ extern "C" {
 		ConnectionDataType *outputTypes;
 	} WormConfig;
 
+	/* Name WH_setup_types
+	 * Setups the available types of this Worm.
+	 * 	If this function is never called, only UINT8-Array would be supported.
+	 * Return 0 if OK, something else if error.
+	 */
+	uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types);
+
 	/* Name WH_init
 	 * Starts the WormHole Library
 	 * Return 0 if OK, something else if error.
