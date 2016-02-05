@@ -236,11 +236,6 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 		return 1;
 	}
 
-	pthread_spin_init(&(sock->to_access[0]), 0);
-	pthread_spin_init(&(sock->to_access[1]), 0);
-	pthread_spin_lock(&(sock->to_access[0]));
-	pthread_spin_lock(&(sock->to_access[1]));
-
 	pthread_create(&(sock->thread), 0, async_fun, sock);
 
 	return 0;
