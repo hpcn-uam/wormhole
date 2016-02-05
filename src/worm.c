@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
+#define _WORMLIB_DEBUG_
 /*
 *Global variables
 */
@@ -193,7 +193,13 @@ void *WH_thread(void *arg)
 					continue;
 				}
 
-				WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].conns.socket = socket;
+				WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].conns = malloc(sizeof(Connection));
+				WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].conns[0].socket = socket;
+
+#ifdef _WORMLIB_DEBUG_
+				fprintf(stderr, "Conexión entrante en worm! Id nodo conectante: %d\n",
+						WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].id);
+#endif
 
 				WH_myRcvWorms.numberOfWorms++;
 				break;
@@ -204,6 +210,69 @@ void *WH_thread(void *arg)
 
 	return NULL;
 }
+
+/* Name WH_connectWorm
+ * Connect and fill the socket data.
+ * Return 0 if OK, something else if error.
+ */
+uint8_t WH_connectWorm(DestinationWorm *c)
+{
+	struct in_addr ip_addr;
+	ip_addr.s_addr = c->ip;
+
+	int socket = tcp_connect_to(inet_ntoa(ip_addr), c->port);
+
+	if (socket == -1) {
+		return 1;
+	}
+
+	//Solicitamos datos...
+	enum wormMsgType type = HELLO; //Con Worm Info
+
+	WormSetup wormSetup;
+	WormConfig wormConfig = {0};
+
+	if (tcp_message_send(socket, &type, sizeof(type))) {
+		fputs("Error solicitando información del Worm", stderr);
+		return 1;
+	}
+
+	if (tcp_message_recv(socket, &wormSetup, sizeof(wormSetup))) { //Con wormSetup
+		fputs("Error solicitando información del Worm", stderr);
+		return 1;
+	}
+
+	if (tcp_message_recv(socket, &wormConfig, sizeof(wormConfig))) { //Con wormConfig
+		fputs("Error solicitando información del Worm", stderr);
+		return 1;
+	}
+
+	wormConfig.inputTypes = malloc(sizeof(ConnectionDataType) * wormConfig.numInputTypes);
+
+	if (tcp_message_recv(socket, wormConfig.inputTypes, sizeof(ConnectionDataType)*wormConfig.numInputTypes)) { //Con wormConfig
+		fputs("Error solicitando información del Worm", stderr);
+		return 1;
+	}
+
+	close(socket);
+
+	//Rellenamos el worm entrante
+	c->id = wormSetup.id;
+	c->conns = NULL;
+
+	return 1;
+}
+
+/* Name WH_setupConnectionType
+ * Setup connection type
+ * Return 0 if OK, something else if error.
+ */
+uint8_t WH_setupConnectionType(Connection *c, const ConnectionDataType *const type)
+{
+	//TODO
+	return 1;
+}
+
 
 uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 {
@@ -681,8 +750,8 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId)
 		return NULL;
 	}
 
-	worm->conns.port = wSetup.listenPort;
-	worm->conns.ip = wSetup.IP;
+	worm->port = wSetup.listenPort;
+	worm->ip = wSetup.IP;
 
 	//TODO: Obtener información de los tipos disponibles.
 

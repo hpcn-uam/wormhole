@@ -37,8 +37,6 @@ int main(int argc, char **argv)
 	mi.size = strlen(TESTDATA) + 1;
 	mi.type = &type;
 
-	sleep(30);
-
 	st = WH_send(TESTDATA, &mi);
 	assert(st == 0);
 	fprintf(stderr, "Mensajes enrutados!\n");

@@ -19,20 +19,18 @@ extern "C" {
 	} Worm2EinsConn;
 
 	typedef struct {
-		uint16_t port;
-		uint32_t ip; //TODO fix para ipv6
 		int socket;
 		ConnectionDataType type;
-		uint8_t *buffPosition;
-		uint8_t *buff;
+		//TODO socketPaula
 	} Connection;
 
 	typedef struct {
 		uint16_t id;
+		uint16_t port;
+		uint32_t ip; //TODO fix para ipv6
 		size_t numberOfTypes;
-		/*TODO: fix para multiples conexiones con un tipo por conexion*/
 		ConnectionDataType *supportedTypes;
-		Connection conns;
+		Connection *conns;
 	} DestinationWorm;
 
 	typedef struct {
