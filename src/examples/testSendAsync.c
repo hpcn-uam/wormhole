@@ -8,7 +8,7 @@
 #include <malloc.h>
 
 #define NUM_SMALL_MESSAGES 500000000
-#define NUM_BIG_MESSAGES 10000000000
+#define NUM_BIG_MESSAGES 500000
 #define SIZE_BUFFER 1024*4
 
 int main(int argc, char **argv)
@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 	}
 
 	AsyncSocket sock;
-	int st = tcp_connect_to_async("192.168.50.102", 5000, &sock, 1024 * 512);
+	int st = tcp_connect_to_async("127.0.0.1", 5000, &sock, 1024 * 512);
 
 	assert(st == 0);
 
@@ -60,6 +60,6 @@ int main(int argc, char **argv)
 	gettimeofday(&end, 0);
 
 	fprintf(stderr, "Terminadas pruebas. %f gbps\n",
-			((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8 / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
+			(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
 
 }

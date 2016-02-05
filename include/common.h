@@ -35,10 +35,14 @@ extern "C" {
 	typedef struct {
 		int sockfd;
 		size_t buf_len;
+		size_t read_pos[2];
 		size_t write_pos[2];
 		int to_access[2];
 		uint8_t *buff[2];
-
+		size_t current_send_buf;
+		size_t current_recv_buf;
+		int can_read;
+	
 		pthread_spinlock_t lock;
 		pthread_t thread;
 	} AsyncSocket;
