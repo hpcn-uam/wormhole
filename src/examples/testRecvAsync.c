@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include "../async_inline.c"
 
 #define NUM_SMALL_MESSAGES 500000000
 #define NUM_BIG_MESSAGES 500000
