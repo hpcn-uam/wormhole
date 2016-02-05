@@ -3,10 +3,11 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include "../async_inline.c"
 
-#define NUM_SMALL_MESSAGES 1000000000
-#define NUM_BIG_MESSAGES 1000
-#define SIZE_BUFFER 1024*1024*50
+#define NUM_SMALL_MESSAGES 500000000
+#define NUM_BIG_MESSAGES 500000
+#define SIZE_BUFFER 1024*4
 
 int main(int argc, char **argv) {
 	void *buffer = malloc(SIZE_BUFFER);
@@ -14,7 +15,7 @@ int main(int argc, char **argv) {
 	assert(listen_socket != -1);
 	
 	AsyncSocket sock;
-	tcp_accept_async(listen_socket, &sock, 1024*1024*50);
+	tcp_accept_async(listen_socket, &sock, 1024*512);
 
 	struct timeval start, end;	
 	
@@ -43,6 +44,6 @@ int main(int argc, char **argv) {
 	gettimeofday(&end, 0);
 	
 	fprintf(stderr, "Terminadas pruebas. %f gbps\n",
-	((double)NUM_BIG_MESSAGES*SIZE_BUFFER*8/1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
+	(((double)NUM_BIG_MESSAGES*SIZE_BUFFER*8)/1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
 
 }

@@ -132,8 +132,6 @@ int tcp_message_recv(int socket, void *message, size_t len)
 
 typedef void *(*async_fun_p)(void *);
 
-#define likely(x)    __builtin_expect (!!(x), 1)
-#define unlikely(x)  __builtin_expect (!!(x), 0)
 
 void *send_fun(void *args)
 {
@@ -166,41 +164,6 @@ void *send_fun(void *args)
 	}
 }
 
-int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len) {
-	void *msgptr = (void *)message;
-	
-	while (unlikely(sock->buf_len - sock->write_pos[current_send_buf] < len)) {
-		memcpy(sock->buff[current_send_buf], msgptr, sock->buf_len - sock->write_pos[current_send_buf]);
-		msgptr += sock->buf_len - sock->write_pos[current_send_buf];
-		len -= sock->buf_len - sock->write_pos[current_send_buf];
-		
-		sock->write_pos[current_send_buf] = sock->buf_len;
-		
-		pthread_spin_lock(&(sock->lock));
-		sock->to_access[current_send_buf] = 1;
-
-		current_send_buf = (current_send_buf + 1) % 2;
-			
-		// Wait until the buffer has been sent
-		while (sock->to_access[current_send_buf]) {
-			pthread_spin_unlock(&(sock->lock));	
-			struct timespec ts;
-			ts.tv_sec = 0;
-			ts.tv_nsec = 100;
-			nanosleep(&ts, 0);
-			pthread_spin_lock(&(sock->lock));
-		}
-		pthread_spin_unlock(&(sock->lock));
-
-
-		sock->write_pos[current_send_buf] = 0;
-	}
-	
-	memcpy(sock->buff[current_send_buf] + sock->write_pos[current_send_buf], msgptr, len);
-	sock->write_pos[current_send_buf] += len;
-
-	return 0;
-}
 
 void *recv_fun(void *args)
 {
@@ -220,7 +183,10 @@ void *recv_fun(void *args)
 		// Wait until the buffer has been sent
 		while (sock->to_access[current_buf]) {
 			pthread_spin_unlock(&(sock->lock));	
-			//usleep(13);
+			struct timespec ts;
+			ts.tv_sec = 0;
+			ts.tv_nsec = 100;
+			nanosleep(&ts, 0);
 			pthread_spin_lock(&(sock->lock));
 		}
 
@@ -231,68 +197,21 @@ void *recv_fun(void *args)
 	}
 }
 
-int tcp_message_recv_async(AsyncSocket *sock, void *message, size_t len)
-{
-	static size_t current_buf = 0;
-	static int can_read = 0;
-	static size_t read_pos = 0;
-
-	while (!can_read) {
-		usleep(13);
-		pthread_spin_lock(&(sock->lock));
-
-		if (sock->to_access[current_buf]) {
-			can_read = 1;
-		}
-
-		pthread_spin_unlock(&(sock->lock));
-	}
-
-	int recur = 0;
-
-	// Split message
-	if (sock->write_pos[current_buf] - read_pos < len) {
-		memcpy(message, sock->buff[current_buf] + read_pos, sock->write_pos[current_buf] - read_pos);
-
-		// Prepare for recursion
-		message += sock->write_pos[current_buf] - read_pos;
-		len -= sock->write_pos[current_buf] - read_pos;
-
-		read_pos += sock->write_pos[current_buf] - read_pos;
-		recur = 1;
-
-	} else {
-		memcpy(message, sock->buff[current_buf] + read_pos, len);
-		read_pos += len;
-	}
-
-	if (read_pos == sock->write_pos[current_buf]) {
-		pthread_spin_lock(&(sock->lock));
-		sock->to_access[current_buf] = 0;
-		pthread_spin_unlock(&(sock->lock));
-
-		current_buf = (current_buf + 1) % 2;
-		can_read = 0;
-		read_pos = 0;
-	}
-
-	// TODO: Quitar recursión
-	if (recur) {
-		tcp_message_recv_async(sock, message, len);
-	}
-
-	return 0;
-}
 
 int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 {
 	sock->buf_len = buf_len;
+
+	sock->read_pos[0] = 0;
+	sock->read_pos[1] = 0;
 
 	sock->write_pos[0] = 0;
 	sock->write_pos[1] = 0;
 
 	sock->to_access[0] = 0;
 	sock->to_access[1] = 0;
+	
+	sock->can_read = 0;
 
 
 	sock->buff[0] = malloc(sizeof(uint8_t) * buf_len);
@@ -307,17 +226,15 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 		free(sock->buff[0]);
 		return 1;
 	}
+	
+	sock->current_send_buf = 0;
+	sock->current_recv_buf = 0;
 
 	if (pthread_spin_init(&(sock->lock), 0) != 0) {
 		free(sock->buff[0]);
 		free(sock->buff[1]);
 		return 1;
 	}
-
-	pthread_spin_init(&(sock->to_access[0]), 0);
-	pthread_spin_init(&(sock->to_access[1]), 0);
-	pthread_spin_lock(&(sock->to_access[0]));
-	pthread_spin_lock(&(sock->to_access[1]));
 
 	pthread_create(&(sock->thread), 0, async_fun, sock);
 

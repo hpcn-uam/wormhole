@@ -15,6 +15,9 @@
 extern "C" {
 #endif
 
+#define likely(x)    __builtin_expect (!!(x), 1)
+#define unlikely(x)  __builtin_expect (!!(x), 0)
+
 	enum ctrlMsgType {
 		HELLOEINSTEIN, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR, HALT
 	};
@@ -35,10 +38,14 @@ extern "C" {
 	typedef struct {
 		int sockfd;
 		size_t buf_len;
+		size_t read_pos[2];
 		size_t write_pos[2];
 		int to_access[2];
 		uint8_t *buff[2];
-
+		size_t current_send_buf;
+		size_t current_recv_buf;
+		int can_read;
+	
 		pthread_spinlock_t lock;
 		pthread_t thread;
 	} AsyncSocket;
@@ -87,18 +94,6 @@ extern "C" {
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_accept_async(int listen_socket, AsyncSocket *sock, size_t buf_len);
-
-	/* Name tcp_message_send_async
-	 * Sends a full message to a socket
-	 * Return 0 if OK, something else if error.
-	 */
-	int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len);
-
-	/* Name tcp_message_recv_async
-	 * Receives a full message from a socket
-	 * Return 0 if OK, something else if error.
-	 */
-	int tcp_message_recv_async(AsyncSocket *sock, void *message, size_t len);
 
 
 #ifdef __cplusplus

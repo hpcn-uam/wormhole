@@ -1,6 +1,6 @@
 export CC=gcc
 export CXX=g++
-export FLAGS=-I include/ -Wall -Werror -g -lpthread -O3
+export FLAGS=-I include/ -Wall -g
 export CFLAGS=$(FLAGS) -std=gnu99 -fPIC
 export CXXFLAGS=$(FLAGS) -std=gnu++11
 export LDFLAGS=-fPIC -ldl -lpthread
@@ -35,11 +35,11 @@ bin/testLisp.tgz: bin/testLisp lib/libworm.so src/examples/lisprun.sh
 bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-bin/testWorm: src/examples/testWorm.c obj/common.o
-	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
+bin/testWorm: src/examples/testWorm.c obj/common.o lib/libworm.a
+	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
 
-bin/testLisp: src/examples/testLisp.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
+bin/testLisp: src/examples/testLisp.c obj/common.o lib/libworm.a
+	$(CC) $(CFLAGS) $(LDFLAGS)  -Llib -lworm -o $@ $^
 
 bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
 	$(CC) $(CFLAGS) -o $@ $^
@@ -49,7 +49,7 @@ bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
 
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^ -Wl,--out-implib,lib/libworm.a
 
 Dependencies: obj lib bin
 
@@ -81,4 +81,4 @@ clean:
 #Custom Data .o
 obj/structures.h.o: $(INCLUDES)
 	./tools/parseFile.bash > obj/structures.h
-	objcopy --input binary --output elf64-x86-64 --binary-architecture i386 obj/structures.h $@
+	objcopy --input-target binary --output-target elf64-x86-64 --binary-architecture i386 obj/structures.h $@
