@@ -95,6 +95,9 @@ extern "C" {
 	 */
 	int tcp_accept_async(int listen_socket, AsyncSocket *sock, size_t buf_len);
 
+	inline int can_be_read(AsyncSocket *s) {
+		return s->can_read;
+	}
 
 #ifdef __cplusplus
 }

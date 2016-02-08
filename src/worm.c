@@ -187,14 +187,14 @@ void *WH_thread(void *arg)
 
 				WH_myRcvWorms.worms = realloc(WH_myRcvWorms.worms, (WH_myRcvWorms.numberOfWorms + 1) * sizeof(DestinationWorm));
 
-				//Recivimos un destinationWorm
+				//Recibimos un destinationWorm
 				if (tcp_message_recv(socket, WH_myRcvWorms.worms + WH_myRcvWorms.numberOfWorms, sizeof(DestinationWorm))) {
 					fputs("Error configurando socket", stderr);
 					continue;
 				}
 
 				WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].conns = malloc(sizeof(Connection));
-				WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].conns[0].socket = socket;
+				WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].conns[0].socket.sockfd = socket;
 
 #ifdef _WORMLIB_DEBUG_
 				fprintf(stderr, "Conexión entrante en worm! Id nodo conectante: %d\n",
@@ -209,6 +209,44 @@ void *WH_thread(void *arg)
 	}
 
 	return NULL;
+}
+
+/* Name WH_connectionPoll
+	* Poll data from some socket
+	* Return some connection with data, NULL if error/timeout.
+	*/
+Connection *WH_connectionPoll(DestinationWorms *wms){
+	static uint32_t wormIndex = 0;
+	static uint32_t connIndex = 0;
+	
+	connIndex++;
+	
+	// Search for an existent worm + connection
+	if (wormIndex >= wms->numberOfWorms) {
+		wormIndex = 0;
+		connIndex = 0;
+	}
+	while (connIndex >= wms->worms[wormIndex].numberOfTypes) {
+		wormIndex = (wormIndex + 1) % wms->numberOfWorms;
+		connIndex = 0;
+	}
+	
+	uint32_t startingWormIndex = wormIndex;
+	uint32_t startingConnIndex = connIndex;
+	
+	while (wormIndex != startingWormIndex && connIndex != startingConnIndex) {
+		if (can_be_read(&(wms->worms[wormIndex].conns[connIndex].socket))) {
+			return &wms->worms[wormIndex].conns[connIndex];
+		}
+		connIndex++;
+		while (connIndex >= wms->worms[wormIndex].numberOfTypes) {
+			wormIndex = (wormIndex + 1) % wms->numberOfWorms;
+			connIndex = 0;
+		}
+	}
+	
+	return 0;
+	
 }
 
 /* Name WH_connectWorm
