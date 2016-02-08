@@ -250,8 +250,9 @@ void destroy_asyncSocket(AsyncSocket *sock)
 	pthread_spin_destroy(&(sock->lock));
 }
 
-int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock, size_t buf_len)
+int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 {
+	size_t buf_len = 512*1024;
 	sock->sockfd = tcp_connect_to(ip, port);
 
 	if (sock->sockfd == -1) {
@@ -266,9 +267,10 @@ int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock, size_t buf_
 	return 0;
 }
 
-int tcp_accept_async(int listen_socket, AsyncSocket *sock, size_t buf_len)
+int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout)
 {
-	sock->sockfd = tcp_accept(listen_socket, NULL);
+	size_t buf_len = 512*1024;
+	sock->sockfd = tcp_accept(listen_socket, timeout);
 
 	if (sock->sockfd == -1) {
 		return 1;

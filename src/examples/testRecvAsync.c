@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 	assert(listen_socket != -1);
 	
 	AsyncSocket sock;
-	tcp_accept_async(listen_socket, &sock, 1024*512);
+	tcp_accept_async(listen_socket, &sock, 0);
 
 	struct timeval start, end;	
 	

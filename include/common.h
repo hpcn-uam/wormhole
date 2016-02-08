@@ -87,13 +87,13 @@ extern "C" {
 	 * Connects to a host using TCP over IPv4
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
-	int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock, size_t buf_len);
+	int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock);
 
 	/* Name tcp_accept_async
 	 * Accepts a new connection from a listen socket
 	 * Return -1 if ERROR, else the socket file descriptor.
 	 */
-	int tcp_accept_async(int listen_socket, AsyncSocket *sock, size_t buf_len);
+	int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout);
 
 	inline int can_be_read(AsyncSocket *s) {
 		return s->can_read;
