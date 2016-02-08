@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <time.h>
 
+#define OPTIMAL_BUFFER_SIZE (512*1024)
+
 size_t current_send_buf = 0;
 
 int tcp_connect_to(char *ip, uint16_t port)
@@ -141,7 +143,7 @@ void *send_fun(void *args)
 
 	for (;; current_buf = (current_buf + 1) % 2) {
 		int writing = 0;
-		
+
 		// Wait until the buffer can be sent
 		do {
 			struct timespec ts;
@@ -149,14 +151,16 @@ void *send_fun(void *args)
 			ts.tv_nsec = 100;
 			nanosleep(&ts, 0);
 			pthread_spin_lock(&(sock->lock));
+
 			if (sock->to_access[current_buf]) {
 				writing = 1;
 			}
+
 			pthread_spin_unlock(&(sock->lock));
 		} while (!writing);
-		
+
 		tcp_message_send(sock->sockfd, sock->buff[current_buf], sock->write_pos[current_buf]);
-		
+
 		pthread_spin_lock(&(sock->lock));
 		sock->to_access[current_buf] = 0;
 		pthread_spin_unlock(&(sock->lock));
@@ -182,7 +186,7 @@ void *recv_fun(void *args)
 
 		// Wait until the buffer has been sent
 		while (sock->to_access[current_buf]) {
-			pthread_spin_unlock(&(sock->lock));	
+			pthread_spin_unlock(&(sock->lock));
 			struct timespec ts;
 			ts.tv_sec = 0;
 			ts.tv_nsec = 100;
@@ -210,7 +214,7 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 
 	sock->to_access[0] = 0;
 	sock->to_access[1] = 0;
-	
+
 	sock->can_read = 0;
 
 
@@ -226,7 +230,7 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 		free(sock->buff[0]);
 		return 1;
 	}
-	
+
 	sock->current_send_buf = 0;
 	sock->current_recv_buf = 0;
 
@@ -250,8 +254,9 @@ void destroy_asyncSocket(AsyncSocket *sock)
 	pthread_spin_destroy(&(sock->lock));
 }
 
-int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock, size_t buf_len)
+int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 {
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
 	sock->sockfd = tcp_connect_to(ip, port);
 
 	if (sock->sockfd == -1) {
@@ -266,9 +271,10 @@ int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock, size_t buf_
 	return 0;
 }
 
-int tcp_accept_async(int listen_socket, AsyncSocket *sock, size_t buf_len)
+int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout)
 {
-	sock->sockfd = tcp_accept(listen_socket, NULL);
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
+	sock->sockfd = tcp_accept(listen_socket, timeout);
 
 	if (sock->sockfd == -1) {
 		return 1;
@@ -276,6 +282,18 @@ int tcp_accept_async(int listen_socket, AsyncSocket *sock, size_t buf_len)
 
 	if (init_asyncSocket(sock, buf_len, recv_fun) != 0) {
 		close(sock->sockfd);
+		return 1;
+	}
+
+	return 0;
+}
+
+int socket_upgrade_to_async(AsyncSocket *async_sock, int sockfd)
+{
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
+	async_sock->sockfd = sockfd;
+
+	if (init_asyncSocket(async_sock, buf_len, recv_fun) != 0) {
 		return 1;
 	}
 
