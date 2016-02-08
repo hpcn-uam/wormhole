@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "async_inline.c"
 #define _WORMLIB_DEBUG_
 /*
 *Global variables
@@ -208,7 +209,7 @@ void *WH_thread(void *arg)
 					continue;
 				}
 
-				tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1].socket.sockfd = socket; //FIXME
+				socket_upgrade_to_async(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1].socket), socket);
 
 #ifdef _WORMLIB_DEBUG_
 				fprintf(stderr, "Conexión entrante en worm! Id nodo conectante: %d\n",
@@ -315,6 +316,10 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 	//Rellenamos el worm entrante
 	c->id = wormSetup.id;
 	c->conns = NULL;
+	c->numberOfTypes = wormConfig.numInputTypes;
+	c->supportedTypes = wormConfig.inputTypes;
+	//FIXME en caso de que se reduzca el numero de conexiones
+	c->conns = realloc(c->conns, sizeof(Connection) * wormConfig.numInputTypes);
 
 	return 0;
 }
@@ -351,7 +356,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		return -1;
 	}
 
-	//Solicitamos datos...
+	//Informamos del tipo de conexion...
 	enum wormMsgType msgtype = SETUPWORMCONN; //Con Worm config
 
 	if (tcp_message_send(socket, &msgtype, sizeof(type))) {
@@ -379,6 +384,16 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		fprintf(stderr, "Error configurando Worm externo %d\n", dw->id);
 		return 1;
 	}
+
+	for (int i = 0; i < dw->numberOfTypes; i++) {
+		if (!memcmp(dw->supportedTypes + i, type, sizeof(ConnectionDataType))) {
+
+			socket_upgrade_to_async(&(dw->conns[i].socket), socket);
+
+			break;
+		}
+	}
+
 
 #ifdef _WORMLIB_DEBUG_
 	fprintf(stderr, "Conexión saliente a worm! Id nodo conectado: %d\n", dw->id);
@@ -555,8 +570,21 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const DestinationWorm *const dw)
 {
 	//TODO search info
+	//WH_setupConnectionType
+	for (int i = 0; i < dw->numberOfTypes; i++) {
+		if (!memcmp(dw->supportedTypes + i, mi->type, sizeof(ConnectionDataType))) {
+			//tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
+			if (&(dw->conns[i]) == NULL)
+				if (WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {
+					return -1;
+				}
+
+			return tcp_message_send_async(&(dw->conns[i].socket), data, mi->size);
+		}
+	}
+
 	//fprintf(stderr, "Sending %d bytes to %d\n", mi->size, cn->ip);
-	return 0;
+	return 1;
 }
 
 /* Name WH_DymRoute_route_create
