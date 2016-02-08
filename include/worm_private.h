@@ -19,9 +19,8 @@ extern "C" {
 	} Worm2EinsConn;
 
 	typedef struct {
-		int socket;
+		AsyncSocket socket;
 		ConnectionDataType type;
-		//TODO socketPaula
 	} Connection;
 
 	typedef struct {
@@ -37,7 +36,6 @@ extern "C" {
 		size_t numberOfWorms;
 		DestinationWorm *worms;
 	} DestinationWorms;
-
 
 	/* Name WH_connectWorm
 	 * Connect and fill the socket data.
@@ -81,6 +79,12 @@ extern "C" {
 	 * A worm Thread listening for info/petitions.
 	 */
 	void *WH_thread(void *arg);
+
+	/* Name WH_connectionPoll
+	 * Poll data from some socket
+	 * Return some connection with data, NULL if error/timeout.
+	 */
+	Connection *WH_connectionPoll(DestinationWorms *wms);
 
 	/*
 	 Dynamic Routing Library
