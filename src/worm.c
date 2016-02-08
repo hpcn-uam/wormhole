@@ -251,19 +251,19 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 		return 1;
 	}
 
-	if (tcp_message_send(socket, &wormSetup, sizeof(wormSetup))) { //Con wormSetup
+	if (tcp_message_recv(socket, &wormSetup, sizeof(wormSetup))) { //Con wormSetup
 		fputs("Error solicitando información del Worm", stderr);
 		return 1;
 	}
 
-	if (tcp_message_send(socket, &wormConfig, sizeof(wormConfig))) { //Con wormConfig
+	if (tcp_message_recv(socket, &wormConfig, sizeof(wormConfig))) { //Con wormConfig
 		fputs("Error solicitando información del Worm", stderr);
 		return 1;
 	}
 
-	wormConfig.inputTypes = malloc(sizeof(ConnectionDataType) * wormConfig.numInputTypes);
+	wormConfig.inputTypes = realloc(wormConfig.inputTypes, sizeof(ConnectionDataType) * wormConfig.numInputTypes);
 
-	if (tcp_message_send(socket, wormConfig.inputTypes, sizeof(ConnectionDataType)*wormConfig.numInputTypes)) { //Con wormConfig
+	if (tcp_message_recv(socket, wormConfig.inputTypes, sizeof(ConnectionDataType)*wormConfig.numInputTypes)) { //Con wormConfig
 		fputs("Error solicitando información del Worm", stderr);
 		return 1;
 	}
@@ -290,6 +290,23 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	if (socket == -1) {
 		return 1;
+	}
+
+	WH_connectWorm(dw);
+	int8_t flag = 0;
+
+	for (int i = 0; i < dw->numberOfTypes; i++) {
+		if (!memcmp(dw->supportedTypes + i, type, sizeof(ConnectionDataType))) {
+			flag = 1;
+			break;
+		}
+	}
+
+	if (!flag) {
+#ifdef _WORMLIB_DEBUG_
+		fprintf(stderr, "No se puede abrir un socket con el datatype solicitado!\n");
+#endif
+		return -1;
 	}
 
 	//Solicitamos datos...
