@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <time.h>
 
+#define OPTIMAL_BUFFER_SIZE (512*1024)
+
 size_t current_send_buf = 0;
 
 int tcp_connect_to(char *ip, uint16_t port)
@@ -252,7 +254,7 @@ void destroy_asyncSocket(AsyncSocket *sock)
 
 int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 {
-	size_t buf_len = 512*1024;
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
 	sock->sockfd = tcp_connect_to(ip, port);
 
 	if (sock->sockfd == -1) {
@@ -269,7 +271,7 @@ int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 
 int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout)
 {
-	size_t buf_len = 512*1024;
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
 	sock->sockfd = tcp_accept(listen_socket, timeout);
 
 	if (sock->sockfd == -1) {
@@ -281,5 +283,15 @@ int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeo
 		return 1;
 	}
 
+	return 0;
+}
+
+int socket_upgrade_to_async(AsyncSocket *async_sock, int sockfd) {
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
+	async_sock->sockfd = sockfd;
+	
+	if (init_asyncSocket(async_sock, buf_len, recv_fun) != 0) {
+		return 1;
+	}
 	return 0;
 }
