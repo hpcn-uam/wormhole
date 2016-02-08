@@ -47,7 +47,7 @@ extern "C" {
 	 * Setup connection type
 	 * Return 0 if OK, something else if error.
 	 */
-	uint8_t WH_setupConnectionType(Connection *c, const ConnectionDataType *const type);
+	uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *const type);
 
 	/* Name WH_getWormData
 	 * Gets worm data (IP+port).
