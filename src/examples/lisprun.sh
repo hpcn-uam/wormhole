@@ -1,3 +1,5 @@
 #!/bin/sh
 
-./testLisp/testLisp &> /tmp/lisp.out
+OUTFILE=$(echo $$)
+
+valgrind ./testLisp/testLisp &> /tmp/lisp.$OUTFILE.out

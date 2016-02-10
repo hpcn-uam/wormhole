@@ -24,10 +24,14 @@ int main(int argc, char **argv)
 	assert(!memcmp(WH_mySetup.connectionDescription, TESTLIST, strlen(TESTLIST)));
 	fprintf(stderr, "Éxito setup\n");
 
+	sleep(5);
+
 	st = WH_DymRoute_init(WH_mySetup.connectionDescription, &WH_myDstWorms);
 	printf("> %d\n", st);
 	assert(st == 0);
 	fprintf(stderr, "Éxito Configurando enrutado\n");
+
+	sleep(5);
 
 	MessageInfo mi;
 	ConnectionDataType type;
@@ -36,6 +40,7 @@ int main(int argc, char **argv)
 
 	mi.size = strlen(TESTDATA) + 1;
 	mi.type = &type;
+	mi.category = 1;
 
 	st = WH_send(TESTDATA, &mi);
 	assert(st == 0);
