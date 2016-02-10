@@ -34,9 +34,12 @@ class EinsConn
 	int numWormSockets;
 	int previousPollIndex;
 	int numFilledPolls;
+	
+	bool autoDeployWorms = true;
 
  public:
 	EinsConn(const string listenIp, const uint16_t listenPort);
+	EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms);
 	~EinsConn();
 
 	// Connects to IP and launches a worm with configuration ws
@@ -68,6 +71,7 @@ class Einstein
 
  public:
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort);
+	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms);
 	~Einstein();
 
 	void openHoles(); // Starts everything
