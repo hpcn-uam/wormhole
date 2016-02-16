@@ -24,9 +24,10 @@ Eins2WormConn::~Eins2WormConn()
 {
 	free(this->ws.connectionDescription);
 }
+Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort) : Einstein(configFileName, listenIp, listenPort, true) {}
 
-Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort)
-	: ec(listenIp, listenPort)
+Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
+	: ec(listenIp, listenPort, autoDeployWorms)
 {
 
 	this->readConfig(configFileName);
@@ -96,8 +97,9 @@ void Einstein::readConfig(const string configFileName)
 	fclose(configFile);
 }
 
-EinsConn::EinsConn(string listenIp, uint16_t listenPort)
-{
+EinsConn::EinsConn(string listenIp, uint16_t listenPort) : EinsConn(listenIp, listenPort, true) {}
+
+EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms) {
 	// Start socket to receive connections from worms
 	this->listenIpStr = listenIp;
 	this->listenIp = inet_addr(listenIp.c_str());
@@ -112,8 +114,9 @@ EinsConn::EinsConn(string listenIp, uint16_t listenPort)
 	this->fdinfo = 0;
 	this->numWormSockets = 0;
 	this->previousPollIndex = 0;
+	this->autoDeployWorms = autoDeployWorms;
 }
-
+	
 EinsConn::~EinsConn()
 {
 	//this->deleteAllWorms();
@@ -162,8 +165,10 @@ void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip)
 void EinsConn::run()
 {
 	// Deploy worms
-	for (auto connIterator = this->connections.begin(); connIterator != this->connections.end(); connIterator++) {
-		deployWorm(*(connIterator->second));
+	if (this->autoDeployWorms) {
+		for (auto connIterator = this->connections.begin(); connIterator != this->connections.end(); connIterator++) {
+			deployWorm(*(connIterator->second));
+		}
 	}
 
 	// Wait for connections from worms

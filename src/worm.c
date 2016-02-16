@@ -297,7 +297,7 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 	int socket = tcp_connect_to(inet_ntoa(ip_addr), c->port);
 
 	if (socket == -1) {
-		error("Error solicitando información del Worm [0]");
+		perror("Error solicitando información del Worm [0]");
 		return 1;
 	}
 
