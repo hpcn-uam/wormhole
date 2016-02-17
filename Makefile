@@ -6,9 +6,10 @@ export CXXFLAGS=$(FLAGS) -std=gnu++11
 export LDFLAGS=-fPIC -ldl -lpthread
 
 INCLUDES := $(wildcard include/*.h include/*.hpp)
+SRCS := $(wildcard src/*.c src/*.cpp src/examples/*.c src/examples/*.cpp)
 
 
-all: Dependencies einstein libs Examples
+all: Dependencies einstein libs Examples doc/html
 
 einstein: obj/einstein.o
 
@@ -59,8 +60,8 @@ obj:
 lib:
 	mkdir -p lib
 
-doc:
-	mkdir -p doc
+doc/html: $(INCLUDES) $(SRCS)
+	doxygen > /dev/null
 
 bin:
 	mkdir -p bin
