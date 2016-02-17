@@ -50,48 +50,48 @@ extern "C" {
 		pthread_t thread;
 	} AsyncSocket;
 
-	/* Name tcp_connect_to
+	/** tcp_connect_to
 	 * Connects to a host using TCP over IPv4
-	 * Return -1 if ERROR, else the socket file descriptor.
+	 * @return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_connect_to(char *ip, uint16_t port);
 
-	/* Name tcp_listen_on_port
+	/** tcp_listen_on_port
 	 * Starts listening in a socket using TCP over IPv4
-	 * Return -1 if ERROR, else the socket file descriptor.
+	 * @return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_listen_on_port(uint16_t port);
 
-	/* Name tcp_accept
+	/** tcp_accept
 	 * Accepts a new connection from a listen socket
-	 * Return -1 if ERROR, else the socket file descriptor.
+	 * @return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_accept(int listen_socket, struct timeval *timeout);
 
-	/* Name tcp_message_send
+	/** tcp_message_send
 	 * Sends a full message to a socket
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	int tcp_message_send(int socket, const void *message, size_t len);
 
-	/* Name tcp_message_recv
+	/** tcp_message_recv
 	 * Receives a full message from a socket
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	int tcp_message_recv(int socket, void *message, size_t len);
 
 
 
 
-	/* Name tcp_connect_to_async
+	/** tcp_connect_to_async
 	 * Connects to a host using TCP over IPv4
-	 * Return -1 if ERROR, else the socket file descriptor.
+	 * @return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock);
 
-	/* Name tcp_accept_async
+	/** tcp_accept_async
 	 * Accepts a new connection from a listen socket
-	 * Return -1 if ERROR, else the socket file descriptor.
+	 * @return -1 if ERROR, else the socket file descriptor.
 	 */
 	int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout);
 

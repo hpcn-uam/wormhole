@@ -37,52 +37,52 @@ extern "C" {
 		DestinationWorm *worms;
 	} DestinationWorms;
 
-	/* Name WH_connectWorm
+	/** WH_connectWorm
 	 * Connect and fill the socket data.
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_connectWorm(DestinationWorm *c);
 
-	/* Name WH_setupConnectionType
+	/** WH_setupConnectionType
 	 * Setup connection type
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *const type);
 
-	/* Name WH_getWormData
+	/** WH_getWormData
 	 * Gets worm data (IP+port).
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId);
 
-	/* Name WH_addWormConnection
-	 * Return the created connection
+	/** WH_addWormConnection
+	 * @return the created connection
 	 */
 	Connection *WH_addWormConnection(DestinationWorm *cns);
 
-	/* Name WH_addWorm
-	 * Return the created connection
+	/** WH_addWorm
+	 * @return the created connection
 	 */
 	DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId);
 
-	/* Name WH_findWorm
-	 * Return the worm mached (if no exists)
+	/** WH_findWorm
+	 * @return the worm mached (if no exists)
 	 */
 	DestinationWorm *WH_findWorm(DestinationWorms *wms, const uint16_t wormId);
 
-	/* Name WH_findWormIndex
-	 * Return the worm index in DestinationWorms
+	/** WH_findWormIndex
+	 * @return the worm index in DestinationWorms
 	 */
 	size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId);
 
-	/* Name WH_thread
+	/** WH_thread
 	 * A worm Thread listening for info/petitions.
 	 */
 	void *WH_thread(void *arg);
 
-	/* Name WH_connectionPoll
+	/** WH_connectionPoll
 	 * Poll data from some socket
-	 * Return some connection with data, NULL if error/timeout.
+	 * @return some connection with data, NULL if error/timeout.
 	 */
 	Connection *WH_connectionPoll(DestinationWorms *wms);
 
@@ -92,46 +92,46 @@ extern "C" {
 	/* DUP, CAT, RR, HASH */
 	enum RoutingRule {DUPLICATE, CATEGORY, ROUNDROBIN, HASH};
 
-	/* Name WH_DymRoute_init
+	/** WH_DymRoute_init
 	 * Starts the Dynamic Routing Library, and setups connection configuration.
 	 * Also makes connections
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *cns);
 
-	/* Name WH_DymRoute_route_create
+	/** WH_DymRoute_route_create
 	 * Starts the Dynamic Routing Library, and setups connection configuration.
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
-	/* Name WH_DymRoute_route_createFunc
+	/** WH_DymRoute_route_createFunc
 	 * Searchs for a Function, and calls the correct function.
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
-	/* Name WH_DymRoute_route_createFuncRR
+	/** WH_DymRoute_route_createFuncRR
 	 * Adds a "c code" for round robin.
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
-	/* Name WH_DymRoute_route_createFuncCat
+	/** WH_DymRoute_route_createFuncCat
 	 * Adds a "c code" for category splitting.
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
-	/* Name WH_DymRoute_route
+	/** WH_DymRoute_route
 	 * Enrute a message
-	 * Return the number of msgs sent
+	 * @return the number of msgs sent
 	 */
 	uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi, DestinationWorms *wms);
 
-	/* Name WH_DymRoute_send
+	/** WH_DymRoute_send
 	 * Sends a message to the network
-	 * Return 0 if OK, something else if error.
+	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const DestinationWorm *const cn);
 
