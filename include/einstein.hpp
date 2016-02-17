@@ -6,6 +6,8 @@
 #include <map>
 #include <memory>
 #include <poll.h>
+#include <signal.h>
+
 
 using namespace std;
 
@@ -34,7 +36,7 @@ class EinsConn
 	int numWormSockets;
 	int previousPollIndex;
 	int numFilledPolls;
-	
+
 	bool autoDeployWorms = true;
 
  public:
@@ -61,6 +63,9 @@ class EinsConn
 	void threadRun();
 	int setupWorm();
 	void deployWorm(Eins2WormConn &wc);
+
+	static void signal_callback_handler(int signum);
+	static bool keepRunning;
 };
 
 class Einstein

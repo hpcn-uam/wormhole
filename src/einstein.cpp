@@ -23,7 +23,16 @@ Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, str
 Eins2WormConn::~Eins2WormConn()
 {
 	free(this->ws.connectionDescription);
+	ctrlMsgType msg = HALT;
+	cerr << "Enviando HALT al Worm id = " << this->ws.id << endl;
+
+	if (tcp_message_send(this->socket, &msg, sizeof(msg)) != 0) {
+		throw std::runtime_error("Error sending HALT");
+	}
 }
+
+bool EinsConn::keepRunning = true;
+
 Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort) : Einstein(configFileName, listenIp, listenPort, true) {}
 
 Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
@@ -36,6 +45,7 @@ Einstein::Einstein(const string configFileName, const string listenIp, const uin
 
 Einstein::~Einstein()
 {
+	cerr << "Eliminando Einstein" << endl;
 }
 
 void Einstein::readConfig(const string configFileName)
@@ -99,7 +109,8 @@ void Einstein::readConfig(const string configFileName)
 
 EinsConn::EinsConn(string listenIp, uint16_t listenPort) : EinsConn(listenIp, listenPort, true) {}
 
-EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms) {
+EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
+{
 	// Start socket to receive connections from worms
 	this->listenIpStr = listenIp;
 	this->listenIp = inet_addr(listenIp.c_str());
@@ -115,11 +126,18 @@ EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDe
 	this->numWormSockets = 0;
 	this->previousPollIndex = 0;
 	this->autoDeployWorms = autoDeployWorms;
+
+	signal((int) SIGINT, EinsConn::signal_callback_handler);
 }
-	
+
+void EinsConn::signal_callback_handler(int signum)
+{
+	keepRunning = false;
+}
+
 EinsConn::~EinsConn()
 {
-	//this->deleteAllWorms();
+	this->deleteAllWorms();
 	close(this->listeningSocket);
 
 	if (this->wormSockets != 0) {
@@ -162,6 +180,25 @@ void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip)
 
 }
 
+
+void EinsConn::deleteWorm(const uint16_t id)
+{
+	cerr << "Deleting worm id = " << id << endl;
+
+	this->connections.erase(id);
+}
+
+void EinsConn::deleteAllWorms()
+{
+	cerr << "Deleting all worms" << endl;
+
+	while (!this->connections.empty()) {
+		this->deleteWorm(this->connections.rbegin()->first);
+	}
+
+	cerr << "Done" << endl;
+}
+
 void EinsConn::run()
 {
 	// Deploy worms
@@ -180,9 +217,11 @@ void EinsConn::run()
 
 	cerr << "Completed setup of all worms\n";
 
-	for (;;) {
+	for (; keepRunning;) {
 		pollWorms();
 	}
+
+	throw std::runtime_error("Forcing to delete Einstein");
 }
 
 int EinsConn::setupWorm()
@@ -290,7 +329,12 @@ void EinsConn::pollWorms()
 	st = poll(this->fdinfo, this->numFilledPolls, 1);
 
 	if (st == -1) {
-		throw std::runtime_error("Failed poll");
+		if (keepRunning) {
+			throw std::runtime_error("Failed poll");
+
+		} else {
+			return;
+		}
 
 	} else if (st) {
 		// Check all sockets from the socket next to the one that received data in the previous iteration

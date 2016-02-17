@@ -13,6 +13,7 @@ extern "C" {
 	};
 
 	typedef struct {
+		uint8_t bussy;
 		uint16_t Port;
 		uint32_t IP; //TODO fix para ipv6
 		int socket;

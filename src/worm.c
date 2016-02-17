@@ -119,9 +119,18 @@ uint8_t WH_init(void)
 	}
 
 	// Lanzar hilo de recepción de conexiones
+	WH_einsConn.bussy = 1;
+
 	if (pthread_create(&WH_wormThread, NULL, WH_thread, NULL)) {
 		return 1;
 	}
+
+	//Creamos el enrutado dinámico
+	if (WH_DymRoute_init(WH_mySetup.connectionDescription, &WH_myDstWorms)) {
+		return 1;
+	}
+
+	WH_einsConn.bussy = 0;
 
 	return 0;
 }
@@ -132,28 +141,55 @@ uint8_t WH_init(void)
 void *WH_thread(void *arg)
 {
 	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
-	//struct timeval ts;
-	//ts.tv_sec  =   0;
-	//ts.tv_usec = 250000;
+	struct timeval ts;
+	ts.tv_sec  =   0;
+	ts.tv_usec = 250000;
 
 	if (listeningSocket == -1) {
 		perror("Error opening socket");
 		exit(-1);
 	}
 
+	if (setsockopt(listeningSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&ts,
+				   sizeof(struct timeval)) < 0) {
+		fputs("[TH] setsockopt failed [1]\n", stderr);
+	}
+
+	if (setsockopt(listeningSocket, SOL_SOCKET, SO_SNDTIMEO, (char *)&ts,
+				   sizeof(struct timeval)) < 0) {
+		fputs("[TH] setsockopt failed [2]\n", stderr);
+	}
+
 	while (1) {
 		//poll for incomming connections/requests.
-		//int socket = tcp_accept(listeningSocket,&ts);
-		int socket = tcp_accept(listeningSocket, NULL);
+		int socket = tcp_accept(listeningSocket, &ts);
+		//int socket = tcp_accept(listeningSocket, NULL);
 
 		if (socket < 0) {
-			fputs("Error abriendo socket", stderr);
+			enum ctrlMsgType type;
+
+			//Lectura desde Einstein
+			if (!WH_einsConn.bussy) {
+				if (tcp_message_recv(WH_einsConn.socket, &type, sizeof(type))) {
+					continue;
+
+				} else {
+					switch (type) {
+					case HALT:
+						fputs("Halting Worm by EINSTEIN...\n", stderr);
+						exit(0);
+
+					default:
+						continue;
+					}
+				}
+			}
 
 		} else {
 			enum wormMsgType type;
 
 			if (tcp_message_recv(socket, &type, sizeof(type))) {
-				fputs("Error abriendo socket", stderr);
+				fputs("Error abriendo socket\n", stderr);
 				continue;
 			}
 
@@ -294,12 +330,12 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 	struct in_addr ip_addr;
 	ip_addr.s_addr = c->ip;
 
-	int socket = tcp_connect_to(inet_ntoa(ip_addr), c->port);
+	int socket;
 
-	if (socket == -1) {
-		perror("Error solicitando información del Worm [0]");
-		return 1;
-	}
+	do {
+		// Force keep-trying
+		socket = tcp_connect_to(inet_ntoa(ip_addr), c->port);
+	} while (socket == -1);
 
 	//Solicitamos datos...
 	enum wormMsgType type = HELLO; //Con Worm Info
@@ -607,6 +643,10 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 		if (!memcmp(dw->supportedTypes + i, mi->type, sizeof(ConnectionDataType))) {
 			//tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
 			if (&(dw->conns[i]) == NULL) {
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [SETUP-CONN-DATA]\n", dw->id);
+#endif
+
 				if (WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {
 #ifdef _DYM_ROUTE_DEBUG_
 					fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL-SETUP]\n", dw->id);
@@ -940,6 +980,7 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId)
 	//TODO: Obtener información de los tipos disponibles.
 	worm->numberOfTypes = 0;
 	worm->supportedTypes = NULL;
+	worm->conns = NULL;
 
 	WH_connectWorm(worm);
 
