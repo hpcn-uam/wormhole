@@ -59,6 +59,9 @@ obj:
 lib:
 	mkdir -p lib
 
+doc:
+	mkdir -p doc
+
 bin:
 	mkdir -p bin
 

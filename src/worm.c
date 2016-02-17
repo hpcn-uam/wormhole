@@ -103,7 +103,7 @@ uint8_t WH_init(void)
 	}
 
 	// Receive connectionDescription
-	WH_mySetup.connectionDescription = malloc(WH_mySetup.connectionDescriptionLength + 1);
+	WH_mySetup.connectionDescription = calloc(WH_mySetup.connectionDescriptionLength + 1, sizeof(char));
 
 	if (tcp_message_recv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength) != 0) {
 		return 1;
@@ -162,7 +162,7 @@ void *WH_thread(void *arg)
 			default:
 				type = WORMINFO; //Con Worm Info
 
-				fputs("Worm Info Pedida\n", stderr);
+				//fputs("Worm Info Pedida\n", stderr);
 
 				if (tcp_message_send(socket, &type, sizeof(type))) {
 					perror("Error contestando socket [1]\n");
@@ -182,7 +182,7 @@ void *WH_thread(void *arg)
 					continue;
 				}
 
-				fprintf(stderr, "Enviando config con size=%zu\n", WH_myConfig.numInputTypes);
+				//fprintf(stderr, "Enviando config con size=%zu\n", WH_myConfig.numInputTypes);
 
 				if (tcp_message_send(socket, WH_myConfig.inputTypes, sizeof(ConnectionDataType)*WH_myConfig.numInputTypes)) { //Con wormConfig
 					perror("Error contestando socket [4]");
@@ -190,7 +190,7 @@ void *WH_thread(void *arg)
 					continue;
 				}
 
-				fputs("Worm Info Respondida\n", stderr);
+				//fputs("Worm Info Respondida\n", stderr);
 
 				close(socket); //cerramos el socket
 				break;
@@ -313,6 +313,16 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 		return 1;
 	}
 
+	if (tcp_message_recv(socket, &type, sizeof(type))) {
+		perror("Error solicitando información del Worm [1]");
+		close(socket);
+		return 1;
+	}
+
+	if (type != WORMINFO) {
+		fprintf(stderr, "Respuesta de worm no esperada...\n");
+	}
+
 	if (tcp_message_recv(socket, &wormSetup, sizeof(wormSetup))) { //Con wormSetup
 		perror("Error solicitando información del Worm [2]");
 		close(socket);
@@ -326,7 +336,6 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 	}
 
 	wormConfig.inputTypes = realloc(c->supportedTypes, sizeof(ConnectionDataType) * wormConfig.numInputTypes);
-	fprintf(stderr, "connect [4] : Recv de %zu types\n", wormConfig.numInputTypes);
 
 	if (tcp_message_recv(socket, wormConfig.inputTypes, sizeof(ConnectionDataType)*wormConfig.numInputTypes)) { //Con wormConfig
 		perror("Error solicitando información del Worm [4]");

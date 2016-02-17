@@ -36,13 +36,16 @@ int main(int argc, char **argv)
 	MessageInfo mi;
 	ConnectionDataType type;
 	type.type = ARRAY;
-	type.ext.arrayType = INT8;
+	type.ext.arrayType = UINT8;
 
 	mi.size = strlen(TESTDATA) + 1;
 	mi.type = &type;
 	mi.category = 1;
 
 	st = WH_send(TESTDATA, &mi);
+
+	sleep(5);
+
 	assert(st == 0);
 	fprintf(stderr, "Mensajes enrutados!\n");
 

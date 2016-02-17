@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
 	} else {
 		try {
-			EinsteinTester einsTester(argv[1], argv[2], false);
+			EinsteinTester einsTester(argv[1], argv[2], true);
 			std::cout << "Éxito\n";
 
 		} catch (exception &e) {
