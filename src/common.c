@@ -9,8 +9,6 @@
 #include <unistd.h>
 #include <time.h>
 
-#define OPTIMAL_BUFFER_SIZE (512*1024)
-
 size_t current_send_buf = 0;
 
 int tcp_connect_to(char *ip, uint16_t port)
@@ -32,6 +30,7 @@ int tcp_connect_to(char *ip, uint16_t port)
 	cli_addr.sin_addr.s_addr = inet_addr(ip);
 
 	if (connect(sockfd, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in)) < 0) {
+		close(sockfd);
 		return -1;
 	}
 
@@ -67,7 +66,7 @@ int tcp_listen_on_port(uint16_t port)
 		return -1;
 	}
 
-	if (listen(sockfd, 5) != 0) {
+	if (listen(sockfd, 50) != 0) {
 		perror("listen");
 		return -1;
 	}

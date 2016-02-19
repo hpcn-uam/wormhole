@@ -23,6 +23,9 @@ DestinationWorms WH_myRcvWorms = {0};
 WormConfig WH_myConfig = {0};
 
 pthread_t WH_wormThread;
+
+
+volatile uint8_t WH_bussy = 0;
 /*
 *===============
 */
@@ -111,7 +114,6 @@ uint8_t WH_init(void)
 
 	//TypeSetup
 	if (WH_myConfig.inputTypes == NULL) {
-		fputs("me ejecuté!\n", stderr);
 		ConnectionDataType tmpType;
 		tmpType.type = ARRAY;
 		tmpType.ext.arrayType = UINT8;
@@ -119,7 +121,7 @@ uint8_t WH_init(void)
 	}
 
 	// Lanzar hilo de recepción de conexiones
-	WH_einsConn.bussy = 1;
+	WH_bussy = 1;
 
 	if (pthread_create(&WH_wormThread, NULL, WH_thread, NULL)) {
 		return 1;
@@ -130,9 +132,40 @@ uint8_t WH_init(void)
 		return 1;
 	}
 
-	WH_einsConn.bussy = 0;
+	WH_bussy = 0;
+
+	struct timeval ts;
+	ts.tv_sec  =   0;
+	ts.tv_usec = 50000;
+
+	if (setsockopt(WH_einsConn.socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&ts,
+				   sizeof(struct timeval)) < 0) {
+		fputs("[TH] setsockopt failed [1]\n", stderr);
+	}
+
+	if (setsockopt(WH_einsConn.socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&ts,
+				   sizeof(struct timeval)) < 0) {
+		fputs("[TH] setsockopt failed [2]\n", stderr);
+	}
 
 	return 0;
+}
+
+/** WH_halt
+ * Stops and free the WormHole Library
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_halt(void)
+{
+	//TODO fix this function, in order to orderly shutdown
+
+	struct timespec ts;
+	ts.tv_sec = 1;
+	ts.tv_nsec = 0;
+
+	while (1) {
+		nanosleep(&ts, 0);
+	}
 }
 
 /* Name WH_thread
@@ -150,16 +183,6 @@ void *WH_thread(void *arg)
 		exit(-1);
 	}
 
-	if (setsockopt(listeningSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&ts,
-				   sizeof(struct timeval)) < 0) {
-		fputs("[TH] setsockopt failed [1]\n", stderr);
-	}
-
-	if (setsockopt(listeningSocket, SOL_SOCKET, SO_SNDTIMEO, (char *)&ts,
-				   sizeof(struct timeval)) < 0) {
-		fputs("[TH] setsockopt failed [2]\n", stderr);
-	}
-
 	while (1) {
 		//poll for incomming connections/requests.
 		int socket = tcp_accept(listeningSocket, &ts);
@@ -169,7 +192,7 @@ void *WH_thread(void *arg)
 			enum ctrlMsgType type;
 
 			//Lectura desde Einstein
-			if (!WH_einsConn.bussy) {
+			if (!WH_bussy) {
 				if (tcp_message_recv(WH_einsConn.socket, &type, sizeof(type))) {
 					continue;
 
@@ -186,6 +209,7 @@ void *WH_thread(void *arg)
 			}
 
 		} else {
+			//fprintf(stderr, "[THREAD:%d]\n", __LINE__);
 			enum wormMsgType type;
 
 			if (tcp_message_recv(socket, &type, sizeof(type))) {
@@ -196,87 +220,96 @@ void *WH_thread(void *arg)
 			switch (type) {
 			case HELLO: //Contestamos a Hello
 			default:
-				type = WORMINFO; //Con Worm Info
-
-				//fputs("Worm Info Pedida\n", stderr);
-
-				if (tcp_message_send(socket, &type, sizeof(type))) {
-					perror("Error contestando socket [1]\n");
-					close(socket); //cerramos el socket
-					continue;
-				}
-
-				if (tcp_message_send(socket, &WH_mySetup, sizeof(WH_mySetup))) { //Con wormSetup
-					perror("Error contestando socket [2]\n");
-					close(socket); //cerramos el socket
-					continue;
-				}
-
-				if (tcp_message_send(socket, &WH_myConfig, sizeof(WH_myConfig))) { //Con wormConfig
-					perror("Error contestando socket [3]\n");
-					close(socket); //cerramos el socket
-					continue;
-				}
-
-				//fprintf(stderr, "Enviando config con size=%zu\n", WH_myConfig.numInputTypes);
-
-				if (tcp_message_send(socket, WH_myConfig.inputTypes, sizeof(ConnectionDataType)*WH_myConfig.numInputTypes)) { //Con wormConfig
-					perror("Error contestando socket [4]");
-					close(socket); //cerramos el socket
-					continue;
-				}
-
-				//fputs("Worm Info Respondida\n", stderr);
-
+				WH_TH_hellow(socket);
 				close(socket); //cerramos el socket
 				break;
 
-			case SETUPWORMCONN: { //Establecemos una conexión completa con otro worm
-				DestinationWorm tmpDestWorm;
-
-				fputs("Worm setup Pedido\n", stderr);
-
-				//Recibimos un destinationWorm
-				if (tcp_message_recv(socket, &tmpDestWorm, sizeof(DestinationWorm))) {
-					fputs("Error configurando socket", stderr);
-					close(socket); //cerramos el socket
-					continue;
-				}
-
-				DestinationWorm *tmpDestWormPtr
-					= WH_addWorm(&WH_myRcvWorms, tmpDestWorm.id);
-
-				tmpDestWormPtr->ip = tmpDestWorm.ip;
-				tmpDestWormPtr->port = tmpDestWorm.port;
-				tmpDestWormPtr->numberOfTypes++;
-				tmpDestWormPtr->supportedTypes = realloc(tmpDestWormPtr->supportedTypes,
-												 tmpDestWormPtr->numberOfTypes * sizeof(ConnectionDataType));
-				tmpDestWormPtr->conns = realloc(tmpDestWormPtr->conns,
-												tmpDestWormPtr->numberOfTypes * sizeof(Connection));
-
-				if (tcp_message_recv(socket, &(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1]), sizeof(Connection))) {
-					fputs("Error configurando socket", stderr);
-					close(socket); //cerramos el socket
-					continue;
-				}
-
-				socket_upgrade_to_async(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1].socket), socket);
-
-#ifdef _WORMLIB_DEBUG_
-				fprintf(stderr, "Conexión entrante en worm! Id nodo conectante: %d\n",
-						WH_myRcvWorms.worms[WH_myRcvWorms.numberOfWorms].id);
-#endif
-
-				fputs("Worm setup finalizado\n", stderr);
-
+			case SETUPWORMCONN:  //Establecemos una conexión completa con otro worm
+				WH_TH_setupworm(socket);
 				break;
-			}
 			}
 
 		}
 	}
 
 	return NULL;
+}
+
+/** WH_TH_hellow
+ * Process a HELLOW message
+ */
+void inline WH_TH_hellow(int socket)
+{
+	enum wormMsgType type;
+	type = WORMINFO; //Con Worm Info
+
+	//fputs("Worm Info Pedida\n", stderr);
+
+	if (tcp_message_send(socket, &type, sizeof(type))) {
+		perror("Error contestando socket [1]\n");
+		close(socket); //cerramos el socket
+		return;
+	}
+
+	if (tcp_message_send(socket, &WH_mySetup, sizeof(WH_mySetup))) { //Con wormSetup
+		perror("Error contestando socket [2]\n");
+		close(socket); //cerramos el socket
+		return;
+	}
+
+	if (tcp_message_send(socket, &WH_myConfig, sizeof(WH_myConfig))) { //Con wormConfig
+		perror("Error contestando socket [3]\n");
+		close(socket); //cerramos el socket
+		return;
+	}
+
+	//fprintf(stderr, "Enviando config con size=%zu\n", WH_myConfig.numInputTypes);
+
+	if (tcp_message_send(socket, WH_myConfig.inputTypes, sizeof(ConnectionDataType)*WH_myConfig.numInputTypes)) { //Con wormConfig
+		perror("Error contestando socket [4]");
+		close(socket); //cerramos el socket
+		return;
+	}
+
+	//fputs("Worm Info Respondida\n", stderr);
+}
+
+/** SETUPWORMCONN
+ * Process a HELLOW message
+ */
+void inline WH_TH_setupworm(int socket)
+{
+	DestinationWorm tmpDestWorm;
+
+	//Recibimos un destinationWorm
+	if (tcp_message_recv(socket, &tmpDestWorm, sizeof(DestinationWorm))) {
+		fputs("Error configurando socket", stderr);
+		close(socket); //cerramos el socket
+		return;
+	}
+
+	DestinationWorm *tmpDestWormPtr
+		= WH_addWorm(&WH_myRcvWorms, tmpDestWorm.id, 0);
+
+	tmpDestWormPtr->ip = tmpDestWorm.ip;
+	tmpDestWormPtr->port = tmpDestWorm.port;
+	tmpDestWormPtr->numberOfTypes++;
+	tmpDestWormPtr->supportedTypes = realloc(tmpDestWormPtr->supportedTypes,
+									 tmpDestWormPtr->numberOfTypes * sizeof(ConnectionDataType));
+	tmpDestWormPtr->conns = realloc(tmpDestWormPtr->conns,
+									tmpDestWormPtr->numberOfTypes * sizeof(Connection));
+
+	if (tcp_message_recv(socket, &(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1]), sizeof(Connection))) {
+		fputs("Error configurando socket", stderr);
+		close(socket); //cerramos el socket
+		return;
+	}
+
+	socket_upgrade_to_async(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1].socket), socket);
+
+#ifdef _WORMLIB_DEBUG_
+	fprintf(stderr, "[WORM] Input Connexion: %d\n", tmpDestWormPtr->id);
+#endif
 }
 
 /* Name WH_connectionPoll
@@ -330,11 +363,18 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 	struct in_addr ip_addr;
 	ip_addr.s_addr = c->ip;
 
-	int socket;
+	int socket = 0;
+
+	//fprintf(stderr, "[DEBUG:%d ; %s:%d]\n", __LINE__, inet_ntoa(ip_addr), c->port);
 
 	do {
 		// Force keep-trying
 		socket = tcp_connect_to(inet_ntoa(ip_addr), c->port);
+
+		if (socket == -1) {
+			perror("Error estableciendo conexion volatil con WORM");
+			fflush(stderr);
+		}
 	} while (socket == -1);
 
 	//Solicitamos datos...
@@ -357,6 +397,8 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 
 	if (type != WORMINFO) {
 		fprintf(stderr, "Respuesta de worm no esperada...\n");
+		close(socket);
+		return 1;
 	}
 
 	if (tcp_message_recv(socket, &wormSetup, sizeof(wormSetup))) { //Con wormSetup
@@ -383,10 +425,9 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 
 	//Rellenamos el worm entrante
 	c->id = wormSetup.id;
-	c->conns = NULL;
 	c->numberOfTypes = wormConfig.numInputTypes;
 	c->supportedTypes = wormConfig.inputTypes;
-	//FIXME en caso de que se reduzca el numero de conexiones
+	//TODO en caso de que se reduzca el numero de conexiones problemas
 	c->conns = realloc(c->conns, sizeof(Connection) * wormConfig.numInputTypes);
 
 	return 0;
@@ -401,13 +442,14 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	struct in_addr ip_addr;
 	ip_addr.s_addr = dw->ip;
 
+	WH_connectWorm(dw);
+
 	int socket = tcp_connect_to(inet_ntoa(ip_addr), dw->port);
 
 	if (socket == -1) {
 		return 1;
 	}
 
-	WH_connectWorm(dw);
 	int8_t flag = 0;
 
 	for (int i = 0; i < dw->numberOfTypes; i++) {
@@ -421,13 +463,13 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 #ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "No se puede abrir un socket con el datatype solicitado!\n");
 #endif
-		return -1;
+		return 1;
 	}
 
 	//Informamos del tipo de conexion...
 	enum wormMsgType msgtype = SETUPWORMCONN; //Con Worm config
 
-	if (tcp_message_send(socket, &msgtype, sizeof(type))) {
+	if (tcp_message_send(socket, &msgtype, sizeof(msgtype))) {
 		fputs("Error configurando Worm externo", stderr);
 		return 1;
 	}
@@ -447,6 +489,9 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	Connection conntmp;
 	conntmp.type = *type;
+	conntmp.socket = (AsyncSocket) {
+		0
+	};
 
 	if (tcp_message_send(socket, &conntmp, sizeof(conntmp))) { //DstWorm
 		fprintf(stderr, "Error configurando Worm externo %d\n", dw->id);
@@ -464,7 +509,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 
 #ifdef _WORMLIB_DEBUG_
-	fprintf(stderr, "Conexión saliente a worm! Id nodo conectado: %d\n", dw->id);
+	fprintf(stderr, "[WORM] Output Connexion: %d\n", dw->id);
 #endif
 
 	return 0;
@@ -642,11 +687,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 	for (int i = 0; i < dw->numberOfTypes; i++) {
 		if (!memcmp(dw->supportedTypes + i, mi->type, sizeof(ConnectionDataType))) {
 			//tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
-			if (&(dw->conns[i]) == NULL) {
-#ifdef _DYM_ROUTE_DEBUG_
-				fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [SETUP-CONN-DATA]\n", dw->id);
-#endif
-
+			if (dw->conns[i].socket.buf_len != OPTIMAL_BUFFER_SIZE) {//TODO fix de posible fuente de errores
 				if (WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {
 #ifdef _DYM_ROUTE_DEBUG_
 					fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL-SETUP]\n", dw->id);
@@ -709,7 +750,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 			fprintf(stderr, "ROUTEDEBUG: Sending to %d\n", nextNode);
 #endif
 
-			DestinationWorm *worm = WH_addWorm(wms, nextNode);
+			DestinationWorm *worm = WH_addWorm(wms, nextNode, 1);
 
 			if (worm) {
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
@@ -826,7 +867,7 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 				i++;
 			}
 
-			DestinationWorm *worm = WH_addWorm(wms, nextNode);
+			DestinationWorm *worm = WH_addWorm(wms, nextNode, 1);
 
 			if (worm) {
 
@@ -946,11 +987,11 @@ size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId)
 	return 0;
 }
 
-
-/* Name WH_addWorm
-	* Return the created connection
-	*/
-DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId)
+/** WH_addWorm
+ * @param init Determines if the worm should be initialized or not
+ * @return the created connection
+ */
+DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const uint8_t init)
 {
 	DestinationWorm *worm = NULL;
 	worm = WH_findWorm(wms, wormId);
@@ -965,24 +1006,28 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId)
 	worm = calloc(sizeof(DestinationWorm), 1); //TODO REVISAR
 	worm->id = wormId;
 
-	WormSetup wSetup;
+	if (init) {
+		WormSetup wSetup;
 
-	if (WH_getWormData(&wSetup, wormId)) {
+		if (WH_getWormData(&wSetup, wormId)) {
 #ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEaddworm: Worm %d no data retrived\n", wormId);
+			fprintf(stderr, "ROUTEaddworm: Worm %d no data retrived\n", wormId);
 #endif
-		return NULL;
-	}
+			return NULL;
+		}
 
-	worm->port = wSetup.listenPort;
-	worm->ip = wSetup.IP;
+		worm->port = wSetup.listenPort;
+		worm->ip = wSetup.IP;
+	}
 
 	//TODO: Obtener información de los tipos disponibles.
 	worm->numberOfTypes = 0;
 	worm->supportedTypes = NULL;
 	worm->conns = NULL;
 
-	WH_connectWorm(worm);
+	if (init) {
+		WH_connectWorm(worm);
+	}
 
 	wms->worms[wms->numberOfWorms - 1] = *worm;
 	return wms->worms + (wms->numberOfWorms - 1);

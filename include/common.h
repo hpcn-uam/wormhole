@@ -18,6 +18,8 @@ extern "C" {
 #define likely(x)    __builtin_expect (!!(x), 1)
 #define unlikely(x)  __builtin_expect (!!(x), 0)
 
+#define OPTIMAL_BUFFER_SIZE (512*1024)
+
 	enum ctrlMsgType {
 		HELLOEINSTEIN, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR, HALT
 	};

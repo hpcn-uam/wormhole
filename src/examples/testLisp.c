@@ -36,10 +36,9 @@ int main(int argc, char **argv)
 	mi.category = 1;
 
 	st = WH_send(TESTDATA, &mi);
-
-	sleep(50);
-
 	assert(st == 0);
 	fprintf(stderr, "Mensajes enrutados!\n");
+
+	return WH_halt();
 
 }

@@ -13,7 +13,6 @@ extern "C" {
 	};
 
 	typedef struct {
-		uint8_t bussy;
 		uint16_t Port;
 		uint32_t IP; //TODO fix para ipv6
 		int socket;
@@ -56,15 +55,11 @@ extern "C" {
 	 */
 	uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId);
 
-	/** WH_addWormConnection
-	 * @return the created connection
-	 */
-	Connection *WH_addWormConnection(DestinationWorm *cns);
-
 	/** WH_addWorm
+	 * @param init Determines if the worm should be initialized or not
 	 * @return the created connection
 	 */
-	DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId);
+	DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const uint8_t init);
 
 	/** WH_findWorm
 	 * @return the worm mached (if no exists)
@@ -80,6 +75,16 @@ extern "C" {
 	 * A worm Thread listening for info/petitions.
 	 */
 	void *WH_thread(void *arg);
+
+	/** WH_TH_hellow
+	 * Process a HELLOW message
+	 */
+	void WH_TH_hellow(int socket);
+
+	/** SETUPWORMCONN
+	 * Process a HELLOW message
+	 */
+	void WH_TH_setupworm(int socket);
 
 	/** WH_connectionPoll
 	 * Poll data from some socket
