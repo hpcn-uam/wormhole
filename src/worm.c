@@ -602,6 +602,87 @@ uint8_t WH_send(const void *const data, const MessageInfo *const mi)
 {
 	return WH_DymRoute_route(data, mi, &WH_myDstWorms);
 }
+
+/** WH_recv
+ * TODO
+ * Params:
+ * @return the number of bytes readed, 0 if ERROR or none.
+ */
+uint32_t WH_recv(void *data, MessageInfo *mi)
+{
+	Connection *c = WH_connectionPoll(&WH_myRcvWorms);
+	mi->type = &(c->type);
+	size_t tmp;
+
+	switch (c->type.type) {
+	case INT8:
+	case UINT8:
+		if (!tcp_message_recv_async(&(c->socket), data, 1)) {
+			return 1;
+		}
+
+	case INT16:
+	case UINT16:
+		if (!tcp_message_recv_async(&(c->socket), data, 2)) {
+			return 2;
+		}
+
+	case INT32:
+	case UINT32:
+		if (! tcp_message_recv_async(&(c->socket), data, 4)) {
+			return 4;
+		}
+
+	case INT64:
+	case UINT64:
+		if (! tcp_message_recv_async(&(c->socket), data, 8)) {
+			return 8;
+		}
+
+	case STRING:
+		if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp)))
+			if (!tcp_message_recv_async(&(c->socket), &data, 1 * tmp)) {
+				return tmp;
+			}
+
+	case ARRAY:
+		if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp)))
+			switch (c->type.ext.arrayType) {
+			case INT8:
+			case UINT8:
+				if (!tcp_message_recv_async(&(c->socket), data, 1 * tmp)) {
+					return 1 * tmp;
+				}
+
+			case INT16:
+			case UINT16:
+				if (!tcp_message_recv_async(&(c->socket), data, 2 * tmp)) {
+					return 2 * tmp;
+				}
+
+			case INT32:
+			case UINT32:
+				if (! tcp_message_recv_async(&(c->socket), data, 4 * tmp)) {
+					return 4 * tmp;
+				}
+
+			case INT64:
+			case UINT64:
+				if (! tcp_message_recv_async(&(c->socket), data, 8 * tmp)) {
+					return 8 * tmp;
+				}
+
+			default:
+				fprintf(stderr, "ARRAYTYPE NOT YET IMPLEMENTED\n"); //TODO implement
+			}
+
+	default:
+		fprintf(stderr, "NOT YET IMPLEMENTED\n"); //TODO implement
+	}
+
+	return 0;
+}
+
 /* Name WH_DymRoute_route
 * Enrute a message
 * Return 0 if OK, something else if error.

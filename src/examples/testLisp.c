@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <malloc.h>
+
 extern Worm2EinsConn WH_einsConn;
 extern uint16_t WH_myId;
 extern WormSetup WH_mySetup;
@@ -38,6 +40,15 @@ int main(int argc, char **argv)
 	st = WH_send(TESTDATA, &mi);
 	assert(st == 0);
 	fprintf(stderr, "Mensajes enrutados!\n");
+
+	char *data = (char *)malloc(1000);
+
+	WH_recv(data, &mi);
+	fprintf(stderr, "RECVMSG: %s\n", data);
+	WH_recv(data, &mi);
+	fprintf(stderr, "RECVMSG: %s\n", data);
+	WH_recv(data, &mi);
+	fprintf(stderr, "RECVMSG: %s\n", data);
 
 	return WH_halt();
 
