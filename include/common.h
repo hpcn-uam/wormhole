@@ -97,11 +97,6 @@ extern "C" {
 	 */
 	int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout);
 
-	inline int can_be_read(AsyncSocket *s)
-	{
-		return s->can_read;
-	}
-
 	int socket_upgrade_to_async(AsyncSocket *async_sock, int sockfd);
 
 #ifdef __cplusplus
