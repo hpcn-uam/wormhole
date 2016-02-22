@@ -6,7 +6,7 @@
 #include "../async_inline.c"
 
 #define NUM_SMALL_MESSAGES 500000000
-#define NUM_BIG_MESSAGES 500000
+#define NUM_BIG_MESSAGES 5000000
 #define SIZE_BUFFER 1024*4
 
 int main(int argc, char **argv)
@@ -53,8 +53,8 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
 		tcp_message_recv_async(&sock, (void *)buffer, SIZE_BUFFER);
-		if (i < 1000 &&*((int *) buffer) != i) {
-			fprintf(stderr, "Paquete perdido %d\n", i);
+		if  (i > 499000) {
+			flush_recv(&sock);
 		}
 	}
 

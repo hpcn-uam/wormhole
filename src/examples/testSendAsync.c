@@ -8,16 +8,17 @@
 #include <malloc.h>
 
 #define NUM_SMALL_MESSAGES 500000000
-#define NUM_BIG_MESSAGES 500000
+#define NUM_BIG_MESSAGES 5000000
 #define SIZE_BUFFER 1024*4 
 
 int main(int argc, char **argv)
 {
-	void *buffer;
-
-	if (posix_memalign(&buffer, 4096, SIZE_BUFFER)) {
-		fputs("error muy feo en reserva de memoria", stderr);
+	void *buffer = calloc(SIZE_BUFFER, 1); 
+	if (!buffer) {
+		fprintf(stderr, "Error reservando memoria\n");
+		return 1;
 	}
+	
 
 	AsyncSocket sock;
 	int st = tcp_connect_to_async("127.0.0.1", 5000, &sock);
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
 
 	gettimeofday(&end, 0);
 
-	//destroy_asyncSocket(&sock);
+	destroy_asyncSocket(&sock);
 
 	fprintf(stderr, "Terminadas pruebas. %f gbps\n",
 			(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));

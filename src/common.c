@@ -162,7 +162,9 @@ void *send_fun(void *args)
 			pthread_spin_unlock(&(sock->lock));
 		} while (!writing);
 
-		tcp_message_send(sock->sockfd, sock->buff[current_buf], sock->write_pos[current_buf]);
+		if (sock->write_pos[current_buf] > 0) {
+			tcp_message_send(sock->sockfd, sock->buff[current_buf], sock->write_pos[current_buf]);
+		}
 
 		pthread_spin_lock(&(sock->lock));
 		sock->to_access[current_buf] = 0;
@@ -211,6 +213,8 @@ void *recv_fun(void *args)
 				pthread_spin_unlock(&(sock->lock));
 
 				sock->write_pos[current_buf] = 0;
+			} else {
+				pthread_spin_unlock(&(sock->lock));
 			}
 		} while (received != sock->buf_len && !sock->flush);
 		if (sock->flush) {
@@ -271,12 +275,7 @@ void flush_recv(AsyncSocket *sock) {
 	pthread_spin_unlock(&(sock->lock));
 }
 
-void destroy_asyncSocket(AsyncSocket *sock)
-{
-	free(sock->buff[0]);
-	free(sock->buff[1]);
-	close(sock->sockfd);
-
+void destroy_asyncSocket(AsyncSocket *sock) {
 	if (sock->socket_type == SEND_SOCKET) {
 		flush_send(sock);
 		flush_send(sock);
@@ -288,6 +287,9 @@ void destroy_asyncSocket(AsyncSocket *sock)
 	pthread_spin_unlock(&(sock->lock));
 	pthread_join(sock->thread, 0);
 	pthread_spin_destroy(&(sock->lock));
+	free(sock->buff[0]);
+	free(sock->buff[1]);
+	close(sock->sockfd);
 }
 
 int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
