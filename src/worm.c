@@ -26,6 +26,7 @@ pthread_t WH_wormThread;
 
 
 volatile uint8_t WH_bussy = 0;
+volatile uint8_t WH_halting = 0;
 /*
 *===============
 */
@@ -158,14 +159,23 @@ uint8_t WH_init(void)
 uint8_t WH_halt(void)
 {
 	//TODO fix this function, in order to orderly shutdown
+	enum ctrlMsgType type = HALT;
+
+	if (tcp_message_send(WH_einsConn.socket, &type, sizeof(type))) {
+		return 1;
+	}
+
+	WH_halting = 1;
 
 	struct timespec ts;
 	ts.tv_sec = 1;
 	ts.tv_nsec = 0;
 
-	while (1) {
+	while (WH_halting) {
 		nanosleep(&ts, 0);
 	}
+
+	return 0;
 }
 
 /* Name WH_thread
@@ -200,7 +210,13 @@ void *WH_thread(void *arg)
 					switch (type) {
 					case HALT:
 						fputs("Halting Worm by EINSTEIN...\n", stderr);
-						exit(0);
+
+						if (WH_halting) {
+							WH_halting = 0;
+
+						} else {
+							exit(0);
+						}
 
 					default:
 						continue;
@@ -372,6 +388,7 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 		socket = tcp_connect_to(inet_ntoa(ip_addr), c->port);
 
 		if (socket == -1) {
+			fprintf(stderr, "%s:%d\t", inet_ntoa(ip_addr), c->port);
 			perror("Error estableciendo conexion volatil con WORM");
 			fflush(stderr);
 		}
@@ -610,9 +627,18 @@ uint8_t WH_send(const void *const data, const MessageInfo *const mi)
  */
 uint32_t WH_recv(void *data, MessageInfo *mi)
 {
-	Connection *c = WH_connectionPoll(&WH_myRcvWorms);
+#ifdef _DYM_ROUTE_DEBUG_
+	fprintf(stderr, "ROUTEDEBUG: Poling...\n");
+#endif
+	Connection *c;
+
+	while (!(c = WH_connectionPoll(&WH_myRcvWorms)));
+
+#ifdef _DYM_ROUTE_DEBUG_
+	fprintf(stderr, "ROUTEDEBUG: Msg found!...\n");
+#endif
 	mi->type = &(c->type);
-	size_t tmp;
+	uint32_t tmp;
 
 	switch (c->type.type) {
 	case INT8:
@@ -775,6 +801,10 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 #endif
 					return -1;
 				}
+			}
+
+			if (mi->type == ARRAY) {
+				tcp_message_send_async(&(dw->conns[i].socket), &(mi->size), sizeof(mi->size));
 			}
 
 #ifdef _DYM_ROUTE_DEBUG_

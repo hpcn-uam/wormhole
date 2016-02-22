@@ -16,6 +16,7 @@ struct Eins2WormConn {
 	int socket;
 	string host;
 	string programName;
+	bool halting;
 
 	Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName);
 	~Eins2WormConn();

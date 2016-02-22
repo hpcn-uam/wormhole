@@ -18,6 +18,7 @@ Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, str
 	memcpy(this->ws.connectionDescription, connectionDescription.c_str(), connectionDescription.size());
 	this->host = host;
 	this->programName = programName;
+	this->halting = false;
 }
 
 Eins2WormConn::~Eins2WormConn()
@@ -307,7 +308,7 @@ void EinsConn::pollWorms()
 	for (i = 0, j = 0; i < this->numWormSockets; ++i, ++j) {
 		memset(& (this->fdinfo[i]), 0, sizeof(struct pollfd));
 
-		if (this->wormSockets[j] == -1) {
+		if (this->wormSockets[j] == -1) { //TODO documentar que hace este bucle for...
 			// Relaunch worm
 			auto connIterator = connections.begin();
 
@@ -401,6 +402,32 @@ void EinsConn::pollWorms()
 					}
 
 					break;
+
+				case HALT: { // TODO better implementation
+					for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+						if (it->second->socket == this->wormSockets[i]) {
+							it->second->halting = true;
+							cerr << "El worm " << it->first << " ha finalizado su tarea." << endl;
+						}
+					}
+
+					uint8_t flag = 1;
+
+					for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+						if (!it->second->halting) {
+							flag = 0;
+							break;
+						}
+					}
+
+					if (flag) {
+						cerr << "Cerrando Einstein debido a que todas las tareas han sido completadas" << endl;
+						this->deleteAllWorms();
+						exit(0); //TODO cambiar por un cierre mas ordenado, como por ejemplo, modificando la variable de salida utilizada para el cntl+c
+					}
+
+					break;
+				}
 
 				case DOWNLINK:
 
