@@ -125,10 +125,6 @@ int tcp_message_recv(int socket, void *message, size_t len)
 	} while (received != len && received_now != -1 && received_now != 0);
 
 	if (received_now == -1 || received_now == 0) {
-		if (received_now == 0) {
-			fputs("recv=0\n", stderr);
-		}
-
 		return 1;
 	}
 
