@@ -9,7 +9,7 @@ inline int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t
 	void *msgptr = (void *)message;
 	
 	while (unlikely(sock->buf_len - sock->write_pos[sock->current_send_buf] < len)) {
-		memcpy(sock->buff[sock->current_send_buf], msgptr, sock->buf_len - sock->write_pos[sock->current_send_buf]);
+		memcpy(sock->buff[sock->current_send_buf] + sock->write_pos[sock->current_send_buf], msgptr, sock->buf_len - sock->write_pos[sock->current_send_buf]);
 		msgptr += sock->buf_len - sock->write_pos[sock->current_send_buf];
 		len -= sock->buf_len - sock->write_pos[sock->current_send_buf];
 		

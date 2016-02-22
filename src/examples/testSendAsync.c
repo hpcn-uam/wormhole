@@ -10,7 +10,7 @@
 #define NUM_SMALL_MESSAGES 500000000
 #define NUM_BIG_MESSAGES 500000
 #define SIZE_BUFFER 1024*4
-
+	int val = 0;
 int main(int argc, char **argv)
 {
 	void *buffer;
@@ -33,6 +33,10 @@ int main(int argc, char **argv)
 	gettimeofday(&start, 0);
 
 	for (int i = 0; i < NUM_SMALL_MESSAGES; i++) {
+		if (i == 499974144) {
+			val = 1;
+		}
+		value = i;
 		tcp_message_send_async(&sock, (void *)&value, sizeof(uint64_t));
 	}
 
@@ -53,6 +57,7 @@ int main(int argc, char **argv)
 	gettimeofday(&start, 0);
 
 	for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
+		*((int*)buffer) = i;
 		tcp_message_send_async(&sock, (void *)buffer, SIZE_BUFFER);
 		//tcp_message_send(sock.sockfd, (void *)buffer, SIZE_BUFFER);
 	}

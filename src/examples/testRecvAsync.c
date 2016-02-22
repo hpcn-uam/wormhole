@@ -9,6 +9,7 @@
 #define NUM_BIG_MESSAGES 500000
 #define SIZE_BUFFER 1024*4
 
+	int val = 0;
 int main(int argc, char **argv)
 {
 	void *buffer = malloc(SIZE_BUFFER);
@@ -26,8 +27,16 @@ int main(int argc, char **argv)
 	uint64_t value;
 	gettimeofday(&start, 0);
 
+
 	for (int i = 0; i < NUM_SMALL_MESSAGES; i++) {
+		if (i == 499974144) {
+			val = 1;
+		}
 		tcp_message_recv_async(&sock, (void *)&value, sizeof(uint64_t));
+		if (value!= i) {
+			fprintf(stderr, "Paquete perdidio %d\n", i);			
+		}
+
 	}
 
 	gettimeofday(&end, 0);
@@ -44,6 +53,9 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
 		tcp_message_recv_async(&sock, (void *)buffer, SIZE_BUFFER);
+		if (i < 1000 && *((int*)buffer) != i) {
+			fprintf(stderr, "Paquete perdidio %d\n", i);
+		}
 	}
 
 	gettimeofday(&end, 0);
