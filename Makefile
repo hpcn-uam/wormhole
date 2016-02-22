@@ -1,6 +1,6 @@
 export CC=gcc
 export CXX=g++
-export FLAGS=-I include/ -Wall -Werror -g -lpthread -O1
+export FLAGS=-I include/ -Wall -Werror -g -lpthread -O0
 export CFLAGS=$(FLAGS) -std=gnu99 -fPIC
 export CXXFLAGS=$(FLAGS) -std=gnu++11
 export LDFLAGS=-fPIC -ldl -lpthread

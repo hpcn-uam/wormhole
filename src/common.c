@@ -187,6 +187,9 @@ void *recv_fun(void *args)
 		
 			pthread_spin_lock(&(sock->lock));
 			if (sock->finish) {
+				sock->to_access[current_buf] = 1;
+				sock->write_pos[current_buf] = received;
+				pthread_spin_unlock(&(sock->lock));
 				return 0;
 			}
 			if (received == sock->buf_len || sock->flush) {
@@ -262,7 +265,7 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 	return 0;
 }
 
-inline void flush_recv(AsyncSocket *sock) {
+void flush_recv(AsyncSocket *sock) {
 	pthread_spin_lock(&(sock->lock));
 	sock->flush = 1;
 	pthread_spin_unlock(&(sock->lock));
