@@ -1,5 +1,25 @@
 #include <common.h>
 
+inline void flush_send(AsyncSocket *sock) {
+	pthread_spin_lock(&(sock->lock));
+	sock->to_access[sock->current_send_buf] = 1;
+
+	sock->current_send_buf = (sock->current_send_buf + 1) % 2;
+		
+	// Wait until the buffer has been sent
+	while (sock->to_access[sock->current_send_buf]) {
+		pthread_spin_unlock(&(sock->lock));	
+		struct timespec ts;
+		ts.tv_sec = 0;
+		ts.tv_nsec = 100;
+		nanosleep(&ts, 0);
+		pthread_spin_lock(&(sock->lock));
+	}
+	pthread_spin_unlock(&(sock->lock));
+
+
+	sock->write_pos[sock->current_send_buf] = 0;
+}
 
 /* Name tcp_message_send_async
 	* Sends a full message to a socket
@@ -15,24 +35,7 @@ inline int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t
 		
 		sock->write_pos[sock->current_send_buf] = sock->buf_len;
 		
-		pthread_spin_lock(&(sock->lock));
-		sock->to_access[sock->current_send_buf] = 1;
-
-		sock->current_send_buf = (sock->current_send_buf + 1) % 2;
-			
-		// Wait until the buffer has been sent
-		while (sock->to_access[sock->current_send_buf]) {
-			pthread_spin_unlock(&(sock->lock));	
-			struct timespec ts;
-			ts.tv_sec = 0;
-			ts.tv_nsec = 100;
-			nanosleep(&ts, 0);
-			pthread_spin_lock(&(sock->lock));
-		}
-		pthread_spin_unlock(&(sock->lock));
-
-
-		sock->write_pos[sock->current_send_buf] = 0;
+		flush_send(sock);
 	}
 	
 	memcpy(sock->buff[sock->current_send_buf] + sock->write_pos[sock->current_send_buf], msgptr, len);

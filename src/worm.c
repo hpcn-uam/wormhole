@@ -321,7 +321,7 @@ void inline WH_TH_setupworm(int socket)
 		return;
 	}
 
-	socket_upgrade_to_async(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1].socket), socket);
+	socket_upgrade_to_async_recv(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1].socket), socket);
 
 #ifdef _WORMLIB_DEBUG_
 	fprintf(stderr, "[WORM] Input Connexion: %d\n", tmpDestWormPtr->id);
@@ -518,7 +518,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	for (int i = 0; i < dw->numberOfTypes; i++) {
 		if (!memcmp(dw->supportedTypes + i, type, sizeof(ConnectionDataType))) {
 
-			socket_upgrade_to_async(&(dw->conns[i].socket), socket);
+			socket_upgrade_to_async_send(&(dw->conns[i].socket), socket);
 
 			break;
 		}

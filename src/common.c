@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <time.h>
 
+#include "async_inline.c"
+
 size_t current_send_buf = 0;
 
 int tcp_connect_to(char *ip, uint16_t port)
@@ -125,10 +127,10 @@ int tcp_message_recv(int socket, void *message, size_t len)
 	} while (received != len && received_now != -1 && received_now != 0);
 
 	if (received_now == -1 || received_now == 0) {
-		return 1;
+		return received;
 	}
 
-	return 0;
+	return received;
 }
 
 typedef void *(*async_fun_p)(void *);
@@ -153,6 +155,8 @@ void *send_fun(void *args)
 
 			if (sock->to_access[current_buf]) {
 				writing = 1;
+			} else if (sock->finish) {
+				return 0;
 			}
 
 			pthread_spin_unlock(&(sock->lock));
@@ -175,28 +179,40 @@ void *recv_fun(void *args)
 	size_t current_buf = 0;
 
 	for (;;) {
-		tcp_message_recv(sock->sockfd, sock->buff[current_buf] + sock->write_pos[current_buf], sock->buf_len - sock->write_pos[current_buf]);
+		int received = 0;
+		do {
+			int received_now = tcp_message_recv(sock->sockfd, sock->buff[current_buf] + sock->write_pos[current_buf], sock->buf_len - sock->write_pos[current_buf]);
+			received += received_now;
 
-		pthread_spin_lock(&(sock->lock));
-		sock->to_access[current_buf] = 1;
-		sock->write_pos[current_buf] = sock->buf_len;
-
-		current_buf = (current_buf + 1) % 2;
-
-		// Wait until the buffer has been sent
-		while (sock->to_access[current_buf]) {
-			pthread_spin_unlock(&(sock->lock));
-			struct timespec ts;
-			ts.tv_sec = 0;
-			ts.tv_nsec = 100;
-			nanosleep(&ts, 0);
+		
 			pthread_spin_lock(&(sock->lock));
+			if (sock->finish) {
+				return 0;
+			}
+			if (received == sock->buf_len || sock->flush) {
+				sock->to_access[current_buf] = 1;
+				sock->write_pos[current_buf] = received;
+
+				current_buf = (current_buf + 1) % 2;
+
+				// Wait until the buffer has been sent
+				while (sock->to_access[current_buf]) {
+					pthread_spin_unlock(&(sock->lock));
+					struct timespec ts;
+					ts.tv_sec = 0;
+					ts.tv_nsec = 100;
+					nanosleep(&ts, 0);
+					pthread_spin_lock(&(sock->lock));
+				}
+
+				pthread_spin_unlock(&(sock->lock));
+
+				sock->write_pos[current_buf] = 0;
+			}
+		} while (received != sock->buf_len && !sock->flush);
+		if (sock->flush) {
+			sock->flush = 0;
 		}
-
-		pthread_spin_unlock(&(sock->lock));
-
-		sock->write_pos[current_buf] = 0;
-
 	}
 }
 
@@ -216,6 +232,8 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 
 	sock->can_read = 0;
 
+	sock->flush = 0;
+	sock->finish = 0;
 
 	sock->buff[0] = malloc(sizeof(uint8_t) * buf_len);
 
@@ -244,12 +262,28 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 	return 0;
 }
 
+inline void flush_recv(AsyncSocket *sock) {
+	pthread_spin_lock(&(sock->lock));
+	sock->flush = 1;
+	pthread_spin_unlock(&(sock->lock));
+}
+
 void destroy_asyncSocket(AsyncSocket *sock)
 {
 	free(sock->buff[0]);
 	free(sock->buff[1]);
 	close(sock->sockfd);
 
+	if (sock->socket_type == SEND_SOCKET) {
+		flush_send(sock);
+		flush_send(sock);
+	} else {
+		flush_recv(sock);
+	}
+	pthread_spin_lock(&(sock->lock));
+	sock->finish = 1;
+	pthread_spin_unlock(&(sock->lock));
+	pthread_join(sock->thread, 0);
 	pthread_spin_destroy(&(sock->lock));
 }
 
@@ -266,7 +300,20 @@ int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 		close(sock->sockfd);
 		return 1;
 	}
+	sock->socket_type = SEND_SOCKET;
+	
+	return 0;
+}
 
+int socket_upgrade_to_async_send(AsyncSocket *async_sock, int sockfd)
+{
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
+	async_sock->sockfd = sockfd;
+
+	if (init_asyncSocket(async_sock, buf_len, send_fun) != 0) {
+		return 1;
+	}
+	async_sock->socket_type = SEND_SOCKET;
 	return 0;
 }
 
@@ -283,11 +330,11 @@ int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeo
 		close(sock->sockfd);
 		return 1;
 	}
-
+	sock->socket_type = RECV_SOCKET;
 	return 0;
 }
 
-int socket_upgrade_to_async(AsyncSocket *async_sock, int sockfd)
+int socket_upgrade_to_async_recv(AsyncSocket *async_sock, int sockfd)
 {
 	size_t buf_len = OPTIMAL_BUFFER_SIZE;
 	async_sock->sockfd = sockfd;
@@ -295,6 +342,7 @@ int socket_upgrade_to_async(AsyncSocket *async_sock, int sockfd)
 	if (init_asyncSocket(async_sock, buf_len, recv_fun) != 0) {
 		return 1;
 	}
-
+	async_sock->socket_type = RECV_SOCKET;
 	return 0;
 }
+

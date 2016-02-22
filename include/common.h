@@ -20,6 +20,7 @@ extern "C" {
 
 #define OPTIMAL_BUFFER_SIZE (512*1024)
 
+	enum asyncSocketType { SEND_SOCKET, RECV_SOCKET };
 	enum ctrlMsgType {
 		HELLOEINSTEIN, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR, HALT
 	};
@@ -48,6 +49,9 @@ extern "C" {
 		size_t current_recv_buf;
 		int can_read;
 
+		enum asyncSocketType socket_type;
+		int finish;
+		int flush;
 		pthread_spinlock_t lock;
 		pthread_t thread;
 	} AsyncSocket;
@@ -78,7 +82,7 @@ extern "C" {
 
 	/** tcp_message_recv
 	 * Receives a full message from a socket
-	 * @return 0 if OK, something else if error.
+	 * @return number of bytes read.
 	 */
 	int tcp_message_recv(int socket, void *message, size_t len);
 
@@ -102,7 +106,10 @@ extern "C" {
 		return s->can_read;
 	}
 
-	int socket_upgrade_to_async(AsyncSocket *async_sock, int sockfd);
+	int socket_upgrade_to_async_send(AsyncSocket *async_sock, int sockfd);
+	int socket_upgrade_to_async_recv(AsyncSocket *async_sock, int sockfd);
+
+	void destroy_asyncSocket(AsyncSocket *sock);
 
 #ifdef __cplusplus
 }
