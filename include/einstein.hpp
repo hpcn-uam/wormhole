@@ -2,11 +2,17 @@
 #define __EINSTEIN_H__
 
 #include <common.h>
+
+#include <poll.h>
+#include <signal.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <memory>
-#include <poll.h>
-#include <signal.h>
+#include <stdexcept>
 
 
 using namespace std;

@@ -1,14 +1,5 @@
 #include <common.h>
 
-#include <strings.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <time.h>
-
 #include "async_inline.c"
 
 size_t current_send_buf = 0;
@@ -155,6 +146,7 @@ void *send_fun(void *args)
 
 			if (sock->to_access[current_buf]) {
 				writing = 1;
+
 			} else if (sock->finish) {
 				return 0;
 			}
@@ -182,18 +174,21 @@ void *recv_fun(void *args)
 
 	for (;;) {
 		int received = 0;
+
 		do {
 			int received_now = tcp_message_recv(sock->sockfd, sock->buff[current_buf] + sock->write_pos[current_buf], sock->buf_len - sock->write_pos[current_buf]);
 			received += received_now;
 
-		
+
 			pthread_spin_lock(&(sock->lock));
+
 			if (sock->finish) {
 				sock->to_access[current_buf] = 1;
 				sock->write_pos[current_buf] = received;
 				pthread_spin_unlock(&(sock->lock));
 				return 0;
 			}
+
 			if (received == sock->buf_len || sock->flush) {
 				sock->to_access[current_buf] = 1;
 				sock->write_pos[current_buf] = received;
@@ -213,10 +208,12 @@ void *recv_fun(void *args)
 				pthread_spin_unlock(&(sock->lock));
 
 				sock->write_pos[current_buf] = 0;
+
 			} else {
 				pthread_spin_unlock(&(sock->lock));
 			}
 		} while (received != sock->buf_len && !sock->flush);
+
 		if (sock->flush) {
 			sock->flush = 0;
 		}
@@ -269,19 +266,23 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 	return 0;
 }
 
-void flush_recv(AsyncSocket *sock) {
+void flush_recv(AsyncSocket *sock)
+{
 	pthread_spin_lock(&(sock->lock));
 	sock->flush = 1;
 	pthread_spin_unlock(&(sock->lock));
 }
 
-void destroy_asyncSocket(AsyncSocket *sock) {
+void destroy_asyncSocket(AsyncSocket *sock)
+{
 	if (sock->socket_type == SEND_SOCKET) {
 		flush_send(sock);
 		flush_send(sock);
+
 	} else {
 		flush_recv(sock);
 	}
+
 	pthread_spin_lock(&(sock->lock));
 	sock->finish = 1;
 	pthread_spin_unlock(&(sock->lock));
@@ -305,8 +306,9 @@ int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 		close(sock->sockfd);
 		return 1;
 	}
+
 	sock->socket_type = SEND_SOCKET;
-	
+
 	return 0;
 }
 
@@ -318,6 +320,7 @@ int socket_upgrade_to_async_send(AsyncSocket *async_sock, int sockfd)
 	if (init_asyncSocket(async_sock, buf_len, send_fun) != 0) {
 		return 1;
 	}
+
 	async_sock->socket_type = SEND_SOCKET;
 	return 0;
 }
@@ -335,6 +338,7 @@ int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeo
 		close(sock->sockfd);
 		return 1;
 	}
+
 	sock->socket_type = RECV_SOCKET;
 	return 0;
 }
@@ -347,6 +351,7 @@ int socket_upgrade_to_async_recv(AsyncSocket *async_sock, int sockfd)
 	if (init_asyncSocket(async_sock, buf_len, recv_fun) != 0) {
 		return 1;
 	}
+
 	async_sock->socket_type = RECV_SOCKET;
 	return 0;
 }

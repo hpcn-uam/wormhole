@@ -1,6 +1,7 @@
 #ifndef __WORM_COMMON_H__
 #define __WORM_COMMON_H__
 
+#include <arpa/inet.h>
 #include <dlfcn.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -10,6 +11,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <time.h>
+#include <strings.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,7 +24,9 @@ extern "C" {
 
 #define OPTIMAL_BUFFER_SIZE (512*1024)
 
-	enum asyncSocketType { SEND_SOCKET, RECV_SOCKET };
+	enum asyncSocketType {
+		SEND_SOCKET, RECV_SOCKET
+	};
 	enum ctrlMsgType {
 		HELLOEINSTEIN, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR, HALT
 	};
@@ -106,6 +112,8 @@ extern "C" {
 	int socket_upgrade_to_async_recv(AsyncSocket *async_sock, int sockfd);
 
 	void destroy_asyncSocket(AsyncSocket *sock);
+
+	void flush_recv(AsyncSocket *sock);
 
 #ifdef __cplusplus
 }

@@ -1,11 +1,5 @@
 #include <einstein.hpp>
 
-#include <cstring>
-#include <cstdio>
-#include <arpa/inet.h>
-#include <stdexcept>
-#include <unistd.h>
-#include <cstdlib>
 
 Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName)
 {

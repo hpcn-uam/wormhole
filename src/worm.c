@@ -1,12 +1,5 @@
-#include <common.h>
-#include <worm.h>
 #include <worm_private.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #include "async_inline.c"
 #define _WORMLIB_DEBUG_
