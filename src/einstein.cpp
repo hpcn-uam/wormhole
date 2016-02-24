@@ -231,7 +231,7 @@ int EinsConn::setupWorm()
 	size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
 	uint8_t hellomsg[hellomsgSize];
 
-	if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize) != 0) {
+	if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize, 1) != hellomsgSize) {
 		throw std::runtime_error("Error receiving message");
 	}
 
@@ -345,7 +345,7 @@ void EinsConn::pollWorms()
 			if (this->fdinfo[i].revents & POLLIN) {
 				enum ctrlMsgType ctrlMsg;
 
-				if (tcp_message_recv(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&ctrlMsg), sizeof(enum ctrlMsgType)) != 0) {
+				if (tcp_message_recv(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&ctrlMsg), sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
 					// Closed socket
 					this->wormSockets[i] = -1;
 					continue;
@@ -357,7 +357,7 @@ void EinsConn::pollWorms()
 					// Get worm id
 					uint16_t wormId;
 
-					if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t)) != 0) {
+					if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t), 1) != sizeof(uint16_t)) {
 						// Closed socket
 						this->wormSockets[i] = -1;
 						continue;

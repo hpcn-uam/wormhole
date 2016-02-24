@@ -107,19 +107,21 @@ int tcp_message_send(int socket, const void *message, size_t len)
 	return 0;
 }
 
-int tcp_message_recv(int socket, void *message, size_t len)
+size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync)
 {
 	ssize_t received = 0;
 	ssize_t received_now;
 
 	do {
 		received_now = recv(socket, message + received, len - received, MSG_NOSIGNAL);
-		received += received_now;
-	} while (received != len && received_now != -1 && received_now != 0);
 
-	if (received_now == -1 || received_now == 0) {
-		return received;
-	}
+		if (received_now > 0) {
+			received += received_now;
+		}
+	} while (received != len && (
+		sync ?
+		((received_now != -1 && received_now != 0) || (errno == EAGAIN || errno == EWOULDBLOCK))
+		: (received_now != -1 && received_now != 0)));
 
 	return received;
 }
@@ -176,8 +178,11 @@ void *recv_fun(void *args)
 		int received = 0;
 
 		do {
-			int received_now = tcp_message_recv(sock->sockfd, sock->buff[current_buf] + sock->write_pos[current_buf], sock->buf_len - sock->write_pos[current_buf]);
-			received += received_now;
+			int received_now = tcp_message_recv(sock->sockfd, sock->buff[current_buf] + sock->write_pos[current_buf], sock->buf_len - sock->write_pos[current_buf], 0);
+
+			if (received_now > 0) {
+				received += received_now;
+			}
 
 
 			pthread_spin_lock(&(sock->lock));

@@ -29,7 +29,7 @@ extern "C" {
 		uint32_t ip; //TODO fix para ipv6
 		size_t numberOfTypes;
 		ConnectionDataType *supportedTypes;
-		Connection *conns;
+		Connection **conns;
 	} DestinationWorm;
 
 	typedef struct {

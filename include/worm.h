@@ -67,6 +67,12 @@ extern "C" {
 	 */
 	uint8_t WH_send(const void *const data, const MessageInfo *const mi);
 
+	/** WH_flushIO
+	 * Flushes all the IO queues.
+	 * @return 0 if OK, something else if error.
+	 */
+	uint8_t WH_flushIO(void);
+
 	/** WH_recv_blk
 	 * TODO
 	 * Params:

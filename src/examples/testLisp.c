@@ -26,8 +26,6 @@ int main(int argc, char **argv)
 	assert(!memcmp(WH_mySetup.connectionDescription, TESTLIST, strlen(TESTLIST)));
 	fprintf(stderr, "Éxito setup\n");
 
-	sleep(5);
-
 	MessageInfo mi;
 	ConnectionDataType type;
 	type.type = ARRAY;
@@ -41,6 +39,14 @@ int main(int argc, char **argv)
 	assert(st == 0);
 	fprintf(stderr, "Mensajes enrutados!\n");
 
+	//st = WH_flushIO();
+	//assert(st == 0);
+
+	//sleep(5);
+	//TODO que sucede con un doble flush??
+	//st = WH_flushIO();
+	//assert(st == 0);
+
 	char *data = (char *)malloc(1000);
 
 	WH_recv(data, &mi);
@@ -49,6 +55,8 @@ int main(int argc, char **argv)
 	fprintf(stderr, "RECVMSG: %s\n", data);
 	WH_recv(data, &mi);
 	fprintf(stderr, "RECVMSG: %s\n", data);
+
+	fprintf(stderr, "Mensajes recibidos!\n");
 
 	return WH_halt();
 

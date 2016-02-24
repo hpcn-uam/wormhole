@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <strings.h>
+#include <errno.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,8 +91,7 @@ extern "C" {
 	 * Receives a full message from a socket
 	 * @return number of bytes read.
 	 */
-	int tcp_message_recv(int socket, void *message, size_t len);
-
+	size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync);
 
 
 
