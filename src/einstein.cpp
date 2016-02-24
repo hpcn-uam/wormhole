@@ -310,8 +310,8 @@ void EinsConn::pollWorms()
 				connIterator++;
 			}
 
-			//deployWorm(*(connIterator->second));
-			//setupWorm();
+			deployWorm(*(connIterator->second));
+			setupWorm();
 		}
 
 		this->fdinfo[i].fd = this->wormSockets[j];
