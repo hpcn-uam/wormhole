@@ -2,7 +2,7 @@
 
 
 #include "async_inline.c"
-#define _WORMLIB_DEBUG_
+//#define _WORMLIB_DEBUG_
 /*
 *Global variables
 */
@@ -612,10 +612,20 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 	return 0;
 }
 
+/*Utils*/
+
+/** WH_get_id
+ * @return the WORM-ID.
+ */
+uint16_t WH_get_id(void)
+{
+	return WH_myId;
+}
+
 /************************************************************
 	Dynamic Routing Library
 *************************************************************/
-#define _DYM_ROUTE_DEBUG_
+//#define _DYM_ROUTE_DEBUG_
 /***************************************/
 extern uint8_t _binary_obj_structures_h_start;
 extern uint8_t _binary_obj_structures_h_end;

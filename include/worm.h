@@ -87,6 +87,13 @@ extern "C" {
 	 */
 	uint8_t WH_send_blk(const void **const data, const MessageInfo **const mi, const uint16_t num);
 
+	/**************** Info Utils ****************/
+
+	/** WH_get_id
+	 * @return the WORM-ID.
+	 */
+	uint16_t WH_get_id(void);
+
 
 #ifdef __cplusplus
 }

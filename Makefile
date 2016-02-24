@@ -13,7 +13,7 @@ all: Dependencies einstein libs Examples doc/html
 
 einstein: obj/einstein.o
 
-Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testSendAsync bin/testRecvAsync
+Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync
 
 bin/testWorm.tgz: bin/testWorm lib/libworm.so src/run.sh
 	mkdir -p bin/tmp/testWorm/lib
@@ -32,6 +32,15 @@ bin/testLisp.tgz: bin/testLisp lib/libworm.so src/examples/lisprun.sh
 	cd bin/tmp;	tar -czf testLisp.tgz testLisp
 	mv bin/tmp/testLisp.tgz bin/testLisp.tgz
 	rm -rf bin/tmp
+	
+bin/testBW.tgz: bin/testBW lib/libworm.so src/examples/bwrun.sh src/examples/bw.conf
+	mkdir -p bin/tmp/testBW/lib
+	cp bin/testBW bin/tmp/testBW
+	cp lib/libworm.so bin/tmp/testBW/lib
+	cp src/examples/bwrun.sh bin/tmp/testBW/run.sh
+	cd bin/tmp;	tar -czf testBW.tgz testBW
+	mv bin/tmp/testBW.tgz bin/testBW.tgz
+	rm -rf bin/tmp
 
 bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
@@ -40,6 +49,9 @@ bin/testWorm: src/examples/testWorm.c obj/common.o
 	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
 
 bin/testLisp: src/examples/testLisp.c obj/common.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
+	
+bin/testBW: src/examples/testBW.c obj/common.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 
 bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
