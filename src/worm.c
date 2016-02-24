@@ -188,7 +188,7 @@ uint8_t WH_flushIO(void)
 			for (int j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
 				if (WH_myDstWorms.worms[i].conns[j] != NULL) {
 #ifdef _WORMLIB_DEBUG_
-					fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d\n", WH_myDstWorms.worms[i].id);
+//					fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d\n", WH_myDstWorms.worms[i].id);
 #endif
 					flush_send(&(WH_myDstWorms.worms[i].conns[j]->socket));
 				}
@@ -203,7 +203,7 @@ uint8_t WH_flushIO(void)
 			for (int j = 0; j < WH_myRcvWorms.worms[i].numberOfTypes; j++) {
 				if (WH_myRcvWorms.worms[i].conns[j] != NULL) {
 #ifdef _WORMLIB_DEBUG_
-					fprintf(stderr, "[WORM:debug] Flushing IN Connection: %d\n", WH_myRcvWorms.worms[i].id);
+//					fprintf(stderr, "[WORM:debug] Flushing IN Connection: %d\n", WH_myRcvWorms.worms[i].id);
 #endif
 					flush_recv(&(WH_myRcvWorms.worms[i].conns[j]->socket));
 				}
@@ -345,29 +345,29 @@ void inline WH_TH_setupworm(int socket)
 
 	tmpDestWormPtr->ip = tmpDestWorm.ip;
 	tmpDestWormPtr->port = tmpDestWorm.port;
-	tmpDestWormPtr->numberOfTypes++;
 	tmpDestWormPtr->supportedTypes = realloc(tmpDestWormPtr->supportedTypes,
-									 tmpDestWormPtr->numberOfTypes * sizeof(ConnectionDataType));
+									 (tmpDestWormPtr->numberOfTypes + 1) * sizeof(ConnectionDataType));
 
 	//TODO fix para en caso de que se reduzca/reordene la lista, no se quede memoria perdida...
 	if (tmpDestWormPtr->conns)
 		tmpDestWormPtr->conns = realloc(tmpDestWormPtr->conns,
-										tmpDestWormPtr->numberOfTypes * sizeof(Connection *)); //TODO test ==NULL
+										(tmpDestWormPtr->numberOfTypes + 1) * sizeof(Connection *)); //TODO test ==NULL
 
 	else {
-		tmpDestWormPtr->conns = calloc(sizeof(Connection *), tmpDestWormPtr->numberOfTypes);
+		tmpDestWormPtr->conns = calloc(sizeof(Connection *), tmpDestWormPtr->numberOfTypes + 1);
 	}
 
-	tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1] = calloc(sizeof(Connection), 1); //TODO test ==NULL
+	tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes] = calloc(sizeof(Connection), 1); //TODO test ==NULL
 
-	if (tcp_message_recv(socket, tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1], sizeof(Connection), 1) != sizeof(Connection)) {
+	if (tcp_message_recv(socket, tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes], sizeof(Connection), 1) != sizeof(Connection)) {
 		fputs("Error configurando socket", stderr);
 		close(socket); //cerramos el socket
 		return;
 	}
 
-	socket_upgrade_to_async_recv(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes - 1]->socket), socket);
+	socket_upgrade_to_async_recv(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes]->socket), socket);
 
+	tmpDestWormPtr->numberOfTypes++;
 #ifdef _WORMLIB_DEBUG_
 	fprintf(stderr, "[WORM] Input Connection: %d\n", tmpDestWormPtr->id);
 #endif
@@ -693,6 +693,11 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 
 			if (pollCnt > 100) { //TODO poner un valor menos "aleatorio"
 				pollCnt = 0;
+
+				struct timespec ts;
+				ts.tv_sec = 0;
+				ts.tv_nsec = 100;
+				nanosleep(&ts, 0);
 				WH_flushIO();
 			}
 		}
@@ -1178,8 +1183,7 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
 		return worm;
 	}
 
-	wms->numberOfWorms++;
-	wms->worms = realloc(wms->worms, sizeof(DestinationWorm) * wms->numberOfWorms);
+	wms->worms = realloc(wms->worms, sizeof(DestinationWorm) * (wms->numberOfWorms + 1));
 
 	worm = calloc(sizeof(DestinationWorm), 1); //TODO REVISAR
 	worm->id = wormId;
@@ -1207,7 +1211,9 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
 		WH_connectWorm(worm);
 	}
 
-	wms->worms[wms->numberOfWorms - 1] = *worm;
+	wms->worms[wms->numberOfWorms] = *worm;
+
+	wms->numberOfWorms++;
 	return wms->worms + (wms->numberOfWorms - 1);
 }
 
