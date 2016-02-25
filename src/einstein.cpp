@@ -10,6 +10,7 @@ Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, str
 	this->ws.connectionDescriptionLength = connectionDescription.size();
 	this->ws.connectionDescription = static_cast<uint8_t *>(malloc(connectionDescription.size()));
 	memcpy(this->ws.connectionDescription, connectionDescription.c_str(), connectionDescription.size());
+	cerr << host << " " << programName << endl;
 	this->host = host;
 	this->programName = programName;
 	this->halting = false;
@@ -50,7 +51,6 @@ void Einstein::readConfig(const string configFileName)
 	uint16_t id = 1;
 	uint16_t baseListenPort = 10000;
 	int16_t core = 0;
-	string ip = "127.0.0.1";
 	//string connectionDescription = "(LISP connection description)";
 
 	FILE *configFile = fopen(configFileName.c_str(), "r");
@@ -83,6 +83,7 @@ void Einstein::readConfig(const string configFileName)
 			throw std::runtime_error("Missing worm routing");
 		}
 
+		cerr << host << " " << programName << endl;
 		connectionDescription[strlen(connectionDescription) - 1] = 0;
 
 		if (connectionDescription[0] != '\t') {
@@ -90,6 +91,28 @@ void Einstein::readConfig(const string configFileName)
 		}
 
 		cerr << "Description: " << connectionDescription + 1 << "|\n";
+
+		//check if ipaddr or name
+		struct sockaddr_in sa;
+		int result = inet_pton(AF_INET, host, &(sa.sin_addr));
+		string ip;
+
+		if (result == -1 || result == 0) {
+			struct hostent *tmp = gethostbyname(host);
+
+			if (tmp == NULL) {
+				throw std::runtime_error("Host '" + string(host) + "' does not exists");
+			}
+
+			if (tmp->h_addr_list[0] == NULL) {
+				throw std::runtime_error("Host '" + string(host) + "' does not have a valid IP");
+			}
+
+			ip = string(inet_ntoa(*((struct in_addr *)tmp->h_addr_list[0])));
+
+		} else {
+			ip = string(host);
+		}
 
 		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1), string(host), string(programName)));
 
@@ -278,7 +301,7 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 	sprintf(executable, "scp %s.tgz %s:~", wc.programName.c_str(), wc.host.c_str());
 
 	if (system(executable)) {
-		cerr << "error executing comand..." << endl;
+		cerr << "error executing comand: \"" << executable << "\"" << endl;
 	}
 
 	sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
@@ -290,7 +313,7 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 			this->listenIpStr.c_str(), wc.programName.c_str());
 
 	if (system(executable)) {
-		cerr << "error executing comand..." << endl;
+		cerr << "error executing comand: \"" << executable << "\"" << endl;
 	}
 }
 

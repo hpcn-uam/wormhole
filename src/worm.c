@@ -3,6 +3,7 @@
 
 #include "async_inline.c"
 //#define _WORMLIB_DEBUG_
+//#define _WORMLIB_DEBUG_FLUSH_
 /*
 *Global variables
 */
@@ -188,7 +189,9 @@ uint8_t WH_flushIO(void)
 			for (int j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
 				if (WH_myDstWorms.worms[i].conns[j] != NULL) {
 #ifdef _WORMLIB_DEBUG_
-//					fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d\n", WH_myDstWorms.worms[i].id);
+#ifdef _WORMLIB_DEBUG_FLUSH_
+					fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d\n", WH_myDstWorms.worms[i].id);
+#endif
 #endif
 					flush_send(&(WH_myDstWorms.worms[i].conns[j]->socket));
 				}
