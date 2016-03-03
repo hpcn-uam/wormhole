@@ -29,7 +29,7 @@ for file in $(git diff-index --cached --name-only HEAD)
 do
 	if [ $(echo $file | grep -ce '\.[hc]p*$') -ne 0 ]
 	then
-		TMP=$(./dependencies/google-astyle/a.out --style=linux -T -H -U -F -p -k3 -j "$file" | grep -c Formatted)
+		TMP=$(./dependencies/google-astyle/a.out --style=linux -T -H -U -F -L -w -K -p -k3 -j "$file" | grep -c Formatted)
 	fi
 	((flag += TMP))
 done

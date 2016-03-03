@@ -21,6 +21,7 @@ pthread_t WH_wormThread;
 
 volatile uint8_t WH_bussy = 0;
 volatile uint8_t WH_halting = 0;
+extern uint32_t WH_load;
 /*
 *===============
 */
@@ -190,7 +191,10 @@ uint8_t WH_flushIO(void)
 				if (WH_myDstWorms.worms[i].conns[j] != NULL) {
 #ifdef _WORMLIB_DEBUG_
 #ifdef _WORMLIB_DEBUG_FLUSH_
-					fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d\n", WH_myDstWorms.worms[i].id);
+					fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d [%d:%d]\n",
+							WH_myDstWorms.worms[i].id,
+							WH_myDstWorms.worms[i].conns[j]->type.type,
+							WH_myDstWorms.worms[i].conns[j]->type.ext.arrayType);
 #endif
 #endif
 					flush_send(&(WH_myDstWorms.worms[i].conns[j]->socket));
@@ -200,19 +204,22 @@ uint8_t WH_flushIO(void)
 	}
 
 	// for each recvWorm
-	for (int i = 0; i < WH_myRcvWorms.numberOfWorms; i++) {
+	/*for (int i = 0; i < WH_myRcvWorms.numberOfWorms; i++) {
 		if (WH_myRcvWorms.worms[i].conns) {
 			// for each Connection/type
 			for (int j = 0; j < WH_myRcvWorms.worms[i].numberOfTypes; j++) {
 				if (WH_myRcvWorms.worms[i].conns[j] != NULL) {
-#ifdef _WORMLIB_DEBUG_
-//					fprintf(stderr, "[WORM:debug] Flushing IN Connection: %d\n", WH_myRcvWorms.worms[i].id);
-#endif
+	#ifdef _WORMLIB_DEBUG_
+					fprintf(stderr, "[WORM:debug] Flushing IN Connection: %d [%d:%d]\n",
+							WH_myRcvWorms.worms[i].id,
+							WH_myRcvWorms.worms[i].conns[j]->type.type,
+							WH_myRcvWorms.worms[i].conns[j]->type.ext.arrayType);
+	#endif
 					flush_recv(&(WH_myRcvWorms.worms[i].conns[j]->socket));
 				}
 			}
 		}
-	}
+	}*/
 
 	return ret;
 }
@@ -225,6 +232,7 @@ void *WH_thread(void *arg)
 	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
 	struct timeval ts;
 	ts.tv_sec  =   0;
+	//ts.tv_usec = 250000;
 	ts.tv_usec = 250000;
 
 	if (listeningSocket == -1) {
@@ -234,7 +242,7 @@ void *WH_thread(void *arg)
 
 	while (1) {
 		//poll for incomming connections/requests.
-		int socket = tcp_accept(listeningSocket, &ts);
+		int socket = tcp_accept(listeningSocket, &ts); //TODO Optimizar para no reconfigurar constantemente el socket
 		//int socket = tcp_accept(listeningSocket, NULL);
 
 		if (socket < 0) {
@@ -264,11 +272,11 @@ void *WH_thread(void *arg)
 			}
 
 		} else {
-			//fprintf(stderr, "[THREAD:%d]\n", __LINE__);
 			enum wormMsgType type;
 
 			if (tcp_message_recv(socket, &type, sizeof(type), 1) != sizeof(type)) {
 				fputs("Error abriendo socket\n", stderr);
+				close(socket);
 				continue;
 			}
 
@@ -412,7 +420,7 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 			wormIndex = (wormIndex + 1) % wms->numberOfWorms;
 			connIndex = 0;
 		}
-	} while (wormIndex != startingWormIndex && connIndex != startingConnIndex);
+	} while (!(wormIndex == startingWormIndex && connIndex == startingConnIndex)); //arreglado bug
 
 	return NULL;
 
@@ -435,12 +443,12 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 		// Force keep-trying
 		socket = tcp_connect_to(inet_ntoa(ip_addr), c->port);
 
-		if (socket == -1) {
+		if (socket < 0) {
 			fprintf(stderr, "%s:%d\t", inet_ntoa(ip_addr), c->port);
 			perror("Error estableciendo conexion volatil con WORM");
 			fflush(stderr);
 		}
-	} while (socket == -1);
+	} while (socket < 0);
 
 	//Solicitamos datos...
 	enum wormMsgType type = HELLO; //Con Worm Info
@@ -517,14 +525,14 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	int socket = tcp_connect_to(inet_ntoa(ip_addr), dw->port);
 
-	if (socket == -1) {
+	if (socket < 0) {
 		return 1;
 	}
 
 	int8_t flag = 0;
 
 	for (int i = 0; i < dw->numberOfTypes; i++) {
-		if (!memcmp(dw->supportedTypes + i, type, sizeof(ConnectionDataType))) {
+		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, type)) {
 			flag = 1;
 			break;
 		}
@@ -534,6 +542,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 #ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "No se puede abrir un socket con el datatype solicitado!\n");
 #endif
+		close(socket);
 		return 1;
 	}
 
@@ -569,16 +578,23 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		return 1;
 	}
 
+	flag = 0;
+
 	for (int i = 0; i < dw->numberOfTypes; i++) {
-		if (!memcmp(dw->supportedTypes + i, type, sizeof(ConnectionDataType))) {
+		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, type)) {
 
 			dw->conns[i] = calloc(sizeof(Connection), 1);
 			socket_upgrade_to_async_send(&(dw->conns[i]->socket), socket);
-
+			dw->conns[i]->type = *type;
+			flag = 1;
 			break;
 		}
 	}
 
+	if (!flag) {
+		close(socket);
+		return 1;
+	}
 
 #ifdef _WORMLIB_DEBUG_
 	fprintf(stderr, "[WORM] Output Connection: %d\n", dw->id);
@@ -624,6 +640,91 @@ uint16_t WH_get_id(void)
 {
 	return WH_myId;
 }
+
+/** WH_typesize
+ * @return the size of the tipe provided
+ */
+size_t WH_typesize(const ConnectionDataType *const type)
+{
+	//TODO optimize converting to static array
+	switch (type->type) {
+	case   INT8:
+	case  UINT8:
+		return 1;
+
+	case  INT16:
+	case UINT16:
+		return 2;
+
+	case  INT32:
+	case UINT32:
+		return 4;
+
+	case  INT64:
+	case UINT64:
+		return 8;
+
+	case  STRING:
+		return 1;
+
+	case ARRAY:
+		switch (type->ext.arrayType) {
+		case   INT8:
+		case  UINT8:
+			return 1;
+
+		case  INT16:
+		case UINT16:
+			return 2;
+
+		case  INT32:
+		case UINT32:
+			return 4;
+
+		case  INT64:
+		case UINT64:
+			return 8;
+
+		case  STRING:
+			return 1;
+
+		default:
+			fprintf(stderr, "NOT YET IMPLEMENTED (%d)\n", __LINE__);
+			exit(1);
+
+		}
+
+	default:
+		fprintf(stderr, "NOT YET IMPLEMENTED (%d)\n", __LINE__);
+		exit(1);
+	}
+}
+
+
+/** WH_connectionDataTypecmp
+ * Compares 2 datatypes
+ * @return 0 if are equal, something else if not.
+ */
+uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const ConnectionDataType *const b)
+{
+	if (a->type == b->type) {
+		if (a->type == ARRAY) {
+			if (a->ext.arrayType == b->ext.arrayType) {
+				return 0;
+
+			} else {
+				return 1;
+			}
+
+		} else {
+			return 0;
+		}
+
+	} else {
+		return 1;
+	}
+}
+
 
 /************************************************************
 	Dynamic Routing Library
@@ -692,7 +793,7 @@ uint8_t WH_send(const void *const data, const MessageInfo *const mi)
  */
 uint32_t WH_recv(void *data, MessageInfo *mi)
 {
-	int pollCnt = 0;
+	//int pollCnt = 0;
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: Polling...\n");
 #endif
@@ -701,94 +802,136 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 	do {
 		c = WH_connectionPoll(&WH_myRcvWorms);
 
-		if (!c) {
+		/*if (!c) {
 			pollCnt++;
 
-			if (pollCnt > 100) { //TODO poner un valor menos "aleatorio"
+			if (pollCnt > 100000) { //TODO poner un valor menos "aleatorio"
 				pollCnt = 0;
 
-				struct timespec ts;
-				ts.tv_sec = 0;
-				ts.tv_nsec = 100;
-				nanosleep(&ts, 0);
-				WH_flushIO();
+				//struct timespec ts;
+				//ts.tv_sec = 0;
+				//ts.tv_nsec = 1000;
+				//nanosleep(&ts, 0);
+				//WH_flushIO();
 			}
-		}
-	} while (!c);
+		}*/
+	} while ((!c) || ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
 
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: Msg found!...\n");
 #endif
-	mi->type = &(c->type);
+
+	if (!mi->type) {
+		mi->type = &(c->type);
+	}
+
 	uint32_t tmp;
+	uint32_t ret = 0;
 
 	switch (c->type.type) {
 	case INT8:
 	case UINT8:
-		if (!tcp_message_recv_async(&(c->socket), data, 1)) {
-			return 1;
+		if (!tcp_message_recv_async(&(c->socket), data, 1 * mi->size)) {
+			ret = 1 * mi->size;
 		}
+
+		break;
 
 	case INT16:
 	case UINT16:
-		if (!tcp_message_recv_async(&(c->socket), data, 2)) {
-			return 2;
+		if (!tcp_message_recv_async(&(c->socket), data, 2 * mi->size)) {
+			ret = 2 * mi->size;
 		}
+
+		break;
 
 	case INT32:
 	case UINT32:
-		if (! tcp_message_recv_async(&(c->socket), data, 4)) {
-			return 4;
+		if (!tcp_message_recv_async(&(c->socket), data, 4 * mi->size)) {
+			ret = 4 * mi->size;
 		}
+
+		break;
 
 	case INT64:
 	case UINT64:
-		if (! tcp_message_recv_async(&(c->socket), data, 8)) {
-			return 8;
+		if (!tcp_message_recv_async(&(c->socket), data, 8 * mi->size)) {
+			ret = 8 * mi->size;
 		}
+
+		break;
 
 	case STRING:
 		if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp)))
 			if (!tcp_message_recv_async(&(c->socket), &data, 1 * tmp)) {
-				return tmp;
+				ret = 1 * tmp;
 			}
 
-	case ARRAY:
-		if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp)))
-			switch (c->type.ext.arrayType) {
-			case INT8:
-			case UINT8:
-				if (!tcp_message_recv_async(&(c->socket), data, 1 * tmp)) {
-					return 1 * tmp;
+		break;
+
+	case ARRAY: {
+			if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp))) {
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Array of %d elements\n", tmp);
+#endif
+
+				switch (c->type.ext.arrayType) {
+				case INT8:
+				case UINT8:
+					if (!tcp_message_recv_async(&(c->socket), data, 1 * tmp)) {
+						ret = 1 * tmp;
+					}
+
+					break;
+
+				case INT16:
+				case UINT16:
+					if (!tcp_message_recv_async(&(c->socket), data, 2 * tmp)) {
+						ret = 2 * tmp;
+					}
+
+					break;
+
+				case INT32:
+				case UINT32:
+					if (! tcp_message_recv_async(&(c->socket), data, 4 * tmp)) {
+						ret = 4 * tmp;
+					}
+
+					break;
+
+				case INT64:
+				case UINT64:
+					if (! tcp_message_recv_async(&(c->socket), data, 8 * tmp)) {
+						ret = 8 * tmp;
+					}
+
+					break;
+
+				default:
+					fprintf(stderr, "ARRAYTYPE: NOT YET IMPLEMENTED [%d]\n", c->type.ext.arrayType); //TODO implement
+					break;
 				}
 
-			case INT16:
-			case UINT16:
-				if (!tcp_message_recv_async(&(c->socket), data, 2 * tmp)) {
-					return 2 * tmp;
-				}
-
-			case INT32:
-			case UINT32:
-				if (! tcp_message_recv_async(&(c->socket), data, 4 * tmp)) {
-					return 4 * tmp;
-				}
-
-			case INT64:
-			case UINT64:
-				if (! tcp_message_recv_async(&(c->socket), data, 8 * tmp)) {
-					return 8 * tmp;
-				}
-
-			default:
-				fprintf(stderr, "ARRAYTYPE NOT YET IMPLEMENTED\n"); //TODO implement
+			} else {
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Error recvArray\n");
+#endif
 			}
+
+			break;
+		}
 
 	default:
-		fprintf(stderr, "NOT YET IMPLEMENTED\n"); //TODO implement
+		fprintf(stderr, "NOT YET IMPLEMENTED [%d]\n", c->type.type); //TODO implement
+		break;
 	}
 
-	return 0;
+#ifdef _DYM_ROUTE_DEBUG_
+	fprintf(stderr, "ROUTEDEBUG: Recv %dB\n", ret);
+#endif
+
+	return ret;
 }
 
 /* Name WH_DymRoute_route
@@ -874,7 +1017,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 	//TODO search info
 	//WH_setupConnectionType
 	for (int i = 0; i < dw->numberOfTypes; i++) {
-		if (!memcmp(dw->supportedTypes + i, mi->type, sizeof(ConnectionDataType))) {
+		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, mi->type)) {
 			//tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
 			if (!dw->conns[i]) {
 				if (WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {
@@ -893,9 +1036,11 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 			}
 
 #ifdef _DYM_ROUTE_DEBUG_
-			fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d\n", dw->id);
+			fprintf(stderr, "ROUTEDEBUG: sending data (%dB) to worm: %d\n", mi->size, dw->id);
 #endif
-			return tcp_message_send_async(&(dw->conns[i]->socket), data, mi->size);
+			return tcp_message_send_async(&(dw->conns[i]->socket),
+										  data,
+										  mi->size * WH_typesize(mi->type));
 		}
 	}
 

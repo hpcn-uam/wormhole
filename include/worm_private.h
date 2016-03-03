@@ -92,6 +92,11 @@ extern "C" {
 	 */
 	Connection *WH_connectionPoll(DestinationWorms *wms);
 
+	/** WH_typesize
+	 * @return the size of the tipe provided
+	 */
+	size_t WH_typesize(const ConnectionDataType *const type);
+
 	/*
 	 Dynamic Routing Library
 	*/

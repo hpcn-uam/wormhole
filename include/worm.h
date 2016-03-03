@@ -8,7 +8,7 @@ extern "C" {
 #include "common.h"
 
 	enum DataType {
-		CUSTOM = -2, COMPOUND, ARRAY, INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64, STRING
+		CUSTOM = -3, COMPOUND, STRING, ARRAY, INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64
 	};
 
 	typedef struct {
@@ -67,25 +67,29 @@ extern "C" {
 	 */
 	uint8_t WH_send(const void *const data, const MessageInfo *const mi);
 
+	/** WH_recv_blk
+	 * Receives multiples messages.
+	 * @return the number of bytes readed, 0 if ERROR or none.
+	 */
+	uint32_t WH_recv_blk(void **data, MessageInfo **mi, uint16_t num);
+
+	/** WH_send_blk
+	 * Sends multiples messages.
+	 * @return 0 if OK, something else if error.
+	 */
+	uint8_t WH_send_blk(const void **const data, const MessageInfo **const mi, const uint16_t num);
+
 	/** WH_flushIO
 	 * Flushes all the IO queues.
 	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_flushIO(void);
 
-	/** WH_recv_blk
-	 * TODO
-	 * Params:
-	 * @return the number of bytes readed, 0 if ERROR or none.
+	/** WH_connectionDataTypecmp
+	 * Compares 2 datatypes
+	 * @return 0 if are equal, something else if not.
 	 */
-	uint32_t WH_recv_blk(void **data, MessageInfo **mi, uint16_t num);
-
-	/** WH_send_blk
-	 * TODO
-	 * Params:
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_send_blk(const void **const data, const MessageInfo **const mi, const uint16_t num);
+	uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const ConnectionDataType *const b);
 
 	/**************** Info Utils ****************/
 

@@ -2,6 +2,7 @@
 
 #include "async_inline.c"
 
+uint32_t WH_load = 0;
 size_t current_send_buf = 0;
 
 int tcp_connect_to(char *ip, uint16_t port)
@@ -120,7 +121,7 @@ size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync)
 		}
 	} while (received != len && (
 		sync ?
-		((received_now != -1 && received_now != 0) || (errno == EAGAIN || errno == EWOULDBLOCK))
+		((received_now == -1 || received_now == 0) && (errno == EAGAIN || errno == EWOULDBLOCK))
 		: (received_now != -1 && received_now != 0)));
 
 	return received;
@@ -145,6 +146,7 @@ void *send_fun(void *args)
 			ts.tv_nsec = 100;
 			nanosleep(&ts, 0);
 			pthread_spin_lock(&(sock->lock));
+			WH_load++;
 
 			if (sock->to_access[current_buf]) {
 				writing = 1;
@@ -155,6 +157,8 @@ void *send_fun(void *args)
 
 			pthread_spin_unlock(&(sock->lock));
 		} while (!writing);
+
+		WH_load = 0;
 
 		if (sock->write_pos[current_buf] > 0) {
 			tcp_message_send(sock->sockfd, sock->buff[current_buf], sock->write_pos[current_buf]);
@@ -173,17 +177,18 @@ void *recv_fun(void *args)
 	AsyncSocket *sock = (AsyncSocket *) args;
 
 	size_t current_buf = 0;
+	uint32_t myLoad = 0;
+	int32_t received = 0;
 
 	for (;;) {
-		int received = 0;
-
 		do {
-			int received_now = tcp_message_recv(sock->sockfd, sock->buff[current_buf] + sock->write_pos[current_buf], sock->buf_len - sock->write_pos[current_buf], 0);
+			int received_now = tcp_message_recv(sock->sockfd,
+												sock->buff[current_buf] + received,
+												sock->buf_len - received, 0);
 
 			if (received_now > 0) {
 				received += received_now;
 			}
-
 
 			pthread_spin_lock(&(sock->lock));
 
@@ -197,7 +202,6 @@ void *recv_fun(void *args)
 			if (received == sock->buf_len || sock->flush) {
 				sock->to_access[current_buf] = 1;
 				sock->write_pos[current_buf] = received;
-
 				current_buf = (current_buf + 1) % 2;
 
 				// Wait until the buffer has been sent
@@ -213,14 +217,23 @@ void *recv_fun(void *args)
 				pthread_spin_unlock(&(sock->lock));
 
 				sock->write_pos[current_buf] = 0;
+				received = 0;
+				myLoad = 0;
 
 			} else {
 				pthread_spin_unlock(&(sock->lock));
+				myLoad++;
+
+				if (myLoad > WH_COMMON_LIMITW8_RECV && received > 0) {
+					sock->flush = 2;
+				}
 			}
-		} while (received != sock->buf_len && !sock->flush);
+		} while (!sock->flush);
+
+		myLoad = 0;
 
 		if (sock->flush) {
-			sock->flush = 0;
+			sock->flush--;
 		}
 	}
 }

@@ -18,11 +18,8 @@ inline void flush_send(AsyncSocket *sock)
 		pthread_spin_lock(&(sock->lock));
 	}
 
-	pthread_spin_unlock(&(sock->lock));
-
-
 	sock->write_pos[sock->current_send_buf] = 0;
-
+	pthread_spin_unlock(&(sock->lock));
 }
 inline int can_be_read(AsyncSocket *s)
 {
@@ -46,6 +43,8 @@ inline int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t
 {
 	void *msgptr = (void *)message;
 
+	pthread_spin_lock(&(sock->lock));
+
 	while (unlikely(sock->buf_len - sock->write_pos[sock->current_send_buf] < len)) {
 		memcpy(sock->buff[sock->current_send_buf] + sock->write_pos[sock->current_send_buf], msgptr, sock->buf_len - sock->write_pos[sock->current_send_buf]);
 		msgptr += sock->buf_len - sock->write_pos[sock->current_send_buf];
@@ -53,13 +52,15 @@ inline int tcp_message_send_async(AsyncSocket *sock, const void *message, size_t
 
 		sock->write_pos[sock->current_send_buf] = sock->buf_len;
 
-
+		pthread_spin_unlock(&(sock->lock));
 		flush_send(sock);
+		pthread_spin_lock(&(sock->lock));
 	}
 
 	memcpy(sock->buff[sock->current_send_buf] + sock->write_pos[sock->current_send_buf], msgptr, len);
 	sock->write_pos[sock->current_send_buf] += len;
 
+	pthread_spin_unlock(&(sock->lock));
 	return 0;
 }
 
@@ -106,11 +107,12 @@ inline int tcp_message_recv_async(AsyncSocket *sock, void *message, size_t len)
 		if (sock->read_pos[sock->current_recv_buf] == sock->write_pos[sock->current_recv_buf]) {
 			pthread_spin_lock(&(sock->lock));
 			sock->to_access[sock->current_recv_buf] = 0;
-			pthread_spin_unlock(&(sock->lock));
 
 			sock->current_recv_buf = (sock->current_recv_buf + 1) % 2;
 			sock->can_read = 0;
 			sock->read_pos[sock->current_recv_buf] = 0;
+
+			pthread_spin_unlock(&(sock->lock));
 		}
 	}
 
