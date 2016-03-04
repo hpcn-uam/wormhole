@@ -10,7 +10,6 @@ Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, str
 	this->ws.connectionDescriptionLength = connectionDescription.size();
 	this->ws.connectionDescription = static_cast<uint8_t *>(malloc(connectionDescription.size()));
 	memcpy(this->ws.connectionDescription, connectionDescription.c_str(), connectionDescription.size());
-	cerr << host << " " << programName << endl;
 	this->host = host;
 	this->programName = programName;
 	this->halting = false;
@@ -83,14 +82,14 @@ void Einstein::readConfig(const string configFileName)
 			throw std::runtime_error("Missing worm routing");
 		}
 
-		cerr << host << " " << programName << endl;
+		cerr << "[" << id << "] " << host << " " << programName << endl;
 		connectionDescription[strlen(connectionDescription) - 1] = 0;
 
 		if (connectionDescription[0] != '\t') {
 			throw std::runtime_error("Missing worm routing");
 		}
 
-		cerr << "Description: " << connectionDescription + 1 << "|\n";
+		cerr << "Description: |" << connectionDescription + 1 << "|\n";
 
 		//check if ipaddr or name
 		struct sockaddr_in sa;
@@ -244,10 +243,15 @@ void EinsConn::run()
 
 int EinsConn::setupWorm()
 {
-	int currentWormSocket = tcp_accept(this->listeningSocket, NULL);
+	struct timeval ts;
+	ts.tv_sec  =   3; //TODO parametrizar esta variable
+	ts.tv_usec =   0;
+
+	int currentWormSocket = tcp_accept(this->listeningSocket, &ts);
 
 	if (currentWormSocket == -1) {
-		throw std::runtime_error("Error accepting connection");
+		//throw std::runtime_error("Error accepting connection");
+		return 1;
 	}
 
 	// Get hello message
@@ -297,11 +301,35 @@ void EinsConn::connectWorm(const uint16_t id, const int socket)
 
 void EinsConn::deployWorm(Eins2WormConn &wc)
 {
-	char executable[4096];
-	sprintf(executable, "scp %s.tgz %s:~", wc.programName.c_str(), wc.host.c_str());
+	//Check if alredy deployed
+	auto v = deployedWorms.find(wc.host);
+	bool copyData = true;;
 
-	if (system(executable)) {
-		cerr << "error executing comand: \"" << executable << "\"" << endl;
+	if (v == deployedWorms.end()) {
+		set<string> tmpset;
+		tmpset.insert(wc.programName);
+		deployedWorms.insert(pair<string, set<string>>(wc.host, tmpset));
+
+	} else {
+		auto p = v->second.find(wc.programName);
+
+		if (p == v->second.end()) {
+			v->second.insert(wc.programName);
+
+		} else {
+			cerr << "Trying to copy program to worm " << wc.ws.id << " but alredy copied" << endl;
+			copyData = false;
+		}
+	}
+
+	char executable[4096]; //TODO fix posible overflow
+
+	if (copyData) {
+		sprintf(executable, "scp %s.tgz %s:~", wc.programName.c_str(), wc.host.c_str());
+
+		if (system(executable)) {
+			cerr << "error executing comand: \"" << executable << "\"" << endl;
+		}
 	}
 
 	sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
@@ -334,7 +362,10 @@ void EinsConn::pollWorms()
 			}
 
 			deployWorm(*(connIterator->second));
-			setupWorm();
+
+			if (setupWorm()) {
+				cerr << "Failed to setup worm " << connIterator->second->ws.id << endl;
+			}
 		}
 
 		this->fdinfo[i].fd = this->wormSockets[j];
@@ -421,30 +452,30 @@ void EinsConn::pollWorms()
 					break;
 
 				case HALT: { // TODO better implementation
-					for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-						if (it->second->socket == this->wormSockets[i]) {
-							it->second->halting = true;
-							cerr << "El worm " << it->first << " ha finalizado su tarea." << endl;
+						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+							if (it->second->socket == this->wormSockets[i]) {
+								it->second->halting = true;
+								cerr << "El worm " << it->first << " ha finalizado su tarea." << endl;
+							}
 						}
-					}
 
-					uint8_t flag = 1;
+						uint8_t flag = 1;
 
-					for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-						if (!it->second->halting) {
-							flag = 0;
-							break;
+						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+							if (!it->second->halting) {
+								flag = 0;
+								break;
+							}
 						}
-					}
 
-					if (flag) {
-						cerr << "Cerrando Einstein debido a que todas las tareas han sido completadas" << endl;
-						this->deleteAllWorms();
-						exit(0); //TODO cambiar por un cierre mas ordenado, como por ejemplo, modificando la variable de salida utilizada para el cntl+c
-					}
+						if (flag) {
+							cerr << "Cerrando Einstein debido a que todas las tareas han sido completadas" << endl;
+							this->deleteAllWorms();
+							exit(0); //TODO cambiar por un cierre mas ordenado, como por ejemplo, modificando la variable de salida utilizada para el cntl+c
+						}
 
-					break;
-				}
+						break;
+					}
 
 				case DOWNLINK:
 

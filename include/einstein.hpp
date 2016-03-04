@@ -11,6 +11,7 @@
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <set>
 #include <memory>
 #include <stdexcept>
 
@@ -37,6 +38,10 @@ class EinsConn
 	uint32_t listenIp;
 	uint16_t listenPort;
 	int listeningSocket;
+
+	// This map represents the worms alredy deployed.
+	// The key represents the host, the vector, the programs alredy deployed on it.
+	map <string, set<string>> deployedWorms;
 
 	int *wormSockets; // Sockets for polling
 	struct pollfd *fdinfo;

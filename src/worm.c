@@ -399,6 +399,10 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 	if (wormIndex >= wms->numberOfWorms) {
 		wormIndex = 0;
 		connIndex = 0;
+
+		if (wms->numberOfWorms == 0) {
+			return NULL;    // Check por si aun no se ha conectado a ningún nodo de entrada.
+		}
 	}
 
 	while (connIndex >= wms->worms[wormIndex].numberOfTypes) {

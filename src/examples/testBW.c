@@ -16,6 +16,8 @@
 #define PEAK_FRACTION_DOWN ((NUM_BIG_MESSAGES  )/3)
 #define PEAK_FRACTION_UP   (PEAK_FRACTION_DOWN*2)
 
+#define NUMNODES 4
+
 int main(int argc, char **argv)
 {
 	ConnectionDataType type[2];
@@ -64,8 +66,8 @@ int main(int argc, char **argv)
 
 			gettimeofday(&end, 0);
 			fprintf(stderr, "[ARRAY] %lf gbps. Pico: %lf gpbs\n",
-					(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
-					(((double)(PEAK_FRACTION_UP - PEAK_FRACTION_DOWN) * SIZE_BUFFER * 8) / 1000) / (((double)endPeak.tv_sec - startPeak.tv_sec) * 1000000 + (endPeak.tv_usec - startPeak.tv_usec)));
+					NUMNODES * (((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
+					NUMNODES * (((double)(PEAK_FRACTION_UP - PEAK_FRACTION_DOWN) * SIZE_BUFFER * 8) / 1000) / (((double)endPeak.tv_sec - startPeak.tv_sec) * 1000000 + (endPeak.tv_usec - startPeak.tv_usec)));
 
 
 
@@ -125,8 +127,8 @@ int main(int argc, char **argv)
 
 			gettimeofday(&end, 0);
 			fprintf(stderr, "[BYTES] %lf gbps. Pico: %lf gpbs\n",
-					(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
-					(((double)(PEAK_FRACTION_UP - PEAK_FRACTION_DOWN) * SIZE_BUFFER * 8) / 1000) / (((double)endPeak.tv_sec - startPeak.tv_sec) * 1000000 + (endPeak.tv_usec - startPeak.tv_usec)));
+					NUMNODES * (((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
+					NUMNODES * (((double)(PEAK_FRACTION_UP - PEAK_FRACTION_DOWN) * SIZE_BUFFER * 8) / 1000) / (((double)endPeak.tv_sec - startPeak.tv_sec) * 1000000 + (endPeak.tv_usec - startPeak.tv_usec)));
 
 
 		} else { //RECV
