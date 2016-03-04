@@ -1,5 +1,5 @@
+#define _GNU_SOURCE //TODO find a better and standar way of set affinity
 #include <worm_private.h>
-
 
 #include "async_inline.c"
 //#define _WORMLIB_DEBUG_
@@ -59,6 +59,9 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
 	return 0;
 }
 
+#include <sched.h>
+//#undef _GNU_SOURCE
+
 /* Name WH_init
 * Starts the WormHole Library
 * Return 0 if OK, something else if error.
@@ -117,8 +120,10 @@ uint8_t WH_init(void)
 	}
 
 	// Establecer afinidad
-	if (WH_mySetup.core) {
-		result = sched_setaffinity(0, sizeof(WH_mySetup.core), &WH_mySetup.core);
+	if (WH_mySetup.core != 0) {
+		if (sched_setaffinity(0, sizeof(WH_mySetup.core), (cpu_set_t *) &WH_mySetup.core)) {
+			perror("Error setting up process affinity");
+		}
 	}
 
 	// Lanzar hilo de recepción de conexiones
@@ -1139,19 +1144,25 @@ uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescript
 	case 'd':
 	case 'D':
 		// DUP Function
+#ifdef _DYM_ROUTE_DEBUG_
 		fprintf(stderr, "ROUTEDEBUG: Calling DUP...\n");
+#endif
 		return WH_DymRoute_route_create(f, routeDescription + i, wms);
 
 	case 'r':
 	case 'R':
 		// Round Robin Function
+#ifdef _DYM_ROUTE_DEBUG_
 		fprintf(stderr, "ROUTEDEBUG: Calling RR...\n");
+#endif
 		return WH_DymRoute_route_createFuncRR(f, routeDescription + i, wms);
 
 	case 'c':
 	case 'C':
 		// Category Function
+#ifdef _DYM_ROUTE_DEBUG_
 		fprintf(stderr, "ROUTEDEBUG: Calling CAT...\n");
+#endif
 		return WH_DymRoute_route_createFuncCat(f, routeDescription + i, wms);
 
 	default:

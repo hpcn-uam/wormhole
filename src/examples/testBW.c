@@ -10,7 +10,7 @@
 
 #include <malloc.h>
 
-#define NUM_BIG_MESSAGES 500000000
+#define NUM_BIG_MESSAGES 5000000
 #define SIZE_BUFFER 1024*4
 
 #define PEAK_FRACTION_DOWN ((NUM_BIG_MESSAGES  )/3)

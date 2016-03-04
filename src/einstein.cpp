@@ -49,7 +49,7 @@ void Einstein::readConfig(const string configFileName)
 	// TODO: Leer realmente el fichero
 	uint16_t id = 1;
 	uint16_t baseListenPort = 10000;
-	int16_t core = 0;
+	int64_t core = 0;
 	//string connectionDescription = "(LISP connection description)";
 
 	FILE *configFile = fopen(configFileName.c_str(), "r");
@@ -68,7 +68,7 @@ void Einstein::readConfig(const string configFileName)
 			break;
 		}
 
-		int st = sscanf(configLine, "%hu %s %s %hd", &id, programName, host, &core);
+		int st = sscanf(configLine, "%hu %s %s %lx", &id, programName, host, &core);
 
 		if (st == EOF) {
 			break;

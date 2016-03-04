@@ -2,7 +2,6 @@
 #define __WORM_PRIV_H__
 
 #include <worm.h>
-#include <common.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -18,7 +18,6 @@
 #include <time.h>
 #include <strings.h>
 #include <errno.h>
-#include <sched.h>
 
 #define WH_COMMON_LIMITW8_RECV (1) //(1<<2) //Wait time in cycles if no more data retrived
 #define WH_COMMON_LIMITW8_SEND (1<<15) //Wait time in cycles if no more data retrived
@@ -42,10 +41,10 @@ extern "C" {
 	typedef struct {
 		uint16_t id;
 		uint16_t listenPort;
-		int16_t core;
 		uint32_t IP; //TODO fix para ipv6
 		uint32_t connectionDescriptionLength;
 		uint8_t *connectionDescription; // (LISP connection description)
+		int64_t core;
 	} WormSetup;
 
 	typedef struct {
