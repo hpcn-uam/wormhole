@@ -33,7 +33,7 @@ bin/testLisp.tgz: bin/testLisp lib/libworm.so src/examples/lisprun.sh
 	mv bin/tmp/testLisp.tgz bin/testLisp.tgz
 	rm -rf bin/tmp
 	
-bin/testBW.tgz: bin/testBW lib/libworm.so src/examples/bwrun.sh src/examples/bw.conf
+bin/testBW.tgz: bin/testBW lib/libworm.so src/examples/bwrun.sh
 	mkdir -p bin/tmp/testBW/lib
 	cp bin/testBW bin/tmp/testBW
 	cp lib/libworm.so bin/tmp/testBW/lib
