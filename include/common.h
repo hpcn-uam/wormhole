@@ -18,6 +18,7 @@
 #include <time.h>
 #include <strings.h>
 #include <errno.h>
+#include <sched.h>
 
 #define WH_COMMON_LIMITW8_RECV (1) //(1<<2) //Wait time in cycles if no more data retrived
 #define WH_COMMON_LIMITW8_SEND (1<<15) //Wait time in cycles if no more data retrived

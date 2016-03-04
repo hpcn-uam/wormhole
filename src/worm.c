@@ -116,6 +116,11 @@ uint8_t WH_init(void)
 		WH_setup_types(1, &tmpType);
 	}
 
+	// Establecer afinidad
+	if (WH_mySetup.core) {
+		result = sched_setaffinity(0, sizeof(WH_mySetup.core), &WH_mySetup.core);
+	}
+
 	// Lanzar hilo de recepción de conexiones
 	WH_bussy = 1;
 
