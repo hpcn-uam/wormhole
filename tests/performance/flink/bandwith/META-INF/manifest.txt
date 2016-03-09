@@ -1,0 +1,1 @@
+program-class: org.apache.flink.streaming.examples.socket.SocketWindowWordCount
