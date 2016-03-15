@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./testWorm/testWorm
+./testWorm

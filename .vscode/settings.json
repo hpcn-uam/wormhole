@@ -1,5 +1,5 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-    "clang.cflags": ["-I", "/home/rafael/git/wormhole/include", "-std=gnu11"],
-    "clang.cxxflags": ["-I", "/home/rafael/git/wormhole/include", "-std=gnu++11"]
+    "clang.cflags": ["-I", "/home/rafael/.gentoo/java-config-2/current-user-vm/include","-I", "/home/rafael/.gentoo/java-config-2/current-user-vm/include/linux","-I", "/home/rafael/git/wormhole/include", "-std=gnu11"],
+    "clang.cxxflags": ["-I", "/home/rafael/.gentoo/java-config-2/current-user-vm/include","-I", "/home/rafael/.gentoo/java-config-2/current-user-vm/include/linux","-I", "/home/rafael/git/wormhole/include", "-std=gnu++11"]
 }

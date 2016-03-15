@@ -82,6 +82,9 @@ uint8_t WH_init(void)
 	WH_einsConn.socket = tcp_connect_to(getenv("EINSTEIN_IP"), WH_einsConn.Port);
 
 	if (WH_einsConn.socket == -1) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Error connecting to Einstein");
+#endif
 		return 1;
 	}
 
@@ -94,6 +97,9 @@ uint8_t WH_init(void)
 
 	// Send hello message
 	if (tcp_message_send(WH_einsConn.socket, hellomsg, hellomsgSize) != 0) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Error sending HELLO to Einstein");
+#endif
 		return 1;
 	}
 
@@ -101,6 +107,9 @@ uint8_t WH_init(void)
 	uint8_t *wormSetupMsg = (uint8_t *) &WH_mySetup;
 
 	if (tcp_message_recv(WH_einsConn.socket, wormSetupMsg, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Error recv myconfig from Einstein");
+#endif
 		return 1;
 	}
 
@@ -108,6 +117,9 @@ uint8_t WH_init(void)
 	WH_mySetup.connectionDescription = calloc(WH_mySetup.connectionDescriptionLength + 1, sizeof(char));
 
 	if (tcp_message_recv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) != WH_mySetup.connectionDescriptionLength) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Error recv connectionDescription from Einstein");
+#endif
 		return 1;
 	}
 
@@ -122,7 +134,7 @@ uint8_t WH_init(void)
 	// Establecer afinidad
 	if (WH_mySetup.core != 0) {
 		if (sched_setaffinity(0, sizeof(WH_mySetup.core), (cpu_set_t *) &WH_mySetup.core)) {
-			perror("Error setting up process affinity");
+			perror("[WH]: Error setting up process affinity");
 		}
 	}
 
@@ -130,11 +142,17 @@ uint8_t WH_init(void)
 	WH_bussy = 1;
 
 	if (pthread_create(&WH_wormThread, NULL, WH_thread, NULL)) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Error creating thread");
+#endif
 		return 1;
 	}
 
 	//Creamos el enrutado dinámico
 	if (WH_DymRoute_init(WH_mySetup.connectionDescription, &WH_myDstWorms)) {
+#ifdef _WORMLIB_DEBUG_
+		fprintf(stderr, "[WH]: Error creating DymRoute\n");
+#endif
 		return 1;
 	}
 
@@ -974,7 +992,10 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 	char *errorString;
 
 	if (!tmpString) {
-		return -1;
+#ifdef _DYM_ROUTE_DEBUG_
+		perror("ROUTEDEBUG: Error in Malloc");
+#endif
+		return 1;
 	}
 
 	sprintf(tmpString, "/tmp/%d.c", myPid);
@@ -982,7 +1003,10 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	if (!f) {
 		free(tmpString);
-		return -2;
+#ifdef _DYM_ROUTE_DEBUG_
+		perror("ROUTEDEBUG: Error creating tmp.c");
+#endif
+		return 2;
 	}
 
 	/*Write headers to the file*/
@@ -996,8 +1020,21 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	/*Compile the .c*/
 	if (!ret) {
-		sprintf(tmpString, "gcc -O3 -Wall /tmp/%d.c -o /tmp/%d.so -shared -lpthread -fPIC ", myPid, myPid);
+		sprintf(tmpString, "gcc -O3 -Wall /tmp/%d.c -o /tmp/%d.so -shared -Llib -lworm -lpthread -fPIC ", myPid, myPid);
+
+#ifdef _DYM_ROUTE_DEBUG_
+		fprintf(stderr, "ROUTEDEBUG: Calling %s\n", tmpString);
+#endif
+
 		ret = system(tmpString);
+
+#ifdef _DYM_ROUTE_DEBUG_
+
+		if (ret) {
+			fprintf(stderr, "ROUTEDEBUG: Error calling gcc\n");
+		}
+
+#endif
 	}
 
 	/*Link the .SO*/
@@ -1006,6 +1043,9 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 		_WH_DymRoute_libHandle = dlopen(tmpString, RTLD_NOW);
 
 		if (!_WH_DymRoute_libHandle) {
+#ifdef _DYM_ROUTE_DEBUG_
+			fprintf(stderr, "ROUTEDEBUG: %s\n", dlerror());
+#endif
 			free(tmpString);
 			return 5;
 		}
@@ -1038,7 +1078,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 #ifdef _DYM_ROUTE_DEBUG_
 					fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL-SETUP]\n", dw->id);
 #endif
-					return -1;
+					return 1;
 				}
 			}
 

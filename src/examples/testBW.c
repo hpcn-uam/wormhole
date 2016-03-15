@@ -10,13 +10,13 @@
 
 #include <malloc.h>
 
-#define NUM_BIG_MESSAGES 5000000
-#define SIZE_BUFFER 1024*4
+#define NUM_BIG_MESSAGES 50000000
+#define SIZE_BUFFER 131//1024*4
 
 #define PEAK_FRACTION_DOWN ((NUM_BIG_MESSAGES  )/3)
 #define PEAK_FRACTION_UP   (PEAK_FRACTION_DOWN*2)
 
-#define NUMNODES 4
+#define NUMNODES 1
 #define RRNODES 1 //Min value=1
 
 //#define CHECKMSG

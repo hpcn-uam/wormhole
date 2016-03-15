@@ -25,12 +25,21 @@ flag=0
 cd dependencies/google-astyle/
 g++ *cpp
 cd -
+
+COMMONFLAGS="--style=linux -T -H -U -F -L -w -K -p -k3 -j"
+
 for file in $(git diff-index --cached --name-only HEAD)
 do
 	if [ $(echo $file | grep -ce '\.[hc]p*$') -ne 0 ]
 	then
-		TMP=$(./dependencies/google-astyle/a.out --style=linux -T -H -U -F -L -w -K -p -k3 -j "$file" | grep -c Formatted)
+		TMP=$(./dependencies/google-astyle/a.out --mode=c    $COMMONFLAGS "$file" | grep -c Formatted)
 	fi
+
+	if [ $(echo $file | grep -ce '\.java') -ne 0 ]
+	then
+		TMP=$(./dependencies/google-astyle/a.out --mode=java $COMMONFLAGS "$file" | grep -c Formatted)
+	fi
+
 	((flag += TMP))
 done
 

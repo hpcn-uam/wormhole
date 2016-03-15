@@ -332,11 +332,13 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 		}
 	}
 
-	sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/lib;"
+	sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz;"
+			"export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/%s/lib;"
 			"export WORM_ID=%hu;"
 			"export EINSTEIN_PORT=%hu;"
 			"export EINSTEIN_IP=%s;"
-			"nohup sh %s/run.sh > /dev/null 2>&1 &'",
+			"cd %s;"
+			"nohup sh run.sh > /dev/null 2>&1 &'",
 			wc.host.c_str(), wc.programName.c_str(), wc.programName.c_str(), wc.ws.id, this->listenPort,
 			this->listenIpStr.c_str(), wc.programName.c_str());
 

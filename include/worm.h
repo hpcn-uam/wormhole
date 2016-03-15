@@ -26,7 +26,7 @@ extern "C" {
 		uint32_t size;
 		uint32_t hash;
 		uint16_t category;
-		ConnectionDataType *type;
+		ConnectionDataType const *type;
 	} MessageInfo;
 
 	typedef struct {
