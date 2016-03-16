@@ -9,17 +9,19 @@ export TMPDIR=/tmp/
 #C/C++
 export CC=gcc
 export CXX=g++
-export FLAGS=-I include/ -Wall -g -lpthread -pthread -O3 -Werror
-export CFLAGS=$(FLAGS) -std=gnu11 -fPIC
+export FLAGS=-fPIC -I include/ -Wall -g -lpthread -pthread -O3 -Werror
+export CFLAGS=$(FLAGS) -std=gnu11
 export CXXFLAGS=$(FLAGS) -std=gnu++11
-export LDFLAGS=-fPIC -ldl -lpthread
+export LDFLAGS=-fPIC -ldl -lpthread -lstdc++
 
 #Java
 export JFLAGS = -g
 export JC = javac
-export JCFLAGS=$(FLAGS) -I $(JAVA_HOME)/include/ -I $(JAVA_HOME)/include/linux/
+export JCFLAGS=-I $(JAVA_HOME)/include/ -I $(JAVA_HOME)/include/linux/
 export JLDFLAGS=$(LDFLAGS) -Llib -lworm
-export JAVAFILES  := $(wildcard src/langApis/Java/es/hpcn/wormhole/*.java src/langApis/Java/es/hpcn/wormhole/test/*.java)
+export JAVALIBSRC := $(wildcard src/langApis/Java/es/hpcn/wormhole/*.java src/langApis/Java/es/hpcn/wormhole/test/*.java)
+export STRMLIBSRC := $(wildcard src/langApis/Java/backtype/storm/*.java src/langApis/Java/backtype/storm/spout/*.java src/langApis/Java/backtype/storm/task/*.java src/langApis/Java/backtype/storm/topology/*.java src/langApis/Java/backtype/storm/topology/base/*.java src/langApis/Java/backtype/storm/tuple/*.java src/langApis/Java/backtype/storm/utils/*.java )
+export JAVAFILES  := $(JAVALIBSRC) $(STRMLIBSRC)
 export CLASSFILES :=  $(patsubst $(JAVAPATH)%,%,$(JAVAFILES:.java=.class))
 
 export INCLUDES := $(wildcard include/*.h include/*.hpp)
@@ -68,18 +70,27 @@ bin/testJBW.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examp
 	cd $(TMPDIR);	tar -czf testJBW.tgz testJBW
 	mv $(TMPDIR)/testJBW.tgz bin/testJBW.tgz
 	rm -rf $(TMPDIR)/testJBW
+	
+bin/testSTBW.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/stormrun.sh
+	mkdir -p $(TMPDIR)/testJBW/lib
+	cp lib/libjavaworm.* $(TMPDIR)/testJBW/lib #only for java
+	cp lib/libworm.so $(TMPDIR)/testJBW/lib
+	cp src/examples/stormrun.sh $(TMPDIR)/testJBW/run.sh
+	cd $(TMPDIR); tar -czf testJBW.tgz testJBW
+	mv $(TMPDIR)/testJBW.tgz bin/testJBW.tgz
+	rm -rf $(TMPDIR)/testJBW
 
 #Examples
-bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o obj/common.o
-	$(CXX) $(CXXFLAGS) -o $@ $^
+bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 
-bin/testWorm: src/examples/testWorm.c obj/common.o
-	$(CC) $(CFLAGS) -Llib -lworm -o $@ $^
+bin/testWorm: src/examples/testWorm.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 
-bin/testLisp: src/examples/testLisp.c obj/common.o
+bin/testLisp: src/examples/testLisp.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 	
-bin/testBW: src/examples/testBW.c obj/common.o
+bin/testBW: src/examples/testBW.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 
 bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
@@ -89,19 +100,24 @@ bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 
-lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o
+lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o obj/einstein.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^
 
 #JAVALibs
-lib/libjavaworm.so: lib/libworm.so $(JAVAPATH)/es_hpcn_wormhole_Worm.h $(JAVAPATH)/es_hpcn_wormhole_Worm.c
-	$(CC) $(JCFLAGS) $(JLDFLAGS) -shared -o $@ $(JAVAPATH)/es_hpcn_wormhole_Worm.c
-	
+lib/libjavaworm.so: lib/libworm.so $(JAVAPATH)es_hpcn_wormhole_Worm.h $(JAVAPATH)es_hpcn_wormhole_Worm.c $(JAVAPATH)es_hpcn_wormhole_Einstein.h $(JAVAPATH)es_hpcn_wormhole_Einstein.cpp
+	$(CC)  $(JCFLAGS) $(CFLAGS)   $(JLDFLAGS) -c -o obj/es_hpcn_wormhole_Worm.o $(JAVAPATH)es_hpcn_wormhole_Worm.c
+	$(CXX) $(JCFLAGS) $(CXXFLAGS) $(JLDFLAGS) -c -o obj/es_hpcn_wormhole_Einstein.o $(JAVAPATH)es_hpcn_wormhole_Einstein.cpp
+	$(CC)  $(JCFLAGS) $(CFLAGS)   $(JLDFLAGS) -shared -o $@ obj/es_hpcn_wormhole_Worm.o obj/es_hpcn_wormhole_Einstein.o
+
 lib/libjavaworm.jar: $(CLASSFILES)
 	cd $(JAVAPATH); jar cf libjavaworm.jar $(CLASSFILES)
-	mv $(JAVAPATH)/libjavaworm.jar lib/libjavaworm.jar
+	mv $(JAVAPATH)libjavaworm.jar lib/libjavaworm.jar
 
-$(JAVAPATH)/es_hpcn_wormhole_Worm.h: $(JAVAPATH)/es/hpcn/wormhole/Worm.java
-	cd $(JAVAPATH) ; rm -f *.h ; javah es.hpcn.wormhole.Worm
+$(JAVAPATH)es_hpcn_wormhole_Worm.h: $(JAVAPATH)es/hpcn/wormhole/Worm.java
+	cd $(JAVAPATH) ; rm -f es_hpcn_wormhole_Worm.h ; javah es.hpcn.wormhole.Worm
+	
+$(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.java
+	cd $(JAVAPATH) ; rm -f es_hpcn_wormhole_Einstein.h ; javah es.hpcn.wormhole.Einstein
 
 .java.class:
 	cd $(JAVAPATH); $(JC) $(JFLAGS) $*.java

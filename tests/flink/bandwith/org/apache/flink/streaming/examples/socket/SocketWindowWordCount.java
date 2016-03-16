@@ -30,7 +30,7 @@ import org.apache.flink.util.Collector;
  * Implements a streaming windowed version of the "WordCount" program.
  *
  * This program connects to a server socket and reads strings from the socket.
- * The easiest way to try this out is to open a text sever (at port 12345) 
+ * The easiest way to try this out is to open a text sever (at port 12345)
  * using the <i>netcat</i> tool via
  * <pre>
  * nc -l 12345
@@ -38,23 +38,27 @@ import org.apache.flink.util.Collector;
  * and run this example with the port as an argument.
  */
 @SuppressWarnings("serial")
-public class SocketWindowWordCount {
-	
-	public static void main(String[] args) throws Exception {
+public class SocketWindowWordCount
+{
+
+	public static void main(String[] args) throws Exception
+	{
 
 		// the port to connect to
 		final int port;
+
 		try {
 			final ParameterTool params = ParameterTool.fromArgs(args);
 			port = params.getInt("port");
+
 		} catch (Exception e) {
 			System.err.println("No port specified. Please run 'BandwithMeter --port <port>', " +
-					"where port is the address of the text server");
+							   "where port is the address of the text server");
 			System.err.println("To start a simple text server, run 'netcat -l <port>' and type the input text " +
-					"into the command line");
+							   "into the command line");
 			return;
-		} 
-		
+		}
+
 		// get the execution environment
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -62,36 +66,36 @@ public class SocketWindowWordCount {
 		DataStream<String> text = env.socketTextStream("nrg", port, '\n');
 
 
-		long tmp2 = System.currentTimeMillis()*1000000;
+		long tmp2 = System.currentTimeMillis() * 1000000;
 
-		// parse the data, group it, window it, and aggregate the counts 
+		// parse the data, group it, window it, and aggregate the counts
 		DataStream<String> windowCounts = text
-				
-				.flatMap(new FlatMapFunction<String, String>() {
-					private static final long numMsg=100000;
-					
-					private long num=0;
-    					private long startTime=tmp2;
-					    
-					@Override
-					public void flatMap(String value, Collector<String> out) {
-						/*for (String word : value.split("\\s")) {
-							out.collect(new WordWithCount(word, 1L));
-						}*/
-						num++;
-						if(num>=numMsg)
-						{
-							long tmp = System.currentTimeMillis()*1000000;
-							out.collect("Tasa = "+((double)(num)*value.length()*8.)/(tmp-startTime)+" gbps");
-							startTime=tmp;
-							num = 0;
-						}
-					}
-				})/*
-				
+
+		.flatMap(new FlatMapFunction<String, String>() {
+			private static final long numMsg = 100000;
+
+			private long num = 0;
+			private long startTime = tmp2;
+
+			@Override
+			public void flatMap(String value, Collector<String> out) {
+				/*for (String word : value.split("\\s")) {
+					out.collect(new WordWithCount(word, 1L));
+				}*/
+				num++;
+
+				if (num >= numMsg) {
+					long tmp = System.currentTimeMillis() * 1000000;
+					out.collect("Tasa = " + ((double)(num) * value.length() * 8.) / (tmp - startTime) + " gbps");
+					startTime = tmp;
+					num = 0;
+				}
+			}
+		})/*
+
 				.keyBy("word")
 				.timeWindow(Time.seconds(5), Time.seconds(1))
-				
+
 				.reduce(new ReduceFunction<WordWithCount>() {
 					@Override
 					public WordWithCount reduce(WordWithCount a, WordWithCount b) {
@@ -104,5 +108,5 @@ public class SocketWindowWordCount {
 
 		env.execute("Socket Window WordCount");
 	}
-	
+
 }

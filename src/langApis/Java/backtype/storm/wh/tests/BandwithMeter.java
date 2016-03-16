@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package storm.bw;
+package backtype.storm.wh.tests;
 
 import backtype.storm.Config;
-import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -166,14 +165,7 @@ public class BandwithMeter
 		@Override
 		public Map<String, Object> getComponentConfiguration()
 		{
-			if (!_isDistributed) {
-				Map<String, Object> ret = new HashMap<String, Object>();
-				ret.put(Config.TOPOLOGY_MAX_TASK_PARALLELISM, 1);
-				return ret;
-
-			} else {
-				return null;
-			}
+			return null;
 		}
 	}
 
@@ -194,11 +186,7 @@ public class BandwithMeter
 
 		} else {
 
-			LocalCluster cluster = new LocalCluster();
-			cluster.submitTopology("test", conf, builder.createTopology());
-			Utils.sleep(60000);
-			cluster.killTopology("test");
-			cluster.shutdown();
+			System.out.println("arguments necesary");
 		}
 	}
 }

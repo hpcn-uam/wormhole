@@ -1,5 +1,4 @@
 #include <einstein.hpp>
-#include <common.h>
 
 #include <cassert>
 #include <cstring>
