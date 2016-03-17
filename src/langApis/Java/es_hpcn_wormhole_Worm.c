@@ -107,6 +107,66 @@ extern "C" {
 
 	/*
 	 * Class:     es_hpcn_wormhole_Worm
+	 * Method:    recv
+	 * Signature: (Ljava/lang/String;)I
+	 */
+	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_recv__Ljava_lang_String_2
+	(JNIEnv *env, jobject obj, jstring data)
+	{
+		MessageInfo mi;
+		jboolean iscopy;
+		mi.type = &_JWH_array8type;
+		mi.size = (*env)->GetStringLength(env, data) * 2; //TODO change type to the corresponding
+
+		int16_t *bytes = (*env)->GetStringCritical(env, data, &iscopy);
+
+		if (iscopy == JNI_TRUE) {
+			fprintf(stderr, "msg has been copied!\n");
+		}
+
+		if (bytes == NULL) {
+			fprintf(stderr, "JVM returned NULL!\n");
+			return -1;
+		}
+
+		jint ret = WH_recv(bytes, &mi);
+		(*env)->ReleaseStringCritical(env, data, bytes);
+
+		return ret;
+	}
+
+	/*
+	 * Class:     es_hpcn_wormhole_Worm
+	 * Method:    send
+	 * Signature: (Ljava/lang/String;)I
+	 */
+	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_send__Ljava_lang_String_2
+	(JNIEnv *env, jobject obj, jstring data)
+	{
+		MessageInfo mi;
+		jboolean iscopy;
+		mi.type = &_JWH_array8type;
+		mi.size = (*env)->GetStringLength(env, data) * 2; //TODO change type to the corresponding
+
+		int16_t *bytes = (*env)->GetStringCritical(env, data, &iscopy);
+
+		if (iscopy == JNI_TRUE) {
+			fprintf(stderr, "msg has been copied!\n");
+		}
+
+		if (bytes == NULL) {
+			fprintf(stderr, "JVM returned NULL!\n");
+			return -1;
+		}
+
+		jint ret = WH_send(bytes, &mi);
+		(*env)->ReleaseStringCritical(env, data, bytes);
+
+		return ret;
+	}
+
+	/*
+	 * Class:     es_hpcn_wormhole_Worm
 	 * Method:    flushIO
 	 * Signature: ()V
 	 */

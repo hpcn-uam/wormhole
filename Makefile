@@ -20,7 +20,7 @@ export JC = javac
 export JCFLAGS=-I $(JAVA_HOME)/include/ -I $(JAVA_HOME)/include/linux/
 export JLDFLAGS=$(LDFLAGS) -Llib -lworm
 export JAVALIBSRC := $(wildcard src/langApis/Java/es/hpcn/wormhole/*.java src/langApis/Java/es/hpcn/wormhole/test/*.java)
-export STRMLIBSRC := $(wildcard src/langApis/Java/backtype/storm/*.java src/langApis/Java/backtype/storm/spout/*.java src/langApis/Java/backtype/storm/task/*.java src/langApis/Java/backtype/storm/topology/*.java src/langApis/Java/backtype/storm/topology/base/*.java src/langApis/Java/backtype/storm/tuple/*.java src/langApis/Java/backtype/storm/utils/*.java )
+export STRMLIBSRC := $(wildcard src/langApis/Java/backtype/storm/*.java src/langApis/Java/backtype/storm/spout/*.java src/langApis/Java/backtype/storm/task/*.java src/langApis/Java/backtype/storm/topology/*.java src/langApis/Java/backtype/storm/topology/base/*.java src/langApis/Java/backtype/storm/tuple/*.java src/langApis/Java/backtype/storm/utils/*.java src/langApis/Java/backtype/storm/generated/*.java src/langApis/Java/backtype/storm/wh/tests/*.java)
 export JAVAFILES  := $(JAVALIBSRC) $(STRMLIBSRC)
 export CLASSFILES :=  $(patsubst $(JAVAPATH)%,%,$(JAVAFILES:.java=.class))
 
@@ -110,7 +110,7 @@ lib/libjavaworm.so: lib/libworm.so $(JAVAPATH)es_hpcn_wormhole_Worm.h $(JAVAPATH
 	$(CC)  $(JCFLAGS) $(CFLAGS)   $(JLDFLAGS) -shared -o $@ obj/es_hpcn_wormhole_Worm.o obj/es_hpcn_wormhole_Einstein.o
 
 lib/libjavaworm.jar: $(CLASSFILES)
-	cd $(JAVAPATH); jar cf libjavaworm.jar $(CLASSFILES)
+	cd $(JAVAPATH); jar cf libjavaworm.jar $(CLASSFILES) backtype/storm/wh/tests/*class
 	mv $(JAVAPATH)libjavaworm.jar lib/libjavaworm.jar
 
 $(JAVAPATH)es_hpcn_wormhole_Worm.h: $(JAVAPATH)es/hpcn/wormhole/Worm.java

@@ -27,7 +27,6 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
 
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.topology.base.BaseRichSpout;
@@ -102,6 +101,7 @@ public class BandwithMeter
 		SpoutOutputCollector _collector;
 
 		String msg;
+		Values v;
 
 		String randomString(long len)
 		{
@@ -126,6 +126,7 @@ public class BandwithMeter
 		{
 			_isDistributed = isDistributed;
 			msg = randomString(msgSize);
+			v = new Values(msg);
 		}
 
 		public void open(Map conf, TopologyContext context, SpoutOutputCollector collector)
@@ -140,11 +141,7 @@ public class BandwithMeter
 
 		public void nextTuple()
 		{
-			//Utils.sleep(100);
-			//final String[] words = new String[] {"nathan", "mike", "jackson", "golda", "bertels"};
-			//final Random rand = new Random();
-			//final String word = words[rand.nextInt(words.length)];
-			_collector.emit(new Values(msg));
+			_collector.emit(v);
 		}
 
 		public void ack(Object msgId)

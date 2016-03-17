@@ -28,7 +28,7 @@ extern "C" {
 	 * Method:    recv
 	 * Signature: ([B)I
 	 */
-	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_recv
+	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_recv___3B
 	(JNIEnv *, jobject, jbyteArray);
 
 	/*
@@ -36,8 +36,24 @@ extern "C" {
 	 * Method:    send
 	 * Signature: ([B)I
 	 */
-	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_send
+	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_send___3B
 	(JNIEnv *, jobject, jbyteArray);
+
+	/*
+	 * Class:     es_hpcn_wormhole_Worm
+	 * Method:    recv
+	 * Signature: (Ljava/lang/String;)I
+	 */
+	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_recv__Ljava_lang_String_2
+	(JNIEnv *, jobject, jstring);
+
+	/*
+	 * Class:     es_hpcn_wormhole_Worm
+	 * Method:    send
+	 * Signature: (Ljava/lang/String;)I
+	 */
+	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_send__Ljava_lang_String_2
+	(JNIEnv *, jobject, jstring);
 
 	/*
 	 * Class:     es_hpcn_wormhole_Worm

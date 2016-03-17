@@ -8,4 +8,9 @@ public class Config extends HashMap<String, Object>
 	{
 
 	}
+
+	public void	setNumWorkers(int workers)
+	{
+
+	}
 }
