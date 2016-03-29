@@ -10,10 +10,10 @@ extern "C" {
 	/*
 	 * Class:     es_hpcn_wormhole_Einstein
 	 * Method:    init
-	 * Signature: (Ljava/lang/String;Ljava/lang/String;IZ)I
+	 * Signature: (Ljava/lang/String;Ljava/lang/String;IZ[Ljava/lang/String;)I
 	 */
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Einstein_init
-	(JNIEnv *, jobject, jstring, jstring, jint, jboolean);
+	(JNIEnv *, jobject, jstring, jstring, jint, jboolean, jobjectArray);
 
 #ifdef __cplusplus
 }

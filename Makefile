@@ -156,7 +156,7 @@ obj/%.o: src/%.c $(INCLUDES)
 clean:
 	rm -rf obj lib bin
 	cd $(JAVAPATH); rm -rf $(CLASSFILES)
-
+	./tools/cleanorigs.bash
 
 #Custom Data .o
 obj/structures.h.o: $(INCLUDES)
