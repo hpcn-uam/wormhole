@@ -32,7 +32,7 @@ all: Dependencies einstein libs langLibs Examples doc/html
 langLibs: javaLibs
 
 Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync
-Jexamples: bin/testJBW.tgz
+Jexamples: bin/testJBW.tgz bin/javaTest.tgz
 
 #Tars
 bin/testWorm.tgz: bin/testWorm lib/libworm.so src/run.sh
@@ -71,14 +71,14 @@ bin/testJBW.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examp
 	mv $(TMPDIR)/testJBW.tgz bin/testJBW.tgz
 	rm -rf $(TMPDIR)/testJBW
 	
-bin/testSTBW.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/stormrun.sh
-	mkdir -p $(TMPDIR)/testJBW/lib
-	cp lib/libjavaworm.* $(TMPDIR)/testJBW/lib #only for java
-	cp lib/libworm.so $(TMPDIR)/testJBW/lib
-	cp src/examples/stormrun.sh $(TMPDIR)/testJBW/run.sh
-	cd $(TMPDIR); tar -czf testJBW.tgz testJBW
-	mv $(TMPDIR)/testJBW.tgz bin/testJBW.tgz
-	rm -rf $(TMPDIR)/testJBW
+bin/javaTest.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/javarun.sh
+	mkdir -p $(TMPDIR)/javaTest/lib
+	cp lib/libjavaworm.* $(TMPDIR)/javaTest/lib #only for java
+	cp lib/libworm.so $(TMPDIR)/javaTest/lib
+	cp src/examples/javarun.sh $(TMPDIR)/javaTest/run.sh
+	cd $(TMPDIR); tar -czf javaTest.tgz javaTest
+	mv $(TMPDIR)/javaTest.tgz bin/javaTest.tgz
+	rm -rf $(TMPDIR)/javaTest
 
 #Examples
 bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o

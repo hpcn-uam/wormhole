@@ -17,14 +17,15 @@ public class StormSubmitter
 
 	private static int checkWH(StormTopology topology)
 	{
-		return 1;
+		return 0;
 	}
 
 	public static void submitTopologyWithProgressBar(String name, Map stormConf, StormTopology topology) throws Exception
 	{
-		if (checkWH(StormTopology topology) != 0
+		if (checkWH(topology) == 0) {
 			return;
 
+		} else {
 			String configFileName = "/tmp/stormEinstein.conf";
 			String listenIp = "150.244.58.114";
 			int listenPort = 5000;
@@ -32,14 +33,15 @@ public class StormSubmitter
 
 			PrintWriter writer = new PrintWriter(configFileName, "UTF-8");
 
-		for (int i = 1; i <= topology.getWHnum(); i++) {
-			writer.println(topology.getWHconfig(i));
+			for (int i = 1; i <= topology.getWHnum(); i++) {
+				writer.println(topology.getWHconfig(i));
 				writer.println("	" + topology.getWHdesc(i));
 			}
 
-		writer.println("");
-		writer.close();
+			writer.println("");
+			writer.close();
 
-		Einstein eins = new Einstein(configFileName, listenIp, listenPort, autoDeployWorms);
+			Einstein eins = new Einstein(configFileName, listenIp, listenPort, autoDeployWorms);
+		}
 	}
 }

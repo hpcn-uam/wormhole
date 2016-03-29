@@ -11,6 +11,7 @@
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <vector>
 #include <set>
 #include <memory>
 #include <stdexcept>
@@ -39,6 +40,8 @@ class EinsConn
 	uint16_t listenPort;
 	int listeningSocket;
 
+	vector<string> runParams;
+
 	// This map represents the worms alredy deployed.
 	// The key represents the host, the vector, the programs alredy deployed on it.
 	map <string, set<string>> deployedWorms;
@@ -54,6 +57,7 @@ class EinsConn
  public:
 	EinsConn(const string listenIp, const uint16_t listenPort);
 	EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms);
+	EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms, vector<string> runParams);
 	~EinsConn();
 
 	// Connects to IP and launches a worm with configuration ws
@@ -89,6 +93,7 @@ class Einstein
  public:
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort);
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms);
+	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms, vector<string> runParams);
 	~Einstein();
 
 	void openHoles(); // Starts everything

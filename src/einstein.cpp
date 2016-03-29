@@ -28,9 +28,13 @@ Eins2WormConn::~Eins2WormConn()
 
 bool EinsConn::keepRunning = true;
 
-Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort) : Einstein(configFileName, listenIp, listenPort, true) {}
+Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort)
+	: Einstein(configFileName, listenIp, listenPort, true) {}
 
 Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
+	: Einstein(configFileName, listenIp, listenPort, autoDeployWorms, vector<string>()) {}
+
+Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms, vector<string> runParams)
 	: ec(listenIp, listenPort, autoDeployWorms)
 {
 
@@ -124,15 +128,21 @@ void Einstein::readConfig(const string configFileName)
 	fclose(configFile);
 }
 
-EinsConn::EinsConn(string listenIp, uint16_t listenPort) : EinsConn(listenIp, listenPort, true) {}
+EinsConn::EinsConn(string listenIp, uint16_t listenPort)
+	: EinsConn(listenIp, listenPort, true) {}
 
 EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
+	: EinsConn(listenIp, listenPort, autoDeployWorms, vector<string>()) {}
+
+EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms, vector<string> runParams)
 {
 	// Start socket to receive connections from worms
 	this->listenIpStr = listenIp;
 	this->listenIp = inet_addr(listenIp.c_str());
 	this->listenPort = listenPort;
 	this->listeningSocket = tcp_listen_on_port(listenPort);
+
+	this->runParams = runParams;
 
 	if (this->listeningSocket == -1) {
 		throw std::runtime_error("Error listening to socket");
@@ -322,27 +332,33 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 		}
 	}
 
-	char executable[4096]; //TODO fix posible overflow
+	string executable = "";
 
 	if (copyData) {
-		sprintf(executable, "scp %s.tgz %s:~", wc.programName.c_str(), wc.host.c_str());
+		executable = "scp " + wc.programName + ".tgz " + wc.host + ":~";
 
-		if (system(executable)) {
+		if (system(executable.c_str())) {
 			cerr << "error executing comand: \"" << executable << "\"" << endl;
 		}
 	}
 
-	sprintf(executable, "ssh -T %s 'tar -xzf %s.tgz;"
-			"export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/%s/lib;"
-			"export WORM_ID=%hu;"
-			"export EINSTEIN_PORT=%hu;"
-			"export EINSTEIN_IP=%s;"
-			"cd %s;"
-			"nohup sh run.sh > /dev/null 2>&1 &'",
-			wc.host.c_str(), wc.programName.c_str(), wc.programName.c_str(), wc.ws.id, this->listenPort,
-			this->listenIpStr.c_str(), wc.programName.c_str());
+	executable = "ssh -T " + wc.host + " 'tar -xzf " + wc.programName + ".tgz;"
+				 "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/" + wc.programName + "/lib;"
+				 "export WORM_ID=" + std::to_string(wc.ws.id) + ";"
+				 "export EINSTEIN_PORT=" + std::to_string(this->listenPort) + ";"
+				 "export EINSTEIN_IP=" + this->listenIpStr + ";"
+				 "cd " + wc.programName + ";"
+				 "nohup sh run.sh ";
 
-	if (system(executable)) {
+	if (this->runParams.size() > 0) {
+		for (unsigned i = 0; i < runParams.size(); i++) {
+			executable += "\"" + runParams[i] + "\"";
+		}
+	}
+
+	executable += " > /dev/null 2>&1 &'";
+
+	if (system(executable.c_str())) {
 		cerr << "error executing comand: \"" << executable << "\"" << endl;
 	}
 }
