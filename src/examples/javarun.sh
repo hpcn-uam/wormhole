@@ -18,6 +18,7 @@ done
 #cd testJBW
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib
 echo "LIBPATH = " $LD_LIBRARY_PATH &>> /tmp/jbw.$OUTFILE.out
+echo "Calling Java with: -cp lib/libjavaworm.jar" "$@" &>> /tmp/jbw.$OUTFILE.out
 
 java -cp lib/libjavaworm.jar "$@" &>> /tmp/jbw.$OUTFILE.out
 

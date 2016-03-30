@@ -15,17 +15,20 @@ public class StormSubmitter
 
 	}
 
-	private static int checkWH(StormTopology topology)
+	private static boolean  isEinsteinNode	= false;
+	private static String   mainClass 		= null;
+	private static String[] mainClassArgs 	= null;
+
+	public static void setEinsteinNode(String mainclassPrm, String[] mainClassArgsPrm)
 	{
-		return 0;
+		isEinsteinNode = true;
+		mainClass = mainclassPrm;
+		mainClassArgs = mainClassArgsPrm;
 	}
 
 	public static void submitTopologyWithProgressBar(String name, Map stormConf, StormTopology topology) throws Exception
 	{
-		if (checkWH(topology) == 0) {
-			return;
-
-		} else {
+		if (isEinsteinNode) {   //Einstein things
 			String configFileName = "/tmp/stormEinstein.conf";
 			String listenIp = "150.244.58.114";
 			int listenPort = 5000;
@@ -41,7 +44,18 @@ public class StormSubmitter
 			writer.println("");
 			writer.close();
 
-			Einstein eins = new Einstein(configFileName, listenIp, listenPort, autoDeployWorms);
+			String[]  params = new String[mainClassArgs.length + 1];
+			params[0] = mainClass;
+
+			for (int i = 0; i < mainClassArgs.length; i++) {
+				params[i + 1] = mainClassArgs[i];
+			}
+
+			Einstein eins = new Einstein(configFileName, listenIp, listenPort, autoDeployWorms, params);
+
+		} else { //Worm things
+			return;
+
 		}
 	}
 }

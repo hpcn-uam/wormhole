@@ -35,7 +35,7 @@ Einstein::Einstein(const string configFileName, const string listenIp, const uin
 	: Einstein(configFileName, listenIp, listenPort, autoDeployWorms, vector<string>()) {}
 
 Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms, vector<string> runParams)
-	: ec(listenIp, listenPort, autoDeployWorms)
+	: ec(listenIp, listenPort, autoDeployWorms, runParams)
 {
 
 	this->readConfig(configFileName);
@@ -62,10 +62,10 @@ void Einstein::readConfig(const string configFileName)
 		throw std::runtime_error("Config file doesn't exist");
 	}
 
-	char configLine[4096];
-	char programName[4096];
-	char host[4096];
-	char connectionDescription[4096];
+	char configLine[4096]; //TODO FIX POSIBLE OVERFLOW
+	char programName[4096]; //TODO FIX POSIBLE OVERFLOW
+	char host[4096]; //TODO FIX POSIBLE OVERFLOW
+	char connectionDescription[4096]; //TODO FIX POSIBLE OVERFLOW
 
 	while (!feof(configFile)) {
 		if (fgets(configLine, 4096, configFile) == 0) {
@@ -352,7 +352,7 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 
 	if (this->runParams.size() > 0) {
 		for (unsigned i = 0; i < runParams.size(); i++) {
-			executable += "\"" + runParams[i] + "\"";
+			executable += "\"" + runParams[i] + "\" ";
 		}
 	}
 
