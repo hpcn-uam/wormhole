@@ -4,9 +4,15 @@ import es.hpcn.wormhole.Worm;
 import es.hpcn.wormhole.Einstein;
 
 import backtype.storm.generated.StormTopology;
+import backtype.storm.topology.IRichBolt;
+import backtype.storm.topology.IRichSpout;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.tuple.Tuple;
 
 import java.util.Map;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 public class StormSubmitter
 {
@@ -54,6 +60,41 @@ public class StormSubmitter
 			Einstein eins = new Einstein(configFileName, listenIp, listenPort, autoDeployWorms, params);
 
 		} else { //Worm things
+
+			ArrayList<IRichSpout> spouts = topology.WHgetSpouts();
+			ArrayList<IRichBolt>  bolts = topology.WHgetBolts();
+
+			Worm worm = new Worm();
+			int id = worm.getId();
+
+			try {
+
+				if (id <= spouts.size()) { // Is a spout!
+					System.out.println("[" + id + "/" + spouts.size() + "] Im a spout! :)");
+					IRichSpout me = spouts.get(id - 1);
+					SpoutOutputCollector collector = new SpoutOutputCollector();
+					me.open(null, null, collector);
+
+					while (true) {
+						me.nextTuple();
+					}
+
+				} else { // is a volt
+					System.out.println("[" + id + "/" + bolts.size() + "] Im a bolt! :)");
+					IRichBolt me = bolts.get((id - spouts.size()) - 1);
+					OutputCollector collector = new OutputCollector();
+					me.prepare(null, null, collector);
+					Tuple t = new Tuple();
+
+					while (true) {
+						me.execute(t);
+					}
+				}
+
+			} catch (Throwable err) {
+				worm.halt();
+			}
+
 			return;
 
 		}

@@ -3,11 +3,35 @@ package backtype.storm.generated;
 import es.hpcn.wormhole.Worm;
 import es.hpcn.wormhole.Einstein;
 
+import backtype.storm.topology.IRichBolt;
+import backtype.storm.topology.IRichSpout;
+
+import java.util.ArrayList;
+
 public class StormTopology
 {
+	private ArrayList<IRichSpout> spouts;
+	private ArrayList<IRichBolt> bolts;
+
 	public StormTopology()
 	{
 
+	}
+
+	public void WHsetSpoutsAndBolts(ArrayList<IRichSpout> spouts, ArrayList<IRichBolt> bolts)
+	{
+		this.spouts = spouts;
+		this.bolts = bolts;
+	}
+
+	public ArrayList<IRichSpout> WHgetSpouts()
+	{
+		return spouts;
+	}
+
+	public ArrayList<IRichBolt> WHgetBolts()
+	{
+		return bolts;
 	}
 
 	public String getWHconfig(int wormId)

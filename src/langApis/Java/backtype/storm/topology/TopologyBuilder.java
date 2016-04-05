@@ -17,17 +17,21 @@ public class TopologyBuilder
 
 	public SpoutDeclarer setSpout(String id, IRichSpout spout, Number parallelism_hint)
 	{
+		spouts.add(spout);
 		return new SpoutDeclarer();
 	}
 
 	public  BoltDeclarer setBolt(String id, IRichBolt bolt, Number parallelism_hint)
 	{
+		bolts.add(bolt);
 		return new BoltDeclarer();
 	}
 
 	public StormTopology createTopology()
 	{
-		return new StormTopology();
+		StormTopology ret = new StormTopology();
+		ret.WHsetSpoutsAndBolts(spouts, bolts);
+		return ret;
 	}
 
 }
