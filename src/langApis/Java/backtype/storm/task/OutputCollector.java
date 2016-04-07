@@ -11,7 +11,7 @@ public class OutputCollector //extends WorkerTopologyContext //implements IMetri
 	static Worm w = null;
 	public OutputCollector() throws Exception
 	{
-		w = Worm.getInstance();
+		w = new Worm();
 	}
 
 	public void	ack(Tuple input)
@@ -22,7 +22,7 @@ public class OutputCollector //extends WorkerTopologyContext //implements IMetri
 	public List<Integer> emit(List<Object> tuple)
 	{
 		for (Object o : tuple) {
-			w.send(tuple);
+			w.send((String)o); //TODO posible future errors
 		}
 
 		return null;

@@ -10,7 +10,10 @@ extern "C" {
 	 * STATIC CONTENT *
 	 ****************/
 
-	static const ConnectionDataType _JWH_array8type = {.type = ARRAY, .ext.arrayType = UINT8};
+#define JWH_NUMTYPES 2
+	static const ConnectionDataType _JWH_array8type  = {.type = ARRAY, .ext.arrayType = UINT8};
+	static const ConnectionDataType _JWH_array16type = {.type = ARRAY, .ext.arrayType = UINT16};
+	static int hasBeenInitialized = 1;
 
 	/****************/
 	/*
@@ -21,9 +24,18 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_init
 	(JNIEnv *env, jobject obj)
 	{
-		jint ret = WH_init();
+		if (hasBeenInitialized) {
+			ConnectionDataType type[2];
 
-		return ret;
+			type[0] = _JWH_array8type;
+			type[1] = _JWH_array16type;
+
+			WH_setup_types(JWH_NUMTYPES, type);
+
+			hasBeenInitialized = WH_init();
+		}
+
+		return hasBeenInitialized;
 	}
 
 	/*
@@ -45,7 +57,7 @@ extern "C" {
 	 * Method:    recv
 	 * Signature: ([B)I
 	 */
-	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_recv
+	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_recv___3B
 	(JNIEnv *env, jobject obj, jbyteArray data)
 	{
 		MessageInfo mi;
@@ -77,7 +89,7 @@ extern "C" {
 	 * Method:    send
 	 * Signature: ([B)I
 	 */
-	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_send
+	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_send___3B
 	(JNIEnv *env, jobject obj, jbyteArray data)
 	{
 		MessageInfo mi;
@@ -114,8 +126,8 @@ extern "C" {
 	{
 		MessageInfo mi;
 		jboolean iscopy;
-		mi.type = &_JWH_array8type;
-		mi.size = (*env)->GetStringLength(env, data) * 2; //TODO change type to the corresponding
+		mi.type = &_JWH_array16type;
+		mi.size = (*env)->GetStringLength(env, data);
 
 		uint16_t *bytes = (uint16_t *)(*env)->GetStringCritical(env, data, &iscopy);
 
@@ -144,8 +156,8 @@ extern "C" {
 	{
 		MessageInfo mi;
 		jboolean iscopy;
-		mi.type = &_JWH_array8type;
-		mi.size = (*env)->GetStringLength(env, data) * 2; //TODO change type to the corresponding
+		mi.type = &_JWH_array16type;
+		mi.size = (*env)->GetStringLength(env, data);
 
 		uint16_t *bytes = (uint16_t *)(*env)->GetStringCritical(env, data, &iscopy);
 

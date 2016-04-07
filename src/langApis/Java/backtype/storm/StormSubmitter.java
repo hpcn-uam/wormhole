@@ -84,14 +84,23 @@ public class StormSubmitter
 					IRichBolt me = bolts.get((id - spouts.size()) - 1);
 					OutputCollector collector = new OutputCollector();
 					me.prepare(null, null, collector);
+
 					Tuple t = new Tuple();
+					String msg = new String();
 
 					while (true) {
+						worm.recv(msg);
+						t.setWHString(msg);
 						me.execute(t);
 					}
 				}
 
 			} catch (Throwable err) {
+				System.out.println(err.toString());
+				System.out.println(err.getMessage());
+				err.printStackTrace();
+
+			} finally {
 				worm.halt();
 			}
 

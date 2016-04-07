@@ -27,7 +27,12 @@ JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Einstein_init
 		}
 	}
 
-	_JWH_einstein = new Einstein(c_configFileName, c_listenIp, listenPort, autoDeployWorms == JNI_TRUE, runparams);
+	try {
+		_JWH_einstein = new Einstein(c_configFileName, c_listenIp, listenPort, autoDeployWorms == JNI_TRUE, runparams);
+
+	} catch (std::runtime_error) {
+		delete _JWH_einstein;
+	}
 
 	env->ReleaseStringUTFChars(configFileName, c_configFileName);
 	env->ReleaseStringUTFChars(configFileName, c_listenIp);
