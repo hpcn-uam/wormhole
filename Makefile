@@ -133,7 +133,7 @@ obj:
 lib:
 	mkdir -p lib
 
-doc/html: $(INCLUDES) $(SRCS)
+doc/html: $(INCLUDES) $(SRCS) $(JAVAFILES)
 	doxygen > /dev/null
 
 bin:
