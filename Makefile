@@ -2,6 +2,8 @@
 export JAVAPATH = src/langApis/Java/
 export VPATH = $(JAVAPATH)
 .SUFFIXES: .java .class
+.PRECIOUS: certs/prv/%.csr certs/prv/%.key.pem
+.SECONDARY: certs/prv/%.csr certs/prv/%.key.pem
 
 #Common
 export TMPDIR=/tmp/
@@ -12,7 +14,8 @@ export CXX=g++
 export FLAGS=-fPIC -I include/ -Wall -g -lpthread -pthread -O3 -Werror
 export CFLAGS=$(FLAGS) -std=gnu11
 export CXXFLAGS=$(FLAGS) -std=gnu++11
-export LDFLAGS=-fPIC -ldl -lpthread -lstdc++
+export SSLFLAGS=-lssl -lcrypto
+export LDFLAGS=-fPIC -ldl -lpthread -lstdc++ $(SSLFLAGS)
 
 #Java
 export JFLAGS = -g
@@ -27,11 +30,11 @@ export CLASSFILES :=  $(patsubst $(JAVAPATH)%,%,$(JAVAFILES:.java=.class))
 export INCLUDES := $(wildcard include/*.h include/*.hpp)
 export SRCS := $(wildcard src/*.c src/*.cpp src/examples/*.c src/examples/*.cpp)
 
-all: Dependencies einstein libs langLibs Examples doc/html
+all: Dependencies einstein libs langLibs Examples doc/html certificates
 
 langLibs: javaLibs
 
-Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync
+Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL
 Jexamples: bin/testJBW.tgz bin/javaTest.tgz
 
 #Tars
@@ -98,6 +101,12 @@ bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
 
 bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
 	$(CC) $(CFLAGS) -o $@ $^
+	
+bin/testSendSSL: src/examples/testSendSSL.c obj/common.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+
+bin/testRecvSSL: src/examples/testRecvSSL.c obj/common.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o obj/einstein.o
@@ -129,6 +138,9 @@ einstein: obj/einstein.o
 
 obj:
 	mkdir -p obj
+	
+certs/prv:
+	mkdir -p certs/prv
 
 lib:
 	mkdir -p lib
@@ -151,6 +163,22 @@ obj/%.o: src/%.cpp $(INCLUDES)
 
 obj/%.o: src/%.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c $< -o $@
+	
+certificates: certs/ca.pem certs/worm.pem certs/einstein.pem
+
+export CERTINFO=-subj "/C=ES/ST=Madrid/L=Madrid/O=wh/CN=www.wormhole.org" 
+
+certs/prv/%.key.pem: | certs/prv
+	openssl genrsa -out $@ 4096
+	
+certs/prv/%.csr: certs/prv/%.key.pem
+	openssl req $(CERTINFO) -new -key $< -out $@
+
+certs/%.pem: certs/prv/%.csr certs/ca.pem certs/prv/ca.key.pem
+	openssl x509 -req -in $< -CA certs/ca.pem -CAkey certs/prv/ca.key.pem -CAcreateserial -out $@ -days 512 -sha512
+
+certs/ca.pem: certs/prv/ca.key.pem
+	openssl req $(CERTINFO) -x509 -new -nodes -key certs/prv/ca.key.pem -sha512 -days 1024  -extensions v3_ca -out certs/ca.pem
 
 
 clean:
