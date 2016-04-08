@@ -37,12 +37,12 @@ public class StormTopology
 	public String getWHconfig(int wormId)
 	{
 		if (wormId == 1) {
-			return wormId + " javaTest localhost -1";
-			//return wormId + " testBW 192.168.50.103 0x3F";
+			//return wormId + " javaTest localhost -1";
+			return wormId + " javaTest 192.168.50.103 0x3F";
 
 		} else {
-			return wormId + " javaTest localhost -1";
-			//return wormId + " testBW 192.168.50.103 0x3F";
+			//return wormId + " javaTest localhost -1";
+			return wormId + " javaTest 192.168.50.102 0x3F";
 		}
 	}
 

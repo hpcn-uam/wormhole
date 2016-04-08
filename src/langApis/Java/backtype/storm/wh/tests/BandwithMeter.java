@@ -46,13 +46,13 @@ public class BandwithMeter
 {
 
 	private static final long numMsg = 5000;
-	private static final long msgSize = 4096;
+	private static final long msgSize = (1048576 / 2);
 
 	public static class ExclamationBolt extends BaseRichBolt
 	{
 		OutputCollector _collector;
 
-		private static long printIter = 100000;
+		private static long printIter = 800;//8000000;
 		private long num = 0;
 		private PrintWriter writer;
 		private long startTime;
@@ -78,7 +78,7 @@ public class BandwithMeter
 			if (num >= printIter) {
 				synchronized (this) {
 					long tmp = System.currentTimeMillis() * 1000000;
-					writer.println("Tasa = " + ((double)(num) * msgSize * 8.) / (tmp - startTime) + " gbps");
+					writer.println("Tasa = " + ((double)(num) * msgSize * 8.) / (tmp - startTime) + " GCharsPS (" + ((double)(num) * msgSize * 16.) / (tmp - startTime) + " gbps)");
 					writer.flush();
 					startTime = tmp;
 					num = 0;

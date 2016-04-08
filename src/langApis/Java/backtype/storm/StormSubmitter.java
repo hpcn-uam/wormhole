@@ -13,6 +13,7 @@ import backtype.storm.tuple.Tuple;
 import java.util.Map;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class StormSubmitter
 {
@@ -86,7 +87,7 @@ public class StormSubmitter
 					me.prepare(null, null, collector);
 
 					Tuple t = new Tuple();
-					String msg = new String();
+					String msg = String.join("", Collections.nCopies(1024 * 1024, String.valueOf("x")));
 
 					while (true) {
 						worm.recv(msg);

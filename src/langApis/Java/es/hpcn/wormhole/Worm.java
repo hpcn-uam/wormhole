@@ -1,5 +1,7 @@
 package es.hpcn.wormhole;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class Worm
 {
 	static
@@ -9,11 +11,14 @@ public class Worm
 
 	private native int init();
 
+	private byte [] barray;
 	public Worm() throws Exception
 	{
 		if (init() != 0) {
 			throw new Exception("Failed to initialize JavaWorm library");
 		}
+
+		barray = new byte[1048576 * 2];
 	}
 
 	public native int halt();
