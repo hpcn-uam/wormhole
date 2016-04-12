@@ -166,19 +166,20 @@ obj/%.o: src/%.c $(INCLUDES)
 	
 certificates: certs/ca.pem certs/worm.pem certs/einstein.pem
 
-export CERTINFO=-subj "/C=ES/ST=Madrid/L=Madrid/O=wh/CN=www.wormhole.org" 
+export CERTINFOCA=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.ca/CN=www.wormhole.org" 
+export CERTINFOWH=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.other/CN=www.wormhole.org" 
 
 certs/prv/%.key.pem: | certs/prv
 	openssl genrsa -out $@ 4096
 	
 certs/prv/%.csr: certs/prv/%.key.pem
-	openssl req $(CERTINFO) -new -key $< -out $@
+	openssl req $(CERTINFOCA) -new -key $< -out $@
 
 certs/%.pem: certs/prv/%.csr certs/ca.pem certs/prv/ca.key.pem
 	openssl x509 -req -in $< -CA certs/ca.pem -CAkey certs/prv/ca.key.pem -CAcreateserial -out $@ -days 512 -sha512
 
 certs/ca.pem: certs/prv/ca.key.pem
-	openssl req $(CERTINFO) -x509 -new -nodes -key certs/prv/ca.key.pem -sha512 -days 1024  -extensions v3_ca -out certs/ca.pem
+	openssl req $(CERTINFOWH) -x509 -new -nodes -key certs/prv/ca.key.pem -sha512 -days 1024  -extensions v3_ca -out certs/ca.pem
 
 
 clean:

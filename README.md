@@ -49,7 +49,8 @@ Each worm:
 ### Security and Certificates
 
 To use SSL between two worms, there should be the SSL param in the configuration.
+
 **NOT YET IMPLEMENTED** To use SSL connection between Einstein and any Worm, the parameter -SSL should be passed to the Einstein starter program.
 
-In order to work with SSL properly, there must be in each .tgz a copy of: `ca.pem` `einstein.pem` `worm.pem`
+In order to work with SSL properly, there must be in each .tgz a copy of: `cert/ca.pem` `cert/einstein.pem` `cert/worm.pem`
 
