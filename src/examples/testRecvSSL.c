@@ -11,8 +11,8 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#define NUM_SMALL_MESSAGES 500000000
-#define NUM_BIG_MESSAGES 5000000
+#define NUM_SMALL_MESSAGES 5000000//00
+#define NUM_BIG_MESSAGES 500000//0
 #define SIZE_BUFFER 1024*4
 
 int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
@@ -78,21 +78,17 @@ int main(int argc, char **argv)
 
 	sock = tcp_accept(listen_socket, NULL);
 
-
-
-
 	struct timeval start, end;
 
 	//INIT OPEN SSL
 	SSL_load_error_strings();
 	SSL_library_init();
-	OpenSSL_add_all_algorithms();
 
 	//tmp variables;
 	SSL_CTX *sslctx;
 	SSL *cSSL;
 
-	sslctx = SSL_CTX_new(SSLv23_server_method());
+	sslctx = SSL_CTX_new(TLSv1_2_server_method());
 	SSL_CTX_set_options(sslctx, SSL_OP_SINGLE_DH_USE);
 
 	if (!SSL_CTX_load_verify_locations(sslctx, "../certs/ca.pem", NULL)) {
@@ -113,7 +109,20 @@ int main(int argc, char **argv)
 	/* verify private key */
 	if (!SSL_CTX_check_private_key(sslctx)) {
 		fprintf(stderr, "Private key does not match the public certificate\n");
-		abort();
+		return -1;
+	}
+
+	/* Set the ciphers list */
+	/*const char* whc_rc4md5 	= "RC4-MD5";	*/
+	const char *whc_rc4sha 	= "RC4-SHA"; 		/*
+	const char* whc_des 	= "DES-CBC-SHA";
+	const char* whc_3des 	= "DES-CBC3-SHA";
+	const char* whc_aes256A	= "AES256-GCM-SHA384";
+	const char* whc_aes256B	= "AES256-SHA256";*/
+
+	if (!SSL_CTX_set_cipher_list(sslctx, whc_rc4sha)) {
+		fprintf(stderr, "No cipher could be selected\n");
+		return -1;
 	}
 
 	/* Set to require peer (client) certificate verification */
@@ -137,20 +146,14 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	printf("TODO OK\n");
-	fflush(stdout);
-	SSL_shutdown(cSSL);
-	SSL_free(cSSL);
-
-	//TODO remove RETURN
-	return 0;
+	fprintf(stderr, "Utilizando cifrado: %s\n", SSL_get_cipher_name(cSSL));
 	fprintf(stderr, "Comenzando pruebas de recibir valores pequeños\n");
 
 	uint64_t value;
 	gettimeofday(&start, 0);
 
 	for (int i = 0; i < NUM_SMALL_MESSAGES; i++) {
-		tcp_message_recv(sock, (void *)&value, sizeof(uint64_t), 1);
+		SSL_read(cSSL, (void *)&value, sizeof(uint64_t));
 
 		if (value != i) {
 			fprintf(stderr, "Paquete perdido %d\n", i);
@@ -163,14 +166,14 @@ int main(int argc, char **argv)
 			((double)NUM_SMALL_MESSAGES * sizeof(uint64_t) * 8 / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
 
 
-
+	fprintf(stderr, "Utilizando cifrado: %s\n", SSL_get_cipher_name(cSSL));
 	fprintf(stderr, "Comenzando pruebas de recibir valores grandes\n");
 
 
 	gettimeofday(&start, 0);
 
 	for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
-		tcp_message_recv(sock, (void *)buffer, SIZE_BUFFER, 1);
+		SSL_read(cSSL, (void *)buffer, SIZE_BUFFER);
 
 		if (i > 499000) {
 			//flush_recv(&sock);
@@ -179,6 +182,10 @@ int main(int argc, char **argv)
 
 	gettimeofday(&end, 0);
 	//destroy_asyncSocket(&sock);
+	SSL_shutdown(cSSL);
+	SSL_free(cSSL);
+	close(sock);
+
 	fprintf(stderr, "Terminadas pruebas. %f gbps\n",
 			(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
 

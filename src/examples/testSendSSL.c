@@ -11,8 +11,8 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#define NUM_SMALL_MESSAGES 500000000
-#define NUM_BIG_MESSAGES 5000000
+#define NUM_SMALL_MESSAGES 5000000//00
+#define NUM_BIG_MESSAGES 500000//0
 #define SIZE_BUFFER 1024*4
 
 int main(int argc, char **argv)
@@ -25,10 +25,9 @@ int main(int argc, char **argv)
 	}
 
 
-	AsyncSocket sock;
-	int st = tcp_connect_to_async("127.0.0.1", 5000, &sock);
+	int sock = tcp_connect_to("127.0.0.1", 5000);
 
-	assert(st == 0);
+	assert(sock > 0);
 
 
 	struct timeval start, end;
@@ -42,7 +41,7 @@ int main(int argc, char **argv)
 	SSL_CTX *sslctx;
 	SSL *cSSL;
 
-	sslctx = SSL_CTX_new(SSLv23_client_method());
+	sslctx = SSL_CTX_new(TLSv1_2_client_method());
 	SSL_CTX_set_options(sslctx, SSL_OP_SINGLE_DH_USE);
 
 	if (!SSL_CTX_load_verify_locations(sslctx, "../certs/ca.pem", NULL)) {
@@ -67,7 +66,7 @@ int main(int argc, char **argv)
 	}
 
 	cSSL = SSL_new(sslctx);
-	SSL_set_fd(cSSL, sock.sockfd);
+	SSL_set_fd(cSSL, sock);
 	int ssl_err = SSL_connect(cSSL);
 
 	if (ssl_err <= 0) {
@@ -80,13 +79,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	printf("TODO OK\n");
-	fflush(stdout);
-	SSL_shutdown(cSSL);
-	SSL_free(cSSL);
-
-	//TODO remove RETURN
-	return 0;
+	fprintf(stderr, "Utilizando cifrado: %s\n", SSL_get_cipher_name(cSSL));
 	fprintf(stderr, "Comenzando pruebas de enviar valores pequeños\n");
 
 	uint64_t value = 0;
@@ -94,7 +87,7 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < NUM_SMALL_MESSAGES; i++) {
 		value = i;
-		tcp_message_send_async(&sock, (void *)&value, sizeof(uint64_t));
+		SSL_write(cSSL, (void *)&value, sizeof(uint64_t));
 	}
 
 	gettimeofday(&end, 0);
@@ -107,7 +100,7 @@ int main(int argc, char **argv)
 
 
 
-
+	fprintf(stderr, "Utilizando cifrado: %s\n", SSL_get_cipher_name(cSSL));
 	fprintf(stderr, "Comenzando pruebas de enviar valores grandes\n");
 
 
@@ -115,15 +108,18 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
 		*((int *) buffer) = i;
-		tcp_message_send_async(&sock, (void *)buffer, SIZE_BUFFER);
+		SSL_write(cSSL, (void *)buffer, SIZE_BUFFER);
 		//tcp_message_send(sock.sockfd, (void *)buffer, SIZE_BUFFER);
 	}
 
 	gettimeofday(&end, 0);
 
-	destroy_asyncSocket(&sock);
+	SSL_shutdown(cSSL);
+	SSL_free(cSSL);
+	close(sock);
 
-	fprintf(stderr, "Terminadas pruebas. %f gbps\n",
-			(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
+	fprintf(stderr, "Terminadas pruebas. %f gbps, %f segundos\n",
+			(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
+			(((double)end.tv_sec - start.tv_sec) + ((double)end.tv_usec - start.tv_usec) / 1000000));
 
 }
