@@ -4,3 +4,6 @@
 [submodule "dependencies/google-astyle"]
 	path = dependencies/google-astyle
 	url = https://github.com/xuy/google-astyle
+[submodule "dependencies/portable"]
+	path = dependencies/libressl
+	url = https://github.com/libressl-portable/portable
