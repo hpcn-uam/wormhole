@@ -152,5 +152,6 @@ GSYMS
 
 doc/html
 certs
+dependencies/compiled
 
 tests/performance/flink/bandwith/gentext

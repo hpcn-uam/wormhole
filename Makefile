@@ -12,10 +12,14 @@ export TMPDIR=/tmp/
 export CC=gcc
 export CXX=g++
 export FLAGS=-fPIC -I include/ -Wall -g -lpthread -pthread -O3 -Werror
-export CFLAGS=$(FLAGS) -std=gnu11
+export SSLCFLAGS= -I dependencies/libressl/compiled/usr/local/include/openssl
+export CFLAGS=$(FLAGS) $(SSLCFLAGS) -std=gnu11
 export CXXFLAGS=$(FLAGS) -std=gnu++11
-export SSLFLAGS=-lssl -lcrypto
-export LDFLAGS=-fPIC -ldl -lpthread -lstdc++ $(SSLFLAGS)
+#export SSLFLAGS=-lssl -lcrypto
+#export SSLFLAGS= -Ldependencies/libressl/compiled/usr/local/lib/ -static -lssl -lcrypto #-Wl,-Bdynamic
+export SSLFLAGS= dependencies/libressl/compiled/usr/local/lib/libssl.a dependencies/libressl/compiled/usr/local/lib/libcrypto.a
+
+export LDFLAGS=-fPIC -ldl -lpthread -lstdc++
 
 #Java
 export JFLAGS = -g
@@ -103,14 +107,14 @@ bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
 	$(CC) $(CFLAGS) -o $@ $^
 	
 bin/testSendSSL: src/examples/testSendSSL.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLFLAGS)
 
 bin/testRecvSSL: src/examples/testRecvSSL.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLFLAGS)
 
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o obj/einstein.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^ $(SSLFLAGS)
 
 #JAVALibs
 lib/libjavaworm.so: lib/libworm.so $(JAVAPATH)es_hpcn_wormhole_Worm.h $(JAVAPATH)es_hpcn_wormhole_Worm.c $(JAVAPATH)es_hpcn_wormhole_Einstein.h $(JAVAPATH)es_hpcn_wormhole_Einstein.cpp

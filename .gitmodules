@@ -1,9 +1,12 @@
 [submodule "dependencies/hptimelib"]
-	path = dependencies/hptimelib
+	path = dependencies/repos/hptimelib
 	url = https://github.com/ralequi/hptimelib
 [submodule "dependencies/google-astyle"]
-	path = dependencies/google-astyle
+	path = dependencies/repos/google-astyle
 	url = https://github.com/xuy/google-astyle
 [submodule "dependencies/portable"]
-	path = dependencies/libressl
+	path = dependencies/repos/libressl
 	url = https://github.com/libressl-portable/portable
+[submodule "dependencies/openbsd"]
+	path = dependencies/repos/libressl-dep
+	url = https://github.com/libressl-portable/openbsd.git
