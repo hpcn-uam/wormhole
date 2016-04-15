@@ -22,7 +22,8 @@ gtags
 flag=0
 
 #ejecutable
-cd dependencies/repos/google-astyle/
+STYLEDIRECTORY=dependencies/repos/google-astyle/
+cd $STYLEDIRECTORY
 g++ *cpp
 cd -
 
@@ -32,12 +33,12 @@ for file in $(git diff-index --cached --name-only HEAD)
 do
 	if [ $(echo $file | grep -ce '\.[hc]p*$') -ne 0 ]
 	then
-		TMP=$(./dependencies/google-astyle/a.out --mode=c    $COMMONFLAGS "$file" | grep -c Formatted)
+		TMP=$(./$STYLEDIRECTORY/a.out --mode=c    $COMMONFLAGS "$file" | grep -c Formatted)
 	fi
 
 	if [ $(echo $file | grep -ce '\.java') -ne 0 ]
 	then
-		TMP=$(./dependencies/google-astyle/a.out --mode=java $COMMONFLAGS "$file" | grep -c Formatted)
+		TMP=$(./$STYLEDIRECTORY/a.out --mode=java $COMMONFLAGS "$file" | grep -c Formatted)
 	fi
 
 	((flag += TMP))
