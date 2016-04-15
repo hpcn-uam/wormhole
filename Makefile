@@ -12,7 +12,7 @@ export TMPDIR=/tmp/
 #C/C++
 export CC=gcc
 export CXX=g++
-export FLAGS=-fPIC -I include/ -Wall -g -lpthread -pthread -O3 -Werror
+export FLAGS=-fPIC -I include/ -Wall -Wextra -g -lpthread -pthread -O3 -Werror
 export SSLCFLAGS= -I dependencies/libressl/compiled/usr/local/include/openssl
 export CFLAGS=$(FLAGS) $(SSLCFLAGS) -std=gnu11
 export CXXFLAGS=$(FLAGS) -std=gnu++11
@@ -137,7 +137,7 @@ $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.jav
 Dependencies: obj lib bin SSL
 
 dependencies/compiled forceCompileDependencies:
-	cd dependencies; make
+	cd dependencies; $(MAKE)
 
 bin/einstein: src/examples/testEinstein.cpp obj/einstein.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
@@ -178,7 +178,7 @@ export CERTINFOWH=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.other/CN=www.wormho
 
 certs/prv/%.key.pem: | certs/prv
 	openssl genrsa -out $@ 4096
-	
+
 certs/prv/%.csr: certs/prv/%.key.pem
 	openssl req $(CERTINFOCA) -new -key $< -out $@
 
@@ -193,7 +193,7 @@ clean:
 	rm -rf obj lib bin
 	cd $(JAVAPATH); rm -rf $(CLASSFILES)
 	./tools/cleanorigs.bash
-	cd dependencies; make clean
+	cd dependencies; $(MAKE) clean
 
 #Custom Data .o
 obj/structures.h.o: $(INCLUDES)

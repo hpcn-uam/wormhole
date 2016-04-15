@@ -99,10 +99,10 @@ int tcp_message_send(int socket, const void *message, size_t len)
 	do {
 		sent_now = send(socket, message + sent, len - sent, MSG_NOSIGNAL);
 		sent += sent_now;
-	} while (sent != len && sent_now != -1 && sent_now != 0);
+	} while (sent != (ssize_t)len && sent_now != -1 && sent_now != 0);
 
 	if (sent_now == -1 || sent_now == 0) {
-		return 1;
+		return sent;
 	}
 
 	return 0;
@@ -119,7 +119,7 @@ size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync)
 		if (received_now > 0) {
 			received += received_now;
 		}
-	} while (received != len && (
+	} while (received != (ssize_t)len && (
 		sync ?
 		((received_now == -1 || received_now == 0) && (errno == EAGAIN || errno == EWOULDBLOCK))
 		: (received_now != -1 && received_now != 0)));
@@ -199,7 +199,7 @@ void *recv_fun(void *args)
 				return 0;
 			}
 
-			if (received == sock->buf_len || sock->flush) {
+			if (received == (int32_t)sock->buf_len || sock->flush) {
 				sock->to_access[current_buf] = 1;
 				sock->write_pos[current_buf] = received;
 				current_buf = (current_buf + 1) % 2;

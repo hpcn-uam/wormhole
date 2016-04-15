@@ -16,6 +16,9 @@ extern WormSetup WH_mySetup;
 
 int main(int argc, char **argv)
 {
+		UNUSED(argc);
+		UNUSED(argv);
+		
 	int st = WH_init();
 	assert(st == 0);
 

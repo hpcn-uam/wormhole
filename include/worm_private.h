@@ -137,7 +137,7 @@ extern "C" {
 	 * Enrute a message
 	 * @return the number of msgs sent
 	 */
-	uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi, DestinationWorms *wms);
+	uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi);
 
 	/** WH_DymRoute_send
 	 * Sends a message to the network

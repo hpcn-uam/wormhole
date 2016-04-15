@@ -212,10 +212,10 @@ uint8_t WH_flushIO(void)
 	uint8_t ret = 0;
 
 	// for each dstWorm
-	for (int i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
+	for (uint32_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
 		if (WH_myDstWorms.worms[i].conns) {
 			// for each Connection/type
-			for (int j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
+			for (uint32_t j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
 				if (WH_myDstWorms.worms[i].conns[j] != NULL) {
 #ifdef _WORMLIB_DEBUG_
 #ifdef _WORMLIB_DEBUG_FLUSH_
@@ -257,6 +257,8 @@ uint8_t WH_flushIO(void)
  */
 void *WH_thread(void *arg)
 {
+	UNUSED(arg);
+	
 	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
 	struct timeval ts;
 	ts.tv_sec  =   0;
@@ -329,7 +331,7 @@ void *WH_thread(void *arg)
 /** WH_TH_hellow
  * Process a HELLOW message
  */
-void inline WH_TH_hellow(int socket)
+inline void WH_TH_hellow(int socket)
 {
 	enum wormMsgType type;
 	type = WORMINFO; //Con Worm Info
@@ -368,7 +370,7 @@ void inline WH_TH_hellow(int socket)
 /** SETUPWORMCONN
  * Process a HELLOW message
  */
-void inline WH_TH_setupworm(int socket)
+inline void WH_TH_setupworm(int socket)
 {
 	DestinationWorm tmpDestWorm;
 
@@ -563,7 +565,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	int8_t flag = 0;
 
-	for (int i = 0; i < dw->numberOfTypes; i++) {
+	for (uint32_t i = 0; i < dw->numberOfTypes; i++) {
 		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, type)) {
 			flag = 1;
 			break;
@@ -612,7 +614,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	flag = 0;
 
-	for (int i = 0; i < dw->numberOfTypes; i++) {
+	for (uint32_t i = 0; i < dw->numberOfTypes; i++) {
 		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, type)) {
 
 			dw->conns[i] = calloc(sizeof(Connection), 1);
@@ -815,7 +817,7 @@ uint8_t (*WH_DymRoute_precompiled_route)(const void *const data, const MessageIn
  */
 uint8_t WH_send(const void *const data, const MessageInfo *const mi)
 {
-	return WH_DymRoute_route(data, mi, &WH_myDstWorms);
+	return WH_DymRoute_route(data, mi);
 }
 
 /** WH_recv
@@ -970,8 +972,8 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 * Enrute a message
 * Return 0 if OK, something else if error.
 */
-uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi, DestinationWorms *wms)
-{
+uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi)
+{	
 	if (WH_DymRoute_precompiled_route == 0) {
 		return 1;
 
@@ -1070,7 +1072,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 {
 	//TODO search info
 	//WH_setupConnectionType
-	for (int i = 0; i < dw->numberOfTypes; i++) {
+	for (uint32_t i = 0; i < dw->numberOfTypes; i++) {
 		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, mi->type)) {
 			//tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
 			if (!dw->conns[i]) {

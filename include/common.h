@@ -22,6 +22,8 @@
 #define WH_COMMON_LIMITW8_RECV (1) //(1<<2) //Wait time in cycles if no more data retrived
 #define WH_COMMON_LIMITW8_SEND (1<<15) //Wait time in cycles if no more data retrived
 
+#define UNUSED(x) (void)(x)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

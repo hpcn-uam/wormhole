@@ -159,6 +159,8 @@ EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDe
 
 void EinsConn::signal_callback_handler(int signum)
 {
+	UNUSED(signum);
+	
 	keepRunning = false;
 }
 
@@ -182,6 +184,7 @@ EinsConn::~EinsConn()
 
 void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip)
 {
+	UNUSED(ip); //TODO remove!
 	// TODO: Conectarse al remoto y crear worm
 
 	this->connections.insert(make_pair(wc->ws.id, std::move(wc)));

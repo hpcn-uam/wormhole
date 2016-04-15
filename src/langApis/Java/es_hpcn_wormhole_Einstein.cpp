@@ -12,6 +12,8 @@ Einstein *_JWH_einstein;
 JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Einstein_init
 (JNIEnv *env, jobject obj, jstring configFileName, jstring listenIp, jint listenPort, jboolean autoDeployWorms, jobjectArray RunParams)
 {
+		UNUSED(obj);
+		
 	const char *c_configFileName = env->GetStringUTFChars(configFileName, NULL);
 	const char *c_listenIp       = env->GetStringUTFChars(listenIp, NULL);
 

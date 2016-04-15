@@ -29,6 +29,9 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_init
 	(JNIEnv *env, jobject obj)
 	{
+		UNUSED(env);
+		UNUSED(obj);
+		
 		if (hasBeenInitialized) {
 			ConnectionDataType type[2];
 
@@ -51,6 +54,9 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_halt
 	(JNIEnv *env, jobject obj)
 	{
+		UNUSED(env);
+		UNUSED(obj);
+		
 		uint8_t ret = WH_halt();
 		jint j = ret;
 
@@ -65,6 +71,8 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_recv___3B
 	(JNIEnv *env, jobject obj, jbyteArray data)
 	{
+		UNUSED(obj);
+		
 		MessageInfo mi;
 		jboolean iscopy;
 		mi.type = &_JWH_array8type;
@@ -97,6 +105,8 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_send___3B
 	(JNIEnv *env, jobject obj, jbyteArray data)
 	{
+		UNUSED(obj);
+		
 		MessageInfo mi;
 		jboolean iscopy;
 		mi.type = &_JWH_array8type;
@@ -129,6 +139,8 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_recv__Ljava_lang_String_2
 	(JNIEnv *env, jobject obj, jstring data)
 	{
+		UNUSED(obj);
+		
 		MessageInfo mi;
 		jboolean iscopy;
 
@@ -170,6 +182,8 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_send__Ljava_lang_String_2
 	(JNIEnv *env, jobject obj, jstring data)
 	{
+		UNUSED(obj);
+		
 		MessageInfo mi;
 		jboolean iscopy;
 		mi.type = &_JWH_array16type;
@@ -200,6 +214,9 @@ extern "C" {
 	JNIEXPORT void JNICALL Java_es_hpcn_wormhole_Worm_flushIO
 	(JNIEnv *env, jobject obj)
 	{
+		UNUSED(env);
+		UNUSED(obj);
+		
 		WH_flushIO();
 	}
 
@@ -211,6 +228,9 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Worm_getId
 	(JNIEnv *env, jobject obj)
 	{
+		UNUSED(env);
+		UNUSED(obj);
+		
 		uint8_t ret = WH_get_id();
 		jint j = ret;
 

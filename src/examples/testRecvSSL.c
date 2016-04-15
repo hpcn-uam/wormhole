@@ -70,6 +70,9 @@ int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 
 int main(int argc, char **argv)
 {
+		UNUSED(argc);
+		UNUSED(argv);
+		
 	void *buffer = malloc(SIZE_BUFFER);
 	int listen_socket = tcp_listen_on_port(5000);
 	assert(listen_socket != -1);
@@ -152,7 +155,7 @@ int main(int argc, char **argv)
 	uint64_t value;
 	gettimeofday(&start, 0);
 
-	for (int i = 0; i < NUM_SMALL_MESSAGES; i++) {
+	for (uint32_t i = 0; i < NUM_SMALL_MESSAGES; i++) {
 		SSL_read(cSSL, (void *)&value, sizeof(uint64_t));
 
 		if (value != i) {
