@@ -22,7 +22,7 @@ gtags
 flag=0
 
 #ejecutable
-cd dependencies/google-astyle/
+cd dependencies/repos/google-astyle/
 g++ *cpp
 cd -
 
