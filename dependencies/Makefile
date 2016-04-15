@@ -20,7 +20,7 @@ initRepositories: checkRepositories
 checkRepositories: repos/hptimelib/README.md
 
 repos/hptimelib/README.md:
-	git submodule update --init --recursive
+	cd ..; git submodule update --init --recursive
 
 #LibreSSL
 LibreSSL: compiled/libressl/usr
@@ -32,7 +32,7 @@ compiled/libressl: repos/libressl/Makefile | compiled
 compiled/libressl/usr: compiled/libressl
 	cd repos/libressl; make install DESTDIR=$(CURRDIR)/compiled/libressl
 
-repos/libressl/openbsd: repos/libressl-dep/
+repos/libressl/openbsd: repos/libressl-dep/ initRepositories
 	rm -f repos/libressl/openbsd
 	ln -s ../libressl-dep repos/libressl/openbsd
 
@@ -45,8 +45,8 @@ repos/libressl/Makefile: repos/libressl/configure
 	cd repos/libressl; ./configure CFLAGS=$(LIBSSLCFLAGS)
 
 clean:
-	git submodule update --init --recursive
-	git submodule update --recursive #its really needed?
+	cd .. ; git submodule update --init --recursive
+	cd .. ; git submodule update --recursive #its really needed?
 	git submodule foreach git reset --hard
 	git submodule foreach git clean -f -d
 	rm -rf compiled
