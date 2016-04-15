@@ -1,5 +1,3 @@
-all: LibreSSL
-
 export CURRDIR=$(shell pwd)
 
 undefine JAVAPATH
@@ -10,6 +8,8 @@ undefine FLAGS
 undefine CFLAGS
 undefine CXXFLAGS
 undefine LDFLAGS
+
+all: LibreSSL
 
 #Common
 compiled:
