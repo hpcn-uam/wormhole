@@ -1151,7 +1151,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 
 			if (worm) {
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
-				fprintf(f, _WH_DymRoute_CC_send);
+				fprintf(f, "%s", _WH_DymRoute_CC_send);
 
 			} else {
 				return 77;    //some random error code
@@ -1258,7 +1258,7 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
 
 				rrCaseId++;
-				fprintf(f, _WH_DymRoute_CC_RRbreak);
+				fprintf(f, "%s", _WH_DymRoute_CC_RRbreak);
 			}
 
 			parentesys++;
@@ -1277,14 +1277,14 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 				fprintf(f, _WH_DymRoute_CC_RRcase, rrCaseId);
 				//RR
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
-				fprintf(f, _WH_DymRoute_CC_send);
+				fprintf(f, "%s", _WH_DymRoute_CC_send);
 
 #ifdef _DYM_ROUTE_DEBUG_
 				fprintf(stderr, "ROUTEDEBUG: %d in RR list\n", nextNode);
 #endif
 
 				rrCaseId++;
-				fprintf(f, _WH_DymRoute_CC_RRbreak);
+				fprintf(f, "%s", _WH_DymRoute_CC_RRbreak);
 
 			} else {
 				return 77;    //some random error code
@@ -1318,7 +1318,7 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
 
 	uint16_t myCat = 0;
 
-	fprintf(f, _WH_DymRoute_CC_Catswitch);
+	fprintf(f, "%s", _WH_DymRoute_CC_Catswitch);
 
 	while (routeDescription[i] != '\0') {
 		if (routeDescription[i] == ')') {
@@ -1347,7 +1347,7 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
 #endif
 				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
 
-				fprintf(f, _WH_DymRoute_CC_Catbreak);
+				fprintf(f, "%s", _WH_DymRoute_CC_Catbreak);
 			}
 
 			parentesys++;
@@ -1356,7 +1356,7 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
 		i++;
 	}
 
-	fprintf(f, _WH_DymRoute_CC_Catend);
+	fprintf(f, "%s", _WH_DymRoute_CC_Catend);
 	return ret;
 }
 
