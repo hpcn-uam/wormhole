@@ -1,13 +1,13 @@
 export CURRDIR=$(shell pwd)
 
-undefine JAVAPATH
-undefine VPATH
-undefine INCLUDES
-undefine SRCS
-undefine FLAGS
-undefine CFLAGS
-undefine CXXFLAGS
-undefine LDFLAGS
+JAVAPATH=""
+VPATH=""
+INCLUDES=""
+SRCS=""
+FLAGS=""
+CFLAGS=""
+CXXFLAGS=""
+LDFLAGS=""
 
 all: LibreSSL
 
@@ -32,7 +32,7 @@ compiled/libressl: repos/libressl/Makefile | compiled
 compiled/libressl/usr: compiled/libressl
 	cd repos/libressl; make install DESTDIR=$(CURRDIR)/compiled/libressl
 
-repos/libressl/openbsd: repos/libressl-dep/ initRepositories
+repos/libressl/openbsd: initRepositories | repos/libressl-dep/
 	rm -f repos/libressl/openbsd
 	ln -s ../libressl-dep repos/libressl/openbsd
 
