@@ -2,6 +2,15 @@ all: LibreSSL
 
 export CURRDIR=$(shell pwd)
 
+undefine JAVAPATH = src/langApis/Java/
+undefine VPATH
+undefine INCLUDES
+undefine SRCS
+undefine FLAGS
+undefine CFLAGS
+undefine CXXFLAGS
+undefine LDFLAGS
+
 #Common
 compiled:
 	mkdir -p compiled
@@ -41,3 +50,4 @@ clean:
 	git submodule foreach git reset --hard
 	git submodule foreach git clean -f -d
 	rm -rf compiled
+	cd repos/libressl ; make clean #clean libressl

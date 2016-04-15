@@ -4,6 +4,7 @@ export VPATH = $(JAVAPATH)
 .SUFFIXES: .java .class
 .PRECIOUS: certs/prv/%.csr certs/prv/%.key.pem
 .SECONDARY: certs/prv/%.csr certs/prv/%.key.pem
+.NOTPARALLEL: all
 
 #Common
 export TMPDIR=/tmp/
@@ -17,7 +18,7 @@ export CFLAGS=$(FLAGS) $(SSLCFLAGS) -std=gnu11
 export CXXFLAGS=$(FLAGS) -std=gnu++11
 #export SSLFLAGS=-lssl -lcrypto
 #export SSLFLAGS= -Ldependencies/libressl/compiled/usr/local/lib/ -static -lssl -lcrypto #-Wl,-Bdynamic
-export SSLFLAGS= dependencies/libressl/compiled/usr/local/lib/libssl.a dependencies/libressl/compiled/usr/local/lib/libcrypto.a
+export SSLFLAGS= dependencies/compiled/libressl/usr/local/lib/libssl.a dependencies/compiled/libressl/usr/local/lib/libcrypto.a
 
 export LDFLAGS=-fPIC -ldl -lpthread -lstdc++
 
@@ -34,11 +35,11 @@ export CLASSFILES :=  $(patsubst $(JAVAPATH)%,%,$(JAVAFILES:.java=.class))
 export INCLUDES := $(wildcard include/*.h include/*.hpp)
 export SRCS := $(wildcard src/*.c src/*.cpp src/examples/*.c src/examples/*.cpp)
 
-all: Dependencies einstein libs langLibs Examples doc/html certificates
+all: Dependencies libs langLibs bin/einstein Examples doc/html
 
 langLibs: javaLibs
 
-Examples: bin/testEinstein bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL
+Examples: bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL
 Jexamples: bin/testJBW.tgz bin/javaTest.tgz
 
 #Tars
@@ -88,9 +89,6 @@ bin/javaTest.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/exam
 	rm -rf $(TMPDIR)/javaTest
 
 #Examples
-bin/testEinstein: src/examples/testEinstein.cpp obj/einstein.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
-
 bin/testWorm: src/examples/testWorm.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 
@@ -136,9 +134,13 @@ $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.jav
 	cd $(JAVAPATH); $(JC) $(JFLAGS) $*.java
 	
 #Common
-Dependencies: obj lib bin
+Dependencies: obj lib bin SSL
 
-einstein: obj/einstein.o
+dependencies/compiled forceCompileDependencies:
+	cd dependencies; make
+
+bin/einstein: src/examples/testEinstein.cpp obj/einstein.o
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
 
 obj:
 	mkdir -p obj
@@ -167,7 +169,8 @@ obj/%.o: src/%.cpp $(INCLUDES)
 
 obj/%.o: src/%.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c $< -o $@
-	
+
+SSL: certificates dependencies/compiled
 certificates: certs/ca.pem certs/worm.pem certs/einstein.pem
 
 export CERTINFOCA=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.ca/CN=www.wormhole.org" 
@@ -190,6 +193,7 @@ clean:
 	rm -rf obj lib bin
 	cd $(JAVAPATH); rm -rf $(CLASSFILES)
 	./tools/cleanorigs.bash
+	cd dependencies; make clean
 
 #Custom Data .o
 obj/structures.h.o: $(INCLUDES)
