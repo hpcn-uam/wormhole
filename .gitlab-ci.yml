@@ -1,3 +1,4 @@
 docs:
     script:
         - make doc/html
+        - cp -rv doc/html /var/www/docs/wormhole
