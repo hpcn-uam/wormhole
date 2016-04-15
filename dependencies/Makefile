@@ -2,7 +2,7 @@ all: LibreSSL
 
 export CURRDIR=$(shell pwd)
 
-undefine JAVAPATH = src/langApis/Java/
+undefine JAVAPATH
 undefine VPATH
 undefine INCLUDES
 undefine SRCS
@@ -28,7 +28,7 @@ LibreSSL: compiled/libressl/usr
 export LIBSSLCFLAGS='-O3 -fPIC'
 compiled/libressl: repos/libressl/Makefile | compiled
 	mkdir -p compiled compiled/libressl
-	
+
 compiled/libressl/usr: compiled/libressl
 	cd repos/libressl; make install DESTDIR=$(CURRDIR)/compiled/libressl
 
