@@ -1,13 +1,22 @@
 export CURRDIR=$(shell pwd)
 
-JAVAPATH=""
-VPATH=""
-INCLUDES=""
-SRCS=""
-FLAGS=""
-CFLAGS=""
-CXXFLAGS=""
-LDFLAGS=""
+JAVAPATH=
+VPATH=
+INCLUDES=
+SRCS=
+FLAGS=
+CFLAGS=
+CXXFLAGS=
+LDFLAGS=
+
+unexport JAVAPATH
+unexport VPATH
+unexport INCLUDES
+unexport SRCS
+unexport FLAGS
+unexport CFLAGS
+unexport CXXFLAGS
+unexport LDFLAGS
 
 all: LibreSSL
 
