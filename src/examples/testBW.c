@@ -23,9 +23,9 @@
 
 int main(int argc, char **argv)
 {
-		UNUSED(argc);
-		UNUSED(argv);
-		
+	UNUSED(argc);
+	UNUSED(argv);
+
 	ConnectionDataType type[2];
 	type[0].type = ARRAY;
 	type[0].ext.arrayType = UINT8;

@@ -9,19 +9,20 @@
 
 #define NUM_SMALL_MESSAGES 500000000
 #define NUM_BIG_MESSAGES 5000000
-#define SIZE_BUFFER 1024*4 
+#define SIZE_BUFFER 1024*4
 
 int main(int argc, char **argv)
 {
-		UNUSED(argc);
-		UNUSED(argv);
-		
-	void *buffer = calloc(SIZE_BUFFER, 1); 
+	UNUSED(argc);
+	UNUSED(argv);
+
+	void *buffer = calloc(SIZE_BUFFER, 1);
+
 	if (!buffer) {
 		fprintf(stderr, "Error reservando memoria\n");
 		return 1;
 	}
-	
+
 
 	AsyncSocket sock;
 	int st = tcp_connect_to_async("127.0.0.1", 5000, &sock);

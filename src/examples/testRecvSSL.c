@@ -70,9 +70,9 @@ int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 
 int main(int argc, char **argv)
 {
-		UNUSED(argc);
-		UNUSED(argv);
-		
+	UNUSED(argc);
+	UNUSED(argv);
+
 	void *buffer = malloc(SIZE_BUFFER);
 	int listen_socket = tcp_listen_on_port(5000);
 	assert(listen_socket != -1);

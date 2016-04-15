@@ -31,7 +31,7 @@ extern "C" {
 	{
 		UNUSED(env);
 		UNUSED(obj);
-		
+
 		if (hasBeenInitialized) {
 			ConnectionDataType type[2];
 
@@ -56,7 +56,7 @@ extern "C" {
 	{
 		UNUSED(env);
 		UNUSED(obj);
-		
+
 		uint8_t ret = WH_halt();
 		jint j = ret;
 
@@ -72,7 +72,7 @@ extern "C" {
 	(JNIEnv *env, jobject obj, jbyteArray data)
 	{
 		UNUSED(obj);
-		
+
 		MessageInfo mi;
 		jboolean iscopy;
 		mi.type = &_JWH_array8type;
@@ -106,7 +106,7 @@ extern "C" {
 	(JNIEnv *env, jobject obj, jbyteArray data)
 	{
 		UNUSED(obj);
-		
+
 		MessageInfo mi;
 		jboolean iscopy;
 		mi.type = &_JWH_array8type;
@@ -140,7 +140,7 @@ extern "C" {
 	(JNIEnv *env, jobject obj, jstring data)
 	{
 		UNUSED(obj);
-		
+
 		MessageInfo mi;
 		jboolean iscopy;
 
@@ -183,7 +183,7 @@ extern "C" {
 	(JNIEnv *env, jobject obj, jstring data)
 	{
 		UNUSED(obj);
-		
+
 		MessageInfo mi;
 		jboolean iscopy;
 		mi.type = &_JWH_array16type;
@@ -216,7 +216,7 @@ extern "C" {
 	{
 		UNUSED(env);
 		UNUSED(obj);
-		
+
 		WH_flushIO();
 	}
 
@@ -230,7 +230,7 @@ extern "C" {
 	{
 		UNUSED(env);
 		UNUSED(obj);
-		
+
 		uint8_t ret = WH_get_id();
 		jint j = ret;
 

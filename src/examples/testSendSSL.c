@@ -17,9 +17,9 @@
 
 int main(int argc, char **argv)
 {
-		UNUSED(argc);
-		UNUSED(argv);
-		
+	UNUSED(argc);
+	UNUSED(argv);
+
 	void *buffer = calloc(SIZE_BUFFER, 1);
 
 	if (!buffer) {

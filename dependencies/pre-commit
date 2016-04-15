@@ -21,13 +21,8 @@ gtags
 
 flag=0
 
-#ejecutable
-STYLEDIRECTORY=dependencies/repos/google-astyle/
-cd $STYLEDIRECTORY
-g++ *cpp
-cd -
-
-COMMONFLAGS="--style=linux -T -H -U -F -L -w -K -p -k3 -j"
+. ./dependencies/formatOptions.sh
+#COMMONFLAGS="--style=linux -T -H -U -F -L -w -K -p -k3 -j"
 
 for file in $(git diff-index --cached --name-only HEAD)
 do

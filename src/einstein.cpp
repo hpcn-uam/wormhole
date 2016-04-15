@@ -160,7 +160,7 @@ EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDe
 void EinsConn::signal_callback_handler(int signum)
 {
 	UNUSED(signum);
-	
+
 	keepRunning = false;
 }
 

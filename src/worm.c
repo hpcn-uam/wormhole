@@ -258,7 +258,7 @@ uint8_t WH_flushIO(void)
 void *WH_thread(void *arg)
 {
 	UNUSED(arg);
-	
+
 	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
 	struct timeval ts;
 	ts.tv_sec  =   0;
@@ -973,7 +973,7 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 * Return 0 if OK, something else if error.
 */
 uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi)
-{	
+{
 	if (WH_DymRoute_precompiled_route == 0) {
 		return 1;
 

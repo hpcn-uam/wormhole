@@ -11,9 +11,9 @@
 
 int main(int argc, char **argv)
 {
-		UNUSED(argc);
-		UNUSED(argv);
-		
+	UNUSED(argc);
+	UNUSED(argv);
+
 	void *buffer = malloc(SIZE_BUFFER);
 	int listen_socket = tcp_listen_on_port(5000);
 	assert(listen_socket != -1);
@@ -21,8 +21,10 @@ int main(int argc, char **argv)
 	/*struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 250000;
-	*/AsyncSocket sock;
+	*/
+	AsyncSocket sock;
 	int ret = 0;
+
 	do {
 		ret = tcp_accept_async(listen_socket, &sock, 0);
 	} while (ret);
@@ -37,6 +39,7 @@ int main(int argc, char **argv)
 
 	for (uint32_t i = 0; i < NUM_SMALL_MESSAGES; i++) {
 		tcp_message_recv_async(&sock, (void *)&value, sizeof(uint64_t));
+
 		if (value != i) {
 			fprintf(stderr, "Paquete perdido %d\n", i);
 		}
@@ -56,7 +59,8 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
 		tcp_message_recv_async(&sock, (void *)buffer, SIZE_BUFFER);
-		if  (i > 499000) {
+
+		if (i > 499000) {
 			flush_recv(&sock);
 		}
 	}
