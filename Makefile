@@ -92,13 +92,13 @@ bin/javaTest.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/exam
 
 #Examples
 bin/testWorm: src/examples/testWorm.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
 
 bin/testLisp: src/examples/testLisp.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
 	
 bin/testBW: src/examples/testBW.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
 
 bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
 	$(CC) $(CFLAGS) -o $@ $^
