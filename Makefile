@@ -140,7 +140,7 @@ dependencies/compiled forceCompileDependencies:
 	cd dependencies; $(MAKE)
 
 bin/einstein: src/examples/testEinstein.cpp lib/libworm.so
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS) -Llib -lworm
+	$(CXX) $(CXXFLAGS) -o $@ $<  -Llib -lworm $(LDFLAGS)
 
 obj:
 	mkdir -p obj
