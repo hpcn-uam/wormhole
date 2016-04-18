@@ -139,8 +139,8 @@ Dependencies: obj lib bin SSL
 dependencies/compiled forceCompileDependencies:
 	cd dependencies; $(MAKE)
 
-bin/einstein: src/examples/testEinstein.cpp obj/einstein.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -Llib -lworm -o $@ $^
+bin/einstein: src/examples/testEinstein.cpp lib/libworm.so
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS) -Llib -lworm
 
 obj:
 	mkdir -p obj
