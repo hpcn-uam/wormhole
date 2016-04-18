@@ -35,7 +35,9 @@ export CLASSFILES :=  $(patsubst $(JAVAPATH)%,%,$(JAVAFILES:.java=.class))
 export INCLUDES := $(wildcard include/*.h include/*.hpp)
 export SRCS := $(wildcard src/*.c src/*.cpp src/examples/*.c src/examples/*.cpp)
 
-all: Dependencies libs langLibs bin/einstein Examples doc/html
+all: Dependencies libs langLibs bin/einstein Examples # doc/html
+
+Docs: doc/html
 
 langLibs: javaLibs
 

@@ -7,5 +7,5 @@ all:
 
 docs:
     script:
-        - make doc/html
+        - make Docs
         - cp -r doc/html /var/www/docs/wormhole
