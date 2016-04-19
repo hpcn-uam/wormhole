@@ -19,6 +19,8 @@
 #include <strings.h>
 #include <errno.h>
 
+#include <tls.h>
+
 #define WH_COMMON_LIMITW8_RECV (1) //(1<<2) //Wait time in cycles if no more data retrived
 #define WH_COMMON_LIMITW8_SEND (1<<15) //Wait time in cycles if no more data retrived
 
@@ -33,6 +35,9 @@ extern "C" {
 
 #define OPTIMAL_BUFFER_SIZE (512*1024)
 
+	enum syncSocketType {
+		NOSSL, SRVSSL, CLIENTSSL
+	};
 	enum asyncSocketType {
 		SEND_SOCKET, RECV_SOCKET
 	};
@@ -71,6 +76,13 @@ extern "C" {
 		pthread_t thread;
 	} AsyncSocket;
 
+	typedef struct {
+		int sockfd;
+		struct tls *tls;
+		struct tls *tlsIO;
+		struct tls_config *config;
+	} SyncSocket;
+
 	/** tcp_connect_to
 	 * Connects to a host using TCP over IPv4
 	 * @return -1 if ERROR, else the socket file descriptor.
@@ -100,6 +112,33 @@ extern "C" {
 	 * @return number of bytes read.
 	 */
 	size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync);
+
+	/** tcp_upgrade2syncSocket
+	 * upgrades a simple socket to SyncSocket
+	 * @param socket : the older socket
+	 * @param mode : the SSL mode
+	 * @param sslConfig : Can be NULL (even with ssl=1). Sets the SSL config. connection.
+	 * @return a new SyncSocket
+	 */
+	SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, struct tls_config *sslConfig);
+
+	/** tcp_message_ssend
+	 * Sends a full message to a socket
+	 * @return 0 if OK, something else if error.
+	 */
+	int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len);
+
+	/** tcp_message_srecv
+	 * Receives a full message from a socket
+	 * @return number of bytes read.
+	 */
+	size_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t sync);
+
+	/** tcp_sclose
+	 * Receives a full message from a socket
+	 * @return number of bytes read.
+	 */
+	void tcp_sclose(SyncSocket *socket);
 
 
 

@@ -13,12 +13,12 @@ export TMPDIR=/tmp/
 export CC=gcc
 export CXX=g++
 export FLAGS=-fPIC -I include/ -Wall -Wextra -g -lpthread -pthread -O3 -Werror
-export SSLCFLAGS= -I dependencies/libressl/compiled/usr/local/include/openssl
+export SSLCFLAGS= -I dependencies/compiled/libressl/usr/local/include
 export CFLAGS=$(FLAGS) $(SSLCFLAGS) -std=gnu11
-export CXXFLAGS=$(FLAGS) -std=gnu++11
-#export SSLFLAGS=-lssl -lcrypto
-#export SSLFLAGS= -Ldependencies/libressl/compiled/usr/local/lib/ -static -lssl -lcrypto #-Wl,-Bdynamic
-export SSLFLAGS= dependencies/compiled/libressl/usr/local/lib/libssl.a dependencies/compiled/libressl/usr/local/lib/libcrypto.a
+export CXXFLAGS=$(FLAGS) $(SSLCFLAGS) -std=gnu++11
+#export SSLLDFLAGS=-lssl -lcrypto
+#export SSLLDFLAGS= -Ldependencies/libressl/compiled/usr/local/lib/ -static -lssl -lcrypto #-Wl,-Bdynamic
+export SSLLDFLAGS= dependencies/compiled/libressl/usr/local/lib/libtls.a dependencies/compiled/libressl/usr/local/lib/libssl.a dependencies/compiled/libressl/usr/local/lib/libcrypto.a
 
 export LDFLAGS=-fPIC -ldl -lpthread -lstdc++
 
@@ -101,20 +101,20 @@ bin/testBW: src/examples/testBW.c
 	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
 
 bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS) 
 
 bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS) 
 	
 bin/testSendSSL: src/examples/testSendSSL.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
 
 bin/testRecvSSL: src/examples/testRecvSSL.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
 
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o obj/einstein.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^ $(SSLFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^ $(SSLLDFLAGS)
 
 #JAVALibs
 lib/libjavaworm.so: lib/libworm.so $(JAVAPATH)es_hpcn_wormhole_Worm.h $(JAVAPATH)es_hpcn_wormhole_Worm.c $(JAVAPATH)es_hpcn_wormhole_Einstein.h $(JAVAPATH)es_hpcn_wormhole_Einstein.cpp
