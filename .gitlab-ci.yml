@@ -1,7 +1,7 @@
 before_script:
     - make clean
 
-all:
+compilation:
     script:
         - make
 

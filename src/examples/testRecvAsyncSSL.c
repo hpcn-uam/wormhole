@@ -29,8 +29,10 @@ int main(int argc, char **argv)
 		ret = tcp_accept_async(listen_socket, &sock, 0);
 	} while (ret);
 
-	struct timeval start, end;
+	ret = asyncSocketStartSSL(&sock, SRVSSL, NULL); //START SSL
+	assert(ret == 0);
 
+	struct timeval start, end;
 
 	fprintf(stderr, "Comenzando pruebas de recibir valores pequeños\n");
 

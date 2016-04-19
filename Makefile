@@ -112,10 +112,10 @@ bin/testSendSSL: src/examples/testSendSSL.c obj/common.o
 bin/testRecvSSL: src/examples/testRecvSSL.c obj/common.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
 
-bin/testSendAsyncSSL: src/examples/testSendSSL.c obj/common.o
+bin/testSendAsyncSSL: src/examples/testSendAsyncSSL.c obj/common.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
 
-bin/testRecvAsyncSSL: src/examples/testRecvSSL.c obj/common.o
+bin/testRecvAsyncSSL: src/examples/testRecvAsyncSSL.c obj/common.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o obj/einstein.o

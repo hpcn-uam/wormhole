@@ -19,7 +19,9 @@
 #include <strings.h>
 #include <errno.h>
 
-#include <tls.h>
+#include <openssl/ssl.h>
+#include <openssl/crypto.h>
+#include <openssl/err.h>
 
 #define WH_COMMON_LIMITW8_RECV (1) //(1<<2) //Wait time in cycles if no more data retrived
 #define WH_COMMON_LIMITW8_SEND (1<<15) //Wait time in cycles if no more data retrived
@@ -36,7 +38,7 @@ extern "C" {
 #define OPTIMAL_BUFFER_SIZE (512*1024)
 
 	enum syncSocketType {
-		NOSSL, SRVSSL, CLIENTSSL
+		NOSSL, SRVSSL, CLISSL
 	};
 	enum asyncSocketType {
 		SEND_SOCKET, RECV_SOCKET
@@ -60,9 +62,9 @@ extern "C" {
 
 	typedef struct {
 		int sockfd;
-		struct tls *tls;
-		struct tls *tlsIO;
-		struct tls_config *config;
+		SSL *tls;
+		//struct tls *tlsIO;
+		SSL_CTX *config;
 	} SyncSocket;
 
 	typedef struct {
@@ -120,7 +122,7 @@ extern "C" {
 	 * @param sslConfig : Can be NULL (even with ssl=1). Sets the SSL config. connection.
 	 * @return a new SyncSocket
 	 */
-	SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, struct tls_config *sslConfig);
+	SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX *sslConfig);
 
 	/** tcp_message_ssend
 	 * Sends a full message to a socket
@@ -142,15 +144,15 @@ extern "C" {
 
 	/** syncSocketStartSSL
 	 * Changes the syncsocketMode in order to start a SSL session.
-	 * @return 1 if ssl has successfully started or 0 if not.
+	 * @return 0 if ssl has successfully started or 1 if not.
 	 */
-	int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, struct tls_config *sslConfig);
+	int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig);
 
 	/** asyncSocketStartSSL
 	 * Changes the syncsocketMode in order to start a SSL session.
-	 * @return 1 if ssl has successfully started or 0 if not.
+	 * @return 0 if ssl has successfully started or 1 if not.
 	 */
-	int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, struct tls_config *sslConfig);
+	int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig);
 
 	/** tcp_connect_to_async
 	 * Connects to a host using TCP over IPv4

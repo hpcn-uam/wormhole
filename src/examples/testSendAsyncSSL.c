@@ -29,6 +29,8 @@ int main(int argc, char **argv)
 
 	assert(st == 0);
 
+	st = asyncSocketStartSSL(&sock, CLISSL, NULL); //START SSL
+	assert(st == 0);
 
 	struct timeval start, end;
 
@@ -68,7 +70,8 @@ int main(int argc, char **argv)
 
 	destroy_asyncSocket(&sock);
 
-	fprintf(stderr, "Terminadas pruebas. %f gbps\n",
-			(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
+	fprintf(stderr, "Terminadas pruebas. %f gbps, %f segundos\n",
+			(((double)NUM_BIG_MESSAGES * SIZE_BUFFER * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
+			(((double)end.tv_sec - start.tv_sec) + ((double)end.tv_usec - start.tv_usec) / 1000000));
 
 }

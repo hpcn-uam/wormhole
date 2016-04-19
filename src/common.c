@@ -129,7 +129,7 @@ size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync)
 	return received;
 }
 
-const char *ciphers = "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384";
+const char *ciphers = "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:RC4-SHA";
 
 /** tcp_upgrade2syncSocket
 	 * upgrades a simple socket to SyncSocket
@@ -138,7 +138,7 @@ const char *ciphers = "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384
 	 * @param sslConfig : Can be NULL (even with ssl=1). Sets the SSL config. connection.
 	 * @return a new SyncSocket
 	 */
-SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, struct tls_config *config)
+SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX *config)
 {
 	SyncSocket *ret = malloc(sizeof(SyncSocket));
 
@@ -148,17 +148,16 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, struct 
 
 	if (mode != NOSSL) {
 		if (!sslStarted) {
-			if (tls_init() < 0) {
-				printf("tls_init error\n");
-				exit(1);
-			}
+			SSL_load_error_strings();
+			SSL_library_init();
 		}
 
 		if (!config) {
-			ret->config = 		tls_config_new();
+			ret->config = SSL_CTX_new(TLSv1_2_method());
+			SSL_CTX_set_options(ret->config, SSL_OP_SINGLE_DH_USE);
 
 			if (ret->config == NULL) {
-				printf("tls_config_new error\n");
+				ERR_print_errors_fp(stderr);
 				exit(1);
 			}
 
@@ -167,71 +166,68 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, struct 
 		}
 
 		if (mode == SRVSSL) {
-			ret->tls = tls_server();
+			SSL_CTX_set_ssl_version(ret->config, TLSv1_2_server_method());
 
 		} else {
-			ret->tls = tls_client();
+			SSL_CTX_set_ssl_version(ret->config, TLSv1_2_client_method());
 		}
-
-		if (ret->tls == NULL) {
-			printf("tls initialization error\n");
-			return NULL;
-		}
-
-		unsigned int protocols = 0;
-
-		if (tls_config_parse_protocols(&protocols, "secure") < 0) {
-			printf("tls_config_parse_protocols error\n");
-			return NULL;
-		}
-
-		tls_config_set_protocols(ret->config, protocols);
-
-		if (tls_config_set_ciphers(ret->config, ciphers) < 0) {
-			printf("tls_config_set_ciphers error\n");
-			return NULL;
-		}
-
-		tls_config_insecure_noverifyname(ret->config);// No name check
 
 		if (!config) {
-			if (tls_config_set_ca_file(ret->config, "../certs/ca.pem") < 0) {
-				printf("tls_config_set_ca_file error\n");
-				return NULL;
+			if (!SSL_CTX_load_verify_locations(ret->config, "../certs/ca.pem", NULL)) {
+				ERR_print_errors_fp(stderr);
+				return 0;
 			}
 
-			if (tls_config_set_cert_file(ret->config, "../certs/worm.pem") < 0) {
-				printf("tls_config_set_cert_file error\n");
-				return NULL;
+			if (!SSL_CTX_use_certificate_file(ret->config, "../certs/worm.pem", SSL_FILETYPE_PEM)) {
+				ERR_print_errors_fp(stderr);
+				return 0;
 			}
 
-			if (tls_config_set_key_file(ret->config, "../certs/prv/worm.key.pem") < 0) {
-				printf("tls_config_set_key_file error\n");
-				return NULL;
+			if (!SSL_CTX_use_PrivateKey_file(ret->config, "../certs/prv/worm.key.pem", SSL_FILETYPE_PEM)) {
+				ERR_print_errors_fp(stderr);
+				return 0;
 			}
+
+			/* verify private key */
+			if (!SSL_CTX_check_private_key(ret->config)) {
+				fprintf(stderr, "Private key does not match the public certificate\n");
+				return 0;
+			}
+
+			if (!SSL_CTX_set_cipher_list(ret->config, ciphers)) {
+				fprintf(stderr, "No cipher could be selected\n");
+				return 0;
+			}
+
+			SSL_CTX_set_verify(ret->config, SSL_VERIFY_PEER, NULL);
+			SSL_CTX_set_verify_depth(ret->config, 1);
 		}
 
+		ret->tls = SSL_new(ret->config);
+		SSL_set_fd(ret->tls, socket);
+
 		if (mode == SRVSSL) {
-			if (tls_accept_socket(ret->tls, &ret->tlsIO, socket) < 0) {
-				printf("tls_accept_socket error: %s\n", tls_error(ret->tls));
-				return NULL;
+			int ssl_err = SSL_accept(ret->tls);
+
+			if (ssl_err <= 0) {
+				ERR_print_errors_fp(stderr);
+				SSL_shutdown(ret->tls);
+				SSL_free(ret->tls);
+				return 0;
 			}
 
 		} else {
-			if (tls_connect_socket(ret->tls, socket, "") < 0) {
-				printf("tls_connect_socket error: %s\n", tls_error(ret->tls));
-				return NULL;
+			int ssl_err = SSL_connect(ret->tls);
+
+			if (ssl_err <= 0) {
+				ERR_print_errors_fp(stderr);
+				SSL_shutdown(ret->tls);
+				SSL_free(ret->tls);
+				return 0;
 			}
-
-			ret->tlsIO = ret->tls;
 		}
 
-		if (tls_handshake(ret->tlsIO) < 0) {
-			printf("HandShake error: %s\n", tls_error(ret->tlsIO));
-			return NULL;
-		}
-
-		fprintf(stderr, "Connection stablished with %s : %s\n", tls_conn_version(ret->tlsIO), tls_conn_cipher(ret->tlsIO));
+		fprintf(stderr, "Connection stablished with %s\n", SSL_get_cipher_name(ret->tls));
 
 	} else {
 		ret->tls = NULL;
@@ -257,7 +253,7 @@ int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len)
 		ssize_t sent_now;
 
 		do {
-			sent_now = tls_write(socket->tlsIO, message + sent, len - sent);
+			sent_now = SSL_write(socket->tls, message + sent, len - sent);
 
 			if (sent_now > 0) {
 				sent += sent_now;
@@ -282,7 +278,7 @@ size_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t 
 		ssize_t received_now;
 
 		do {
-			received_now = tls_read(socket->tlsIO, message + received, len - received);
+			received_now = SSL_read(socket->tls, message + received, len - received);
 
 			if (received_now > 0) {
 				received += received_now;
@@ -304,9 +300,11 @@ void tcp_sclose(SyncSocket *socket)
 {
 	if (socket) {
 		if (socket->tls) {
-			tls_close(socket->tls);
-			tls_free(socket->tls);
-			tls_config_free(socket->config);
+//			tls_close(socket->tls);
+//			tls_free(socket->tls);
+//			tls_config_free(socket->config);
+			SSL_shutdown(socket->tls);
+			SSL_free(socket->tls);
 		}
 
 		close(socket->sockfd); //TODO check if necesary
@@ -318,24 +316,24 @@ void tcp_sclose(SyncSocket *socket)
  * Changes the syncsocketMode in order to start a SSL session.
  * @return 1 if ssl has successfully started or 0 if not.
  */
-int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, struct tls_config *sslConfig)
+int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig)
 {
-	if (!socket->tlsIO) { //If there is no SSL connection
+	if (!socket->tls) { //If there is no SSL connection
 		SyncSocket *newSocket = tcp_upgrade2syncSocket(socket->sockfd, mode, sslConfig);
 
 		if (newSocket != NULL) {
 			socket->config	= newSocket->config;
 			socket->tls		= newSocket->tls;
-			socket->tlsIO	= newSocket->tlsIO;
+			//socket->tlsIO	= newSocket->tlsIO;
 			free(newSocket);
-			return 1;
+			return 0;
 
 		} else {
-			return 0;
+			return 1;
 		}
 
 	} else {
-		return 0;
+		return 1;
 	}
 }
 
@@ -343,7 +341,7 @@ int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, struct tls_
  * Changes the syncsocketMode in order to start a SSL session.
  * @return 1 if ssl has successfully started or 0 if not.
  */
-int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, struct tls_config *sslConfig)
+int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig)
 {
 	return syncSocketStartSSL(socket->ssock, mode, sslConfig);
 }
