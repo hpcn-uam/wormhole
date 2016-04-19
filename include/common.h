@@ -60,6 +60,13 @@ extern "C" {
 
 	typedef struct {
 		int sockfd;
+		struct tls *tls;
+		struct tls *tlsIO;
+		struct tls_config *config;
+	} SyncSocket;
+
+	typedef struct {
+		SyncSocket *ssock;
 		size_t buf_len;
 		size_t read_pos[2];
 		size_t write_pos[2];
@@ -75,13 +82,6 @@ extern "C" {
 		pthread_spinlock_t lock;
 		pthread_t thread;
 	} AsyncSocket;
-
-	typedef struct {
-		int sockfd;
-		struct tls *tls;
-		struct tls *tlsIO;
-		struct tls_config *config;
-	} SyncSocket;
 
 	/** tcp_connect_to
 	 * Connects to a host using TCP over IPv4
@@ -157,6 +157,9 @@ extern "C" {
 
 	int socket_upgrade_to_async_send(AsyncSocket *async_sock, int sockfd);
 	int socket_upgrade_to_async_recv(AsyncSocket *async_sock, int sockfd);
+
+	int socket_sync_to_async_send(AsyncSocket *async_sock, SyncSocket *ssock);
+	int socket_sync_to_async_recv(AsyncSocket *async_sock, SyncSocket *ssock);
 
 	void destroy_asyncSocket(AsyncSocket *sock);
 

@@ -354,7 +354,7 @@ void *send_fun(void *args)
 		WH_load = 0;
 
 		if (sock->write_pos[current_buf] > 0) {
-			tcp_message_send(sock->sockfd, sock->buff[current_buf], sock->write_pos[current_buf]);
+			tcp_message_ssend(sock->ssock, sock->buff[current_buf], sock->write_pos[current_buf]);
 		}
 
 		pthread_spin_lock(&(sock->lock));
@@ -375,9 +375,9 @@ void *recv_fun(void *args)
 
 	for (;;) {
 		do {
-			int received_now = tcp_message_recv(sock->sockfd,
-												sock->buff[current_buf] + received,
-												sock->buf_len - received, 0);
+			int received_now = tcp_message_srecv(sock->ssock,
+												 sock->buff[current_buf] + received,
+												 sock->buf_len - received, 0);
 
 			if (received_now > 0) {
 				received += received_now;
@@ -501,20 +501,22 @@ void destroy_asyncSocket(AsyncSocket *sock)
 	pthread_spin_destroy(&(sock->lock));
 	free(sock->buff[0]);
 	free(sock->buff[1]);
-	close(sock->sockfd);
+	tcp_sclose(sock->ssock);
 }
 
 int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 {
 	size_t buf_len = OPTIMAL_BUFFER_SIZE;
-	sock->sockfd = tcp_connect_to(ip, port);
+	int sockfd = tcp_connect_to(ip, port);
+	sock->ssock = tcp_upgrade2syncSocket(sockfd, NOSSL, NULL);
 
-	if (sock->sockfd == -1) {
+
+	if (sock->ssock == NULL) {
 		return 1;
 	}
 
 	if (init_asyncSocket(sock, buf_len, send_fun) != 0) {
-		close(sock->sockfd);
+		tcp_sclose(sock->ssock);
 		return 1;
 	}
 
@@ -523,10 +525,29 @@ int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 	return 0;
 }
 
+int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout)
+{
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
+	int sockfd = tcp_accept(listen_socket, timeout);
+	sock->ssock = tcp_upgrade2syncSocket(sockfd, NOSSL, NULL);
+
+	if (sock->ssock == NULL) {
+		return 1;
+	}
+
+	if (init_asyncSocket(sock, buf_len, recv_fun) != 0) {
+		tcp_sclose(sock->ssock);
+		return 1;
+	}
+
+	sock->socket_type = RECV_SOCKET;
+	return 0;
+}
+
 int socket_upgrade_to_async_send(AsyncSocket *async_sock, int sockfd)
 {
 	size_t buf_len = OPTIMAL_BUFFER_SIZE;
-	async_sock->sockfd = sockfd;
+	async_sock->ssock = tcp_upgrade2syncSocket(sockfd, NOSSL, NULL);
 
 	if (init_asyncSocket(async_sock, buf_len, send_fun) != 0) {
 		return 1;
@@ -536,28 +557,10 @@ int socket_upgrade_to_async_send(AsyncSocket *async_sock, int sockfd)
 	return 0;
 }
 
-int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout)
-{
-	size_t buf_len = OPTIMAL_BUFFER_SIZE;
-	sock->sockfd = tcp_accept(listen_socket, timeout);
-
-	if (sock->sockfd == -1) {
-		return 1;
-	}
-
-	if (init_asyncSocket(sock, buf_len, recv_fun) != 0) {
-		close(sock->sockfd);
-		return 1;
-	}
-
-	sock->socket_type = RECV_SOCKET;
-	return 0;
-}
-
 int socket_upgrade_to_async_recv(AsyncSocket *async_sock, int sockfd)
 {
 	size_t buf_len = OPTIMAL_BUFFER_SIZE;
-	async_sock->sockfd = sockfd;
+	async_sock->ssock = tcp_upgrade2syncSocket(sockfd, NOSSL, NULL);
 
 	if (init_asyncSocket(async_sock, buf_len, recv_fun) != 0) {
 		return 1;
@@ -567,3 +570,29 @@ int socket_upgrade_to_async_recv(AsyncSocket *async_sock, int sockfd)
 	return 0;
 }
 
+
+int socket_sync_to_async_send(AsyncSocket *async_sock, SyncSocket *ssock)
+{
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
+	async_sock->ssock = ssock;
+
+	if (init_asyncSocket(async_sock, buf_len, send_fun) != 0) {
+		return 1;
+	}
+
+	async_sock->socket_type = SEND_SOCKET;
+	return 0;
+}
+
+int socket_sync_to_async_recv(AsyncSocket *async_sock, SyncSocket *ssock)
+{
+	size_t buf_len = OPTIMAL_BUFFER_SIZE;
+	async_sock->ssock = ssock;
+
+	if (init_asyncSocket(async_sock, buf_len, recv_fun) != 0) {
+		return 1;
+	}
+
+	async_sock->socket_type = RECV_SOCKET;
+	return 0;
+}
