@@ -314,7 +314,39 @@ void tcp_sclose(SyncSocket *socket)
 	}
 }
 
+/** syncSocketStartSSL
+ * Changes the syncsocketMode in order to start a SSL session.
+ * @return 1 if ssl has successfully started or 0 if not.
+ */
+int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, struct tls_config *sslConfig)
+{
+	if (!socket->tlsIO) { //If there is no SSL connection
+		SyncSocket *newSocket = tcp_upgrade2syncSocket(socket->sockfd, mode, sslConfig);
 
+		if (newSocket != NULL) {
+			socket->config	= newSocket->config;
+			socket->tls		= newSocket->tls;
+			socket->tlsIO	= newSocket->tlsIO;
+			free(newSocket);
+			return 1;
+
+		} else {
+			return 0;
+		}
+
+	} else {
+		return 0;
+	}
+}
+
+/** asyncSocketStartSSL
+ * Changes the syncsocketMode in order to start a SSL session.
+ * @return 1 if ssl has successfully started or 0 if not.
+ */
+int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, struct tls_config *sslConfig)
+{
+	return syncSocketStartSSL(socket->ssock, mode, sslConfig);
+}
 
 /************
  * ASYNC LIB *

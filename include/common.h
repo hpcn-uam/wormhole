@@ -140,7 +140,17 @@ extern "C" {
 	 */
 	void tcp_sclose(SyncSocket *socket);
 
+	/** syncSocketStartSSL
+	 * Changes the syncsocketMode in order to start a SSL session.
+	 * @return 1 if ssl has successfully started or 0 if not.
+	 */
+	int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, struct tls_config *sslConfig);
 
+	/** asyncSocketStartSSL
+	 * Changes the syncsocketMode in order to start a SSL session.
+	 * @return 1 if ssl has successfully started or 0 if not.
+	 */
+	int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, struct tls_config *sslConfig);
 
 	/** tcp_connect_to_async
 	 * Connects to a host using TCP over IPv4

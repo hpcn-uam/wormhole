@@ -41,7 +41,7 @@ Docs: doc/html
 
 langLibs: javaLibs
 
-Examples: bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL
+Examples: bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
 Jexamples: bin/testJBW.tgz bin/javaTest.tgz
 
 #Tars
@@ -112,6 +112,11 @@ bin/testSendSSL: src/examples/testSendSSL.c obj/common.o
 bin/testRecvSSL: src/examples/testRecvSSL.c obj/common.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
 
+bin/testSendAsyncSSL: src/examples/testSendSSL.c obj/common.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
+
+bin/testRecvAsyncSSL: src/examples/testRecvSSL.c obj/common.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o obj/einstein.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^ $(SSLLDFLAGS)
