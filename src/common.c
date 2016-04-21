@@ -300,6 +300,9 @@ int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len, int *
 
 			if (sent_now > 0) {
 				sent += sent_now;
+			} else if (sent_now == 0 || (sent_now == -1 && (errno == EPIPE || errno == ENOTCONN))) {
+				*closed_socket = 1;
+				return sent;
 			}
 		} while (sent != (ssize_t)len && sent_now != -1 && sent_now != 0);
 
@@ -325,6 +328,9 @@ size_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t 
 
 			if (received_now > 0) {
 				received += received_now;
+			} else if (received_now == 0 || (received_now == -1 && (errno == EPIPE || errno == ENOTCONN))) {
+				*closed_socket = 1;
+				return received;
 			}
 		} while (received != (ssize_t)len && (
 			sync ?
