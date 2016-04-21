@@ -109,14 +109,18 @@ extern "C" {
 	/** tcp_message_send
 	 * Sends a full message to a socket
 	 * @return 0 if OK, something else if error.
+	 * ERROR CODES:
+	 * -1 if socket is closed.
 	 */
-	int tcp_message_send(int socket, const void *message, size_t len, int *closed_socket);
+	int tcp_message_send(int socket, const void *message, size_t len);
 
 	/** tcp_message_recv
 	 * Receives a full message from a socket
 	 * @return number of bytes read.
+	 * ERROR CODES:
+	 * -1 if socket is closed.
 	 */
-	size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync, int *closed_socket);
+	ssize_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync);
 
 	/** tcp_upgrade2syncSocket
 	 * upgrades a simple socket to SyncSocket
@@ -130,14 +134,18 @@ extern "C" {
 	/** tcp_message_ssend
 	 * Sends a full message to a socket
 	 * @return 0 if OK, something else if error.
+	 * ERROR CODES:
+	 * -1 if socket is closed.
 	 */
-	int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len, int *closed_socket);
+	int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len);
 
 	/** tcp_message_srecv
 	 * Receives a full message from a socket
 	 * @return number of bytes read.
+	 * ERROR CODES:
+	 * -1 if socket is closed.
 	 */
-	size_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t sync, int *closed_socket);
+	ssize_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t sync);
 
 	/** tcp_sclose
 	 * Receives a full message from a socket

@@ -522,7 +522,7 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 
 	wormConfig.inputTypes = realloc(c->supportedTypes, sizeof(ConnectionDataType) * wormConfig.numInputTypes);
 
-	if (tcp_message_recv(socket, wormConfig.inputTypes, sizeof(ConnectionDataType)*wormConfig.numInputTypes, 1) != sizeof(ConnectionDataType)*wormConfig.numInputTypes) { //Con wormConfig
+	if (tcp_message_recv(socket, wormConfig.inputTypes, sizeof(ConnectionDataType)*wormConfig.numInputTypes, 1) != (ssize_t)(sizeof(ConnectionDataType)*wormConfig.numInputTypes)) {  //Con wormConfig
 		perror("Error solicitando información del Worm [4]");
 		close(socket);
 		return 1;

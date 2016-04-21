@@ -280,7 +280,7 @@ int EinsConn::setupWorm()
 	size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
 	uint8_t hellomsg[hellomsgSize];
 
-	if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize, 1) != hellomsgSize) {
+	if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize, 1) != (ssize_t)hellomsgSize) {
 		throw std::runtime_error("Error receiving message");
 	}
 
