@@ -9,7 +9,7 @@ inline void flush_send(AsyncSocket *sock)
 	sock->current_send_buf = (sock->current_send_buf + 1) % 2;
 
 	// Wait until the buffer has been sent
-	while (sock->to_access[sock->current_send_buf]) {
+	while (sock->to_access[sock->current_send_buf] && !sock->closed) {
 		pthread_spin_unlock(&(sock->lock));
 		struct timespec ts;
 		ts.tv_sec = 0;
@@ -26,7 +26,7 @@ inline int can_be_read(AsyncSocket *s)
 	int can_read = 0;
 	pthread_spin_lock(&(s->lock));
 
-	if (s->to_access[s->current_recv_buf]) {
+	if (s->to_access[s->current_recv_buf] && !s->closed) {
 		can_read = 1;
 	}
 
@@ -83,7 +83,11 @@ inline int tcp_message_recv_async(AsyncSocket *sock, void *message, size_t len)
 
 			if (sock->to_access[sock->current_recv_buf]) {
 				sock->can_read = 1;
+			} else if (sock->closed) {
+				pthread_spin_unlock(&(sock->lock));
+				return -1;
 			}
+				
 
 			pthread_spin_unlock(&(sock->lock));
 		}

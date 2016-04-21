@@ -92,14 +92,21 @@ int tcp_accept(int listen_socket, struct timeval *timeout)
 	return newsockfd;
 }
 
-int tcp_message_send(int socket, const void *message, size_t len)
+int tcp_message_send(int socket, const void *message, size_t len, int *closed_socket)
 {
 	ssize_t sent = 0;
 	ssize_t sent_now;
 
+	*closed_socket = 0;
+
 	do {
 		sent_now = send(socket, message + sent, len - sent, MSG_NOSIGNAL);
 		sent += sent_now;
+
+		if (sent_now == 0 || (sent_now == -1 && (errno == EPIPE || errno == ENOTCONN))) {
+			*closed_socket = 1;
+			return sent;
+		}
 	} while (sent != (ssize_t)len && sent_now != -1 && sent_now != 0);
 
 	if (sent_now == -1 || sent_now == 0) {
@@ -109,16 +116,21 @@ int tcp_message_send(int socket, const void *message, size_t len)
 	return 0;
 }
 
-size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync)
+size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync, int *closed_socket)
 {
 	ssize_t received = 0;
 	ssize_t received_now;
+
+	*closed_socket = 0;
 
 	do {
 		received_now = recv(socket, message + received, len - received, MSG_NOSIGNAL);
 
 		if (received_now > 0) {
 			received += received_now;
+		} else if (received_now == 0 || (received_now == -1 && (errno == EPIPE || errno == ENOTCONN))) {
+			*closed_socket = 1;
+			return received;
 		}
 	} while (received != (ssize_t)len && (
 		sync ?
@@ -246,10 +258,10 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
  * Sends a full message to a socket
  * @return 0 if OK, something else if error.
  */
-int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len)
+int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len, int *closed_socket)
 {
 	if (socket->config == NOSSL) {
-		return tcp_message_send(socket->sockfd, message, len);
+		return tcp_message_send(socket->sockfd, message, len, closed_socket);
 
 	} else {
 		ssize_t sent = 0;
@@ -271,10 +283,10 @@ int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len)
  * Receives a full message from a socket
  * @return number of bytes read.
  */
-size_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t sync)
+size_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t sync, int *closed_socket)
 {
 	if (socket->config == NOSSL) {
-		return tcp_message_recv(socket->sockfd, message, len, sync);
+		return tcp_message_recv(socket->sockfd, message, len, sync, closed_socket);
 
 	} else {
 		ssize_t received = 0;
@@ -377,7 +389,14 @@ void *send_fun(void *args)
 		} while (!writing);
 
 		if (sock->write_pos[current_buf] > 0) {
-			tcp_message_ssend(sock->ssock, sock->buff[current_buf], sock->write_pos[current_buf]);
+			int closed_socket = 0;
+			tcp_message_ssend(sock->ssock, sock->buff[current_buf], sock->write_pos[current_buf], &closed_socket);
+			if (closed_socket) {
+				pthread_spin_lock(&(sock->lock));
+				sock->closed = 1;
+				pthread_spin_unlock(&(sock->lock));
+				return 0;
+			}
 		}
 
 		pthread_spin_lock(&(sock->lock));
@@ -398,12 +417,20 @@ void *recv_fun(void *args)
 
 	for (;;) {
 		do {
+			int closed_socket = 0;
 			int received_now = tcp_message_srecv(sock->ssock,
 												 sock->buff[current_buf] + received,
-												 sock->buf_len - received, 0);
+												 sock->buf_len - received, 0, &closed_socket);
 
 			if (received_now > 0) {
 				received += received_now;
+			}
+
+			if (closed_socket) {
+				pthread_spin_lock(&(sock->lock));
+				sock->closed = 1;
+				pthread_spin_unlock(&(sock->lock));
+				return 0;
 			}
 
 			pthread_spin_lock(&(sock->lock));
@@ -472,6 +499,7 @@ int init_asyncSocket(AsyncSocket *sock, size_t buf_len, async_fun_p async_fun)
 
 	sock->flush = 0;
 	sock->finish = 0;
+	sock->closed = 0;
 
 	sock->buff[0] = malloc(sizeof(uint8_t) * buf_len);
 
@@ -668,6 +696,7 @@ int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *
 	ret = syncSocketStartSSL(socket->ssock, mode, sslConfig);
 
 	socket->finish = 0;
+	socket->closed = 0;
 
 	socket->to_access[0] = 0;
 	socket->to_access[1] = 0;

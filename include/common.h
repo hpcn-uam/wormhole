@@ -83,6 +83,7 @@ extern "C" {
 		enum asyncSocketType socket_type;
 		int finish;
 		int flush;
+		int closed;
 		pthread_spinlock_t lock;
 		pthread_t thread;
 	} AsyncSocket;
@@ -109,13 +110,13 @@ extern "C" {
 	 * Sends a full message to a socket
 	 * @return 0 if OK, something else if error.
 	 */
-	int tcp_message_send(int socket, const void *message, size_t len);
+	int tcp_message_send(int socket, const void *message, size_t len, int *closed_socket);
 
 	/** tcp_message_recv
 	 * Receives a full message from a socket
 	 * @return number of bytes read.
 	 */
-	size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync);
+	size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync, int *closed_socket);
 
 	/** tcp_upgrade2syncSocket
 	 * upgrades a simple socket to SyncSocket
@@ -130,13 +131,13 @@ extern "C" {
 	 * Sends a full message to a socket
 	 * @return 0 if OK, something else if error.
 	 */
-	int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len);
+	int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len, int *closed_socket);
 
 	/** tcp_message_srecv
 	 * Receives a full message from a socket
 	 * @return number of bytes read.
 	 */
-	size_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t sync);
+	size_t tcp_message_srecv(SyncSocket *socket, void *message, size_t len, uint8_t sync, int *closed_socket);
 
 	/** tcp_sclose
 	 * Receives a full message from a socket
