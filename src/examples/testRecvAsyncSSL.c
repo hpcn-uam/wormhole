@@ -40,7 +40,9 @@ int main(int argc, char **argv)
 	gettimeofday(&start, 0);
 
 	for (uint32_t i = 0; i < NUM_SMALL_MESSAGES; i++) {
-		tcp_message_recv_async(&sock, (void *)&value, sizeof(uint64_t));
+		if (tcp_message_recv_async(&sock, (void *)&value, sizeof(uint64_t)) == -1) {
+			break;
+		}
 
 		if (value != i) {
 			fprintf(stderr, "Paquete perdido %d\n", i);
@@ -60,9 +62,11 @@ int main(int argc, char **argv)
 	gettimeofday(&start, 0);
 
 	for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
-		tcp_message_recv_async(&sock, (void *)buffer, SIZE_BUFFER);
+		if (tcp_message_recv_async(&sock, (void *)buffer, SIZE_BUFFER) == -1) {
+			break;
+		}
 
-		if (i > 499000) {
+		if (i > NUM_BIG_MESSAGES - 1000) {
 			flush_recv(&sock);
 		}
 	}

@@ -39,7 +39,10 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < NUM_SMALL_MESSAGES; i++) {
 		value = i;
-		tcp_message_send_async(&sock, (void *)&value, sizeof(uint64_t));
+
+		if (tcp_message_send_async(&sock, (void *)&value, sizeof(uint64_t)) == -1) {
+			break;
+		}
 	}
 
 	gettimeofday(&end, 0);
@@ -60,7 +63,11 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
 		*((int *) buffer) = i;
-		tcp_message_send_async(&sock, (void *)buffer, SIZE_BUFFER);
+
+		if (tcp_message_send_async(&sock, (void *)buffer, SIZE_BUFFER) == -1) {
+			break;
+		}
+
 		//tcp_message_send(sock.sockfd, (void *)buffer, SIZE_BUFFER);
 	}
 
