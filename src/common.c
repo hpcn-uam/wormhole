@@ -362,7 +362,7 @@ void *send_fun(void *args)
 
 	size_t current_buf = 0;
 
-	for (;; current_buf = (current_buf + 1) % 2) {
+	for (;; current_buf = (current_buf + 1) & 1) { // equivalent to %2
 		int writing = 0;
 
 		// Wait until the buffer can be sent
@@ -425,7 +425,7 @@ void *recv_fun(void *args)
 			if (received == (int32_t)sock->buf_len || sock->flush) {
 				sock->to_access[current_buf] = 1;
 				sock->write_pos[current_buf] = received;
-				current_buf = (current_buf + 1) % 2;
+				current_buf = (current_buf + 1) & 1; // equivalent to %2
 
 				// Wait until the buffer has been sent
 				while (sock->to_access[current_buf]) {
