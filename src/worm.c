@@ -370,14 +370,16 @@ inline void WH_TH_hellow(int socket)
 /** SETUPWORMCONN
  * Process a HELLOW message
  */
-inline void WH_TH_setupworm(int socket)
+inline void WH_TH_setupworm(int tmpsock)
 {
 	DestinationWorm tmpDestWorm;
 
+	SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
+
 	//Recibimos un destinationWorm
-	if (tcp_message_recv(socket, &tmpDestWorm, sizeof(DestinationWorm), 1) != sizeof(DestinationWorm)) {
+	if (tcp_message_srecv(socket, &tmpDestWorm, sizeof(DestinationWorm), 1) != sizeof(DestinationWorm)) {
 		fputs("Error configurando socket", stderr);
-		close(socket); //cerramos el socket
+		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
@@ -400,9 +402,9 @@ inline void WH_TH_setupworm(int socket)
 
 	tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes] = calloc(sizeof(Connection), 1); //TODO test ==NULL
 
-	if (tcp_message_recv(socket, tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes], sizeof(Connection), 1) != sizeof(Connection)) {
+	if (tcp_message_srecv(socket, tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes], sizeof(Connection), 1) != sizeof(Connection)) {
 		fputs("Error configurando socket", stderr);
-		close(socket); //cerramos el socket
+		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
@@ -557,11 +559,21 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	WH_connectWorm(dw);
 
-	int socket = tcp_connect_to(inet_ntoa(ip_addr), dw->port);
+	int tmpsock = tcp_connect_to(inet_ntoa(ip_addr), dw->port);
 
-	if (socket < 0) {
+	if (tmpsock < 0) {
 		return 1;
 	}
+
+	SyncSocket *socket = NULL;
+
+	//setup SSL
+	if (WH_mySetup.isSSLNode) {
+
+	} else {
+		socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
+	}
+
 
 	int8_t flag = 0;
 
@@ -576,14 +588,14 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 #ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "No se puede abrir un socket con el datatype solicitado!\n");
 #endif
-		close(socket);
+		tcp_sclose(socket);
 		return 1;
 	}
 
 	//Informamos del tipo de conexion...
 	enum wormMsgType msgtype = SETUPWORMCONN; //Con Worm config
 
-	if (tcp_message_send(socket, &msgtype, sizeof(msgtype))) {
+	if (tcp_message_ssend(socket, &msgtype, sizeof(msgtype))) {
 		fputs("Error configurando Worm externo", stderr);
 		return 1;
 	}
@@ -596,7 +608,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	dwtmp.supportedTypes = NULL;
 	dwtmp.conns = NULL;
 
-	if (tcp_message_send(socket, &dwtmp, sizeof(dwtmp))) { //DstWorm
+	if (tcp_message_ssend(socket, &dwtmp, sizeof(dwtmp))) { //DstWorm
 		fprintf(stderr, "Error configurando Worm externo %d\n", dw->id);
 		return 1;
 	}
@@ -607,7 +619,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		0
 	};
 
-	if (tcp_message_send(socket, &conntmp, sizeof(conntmp))) { //DstWorm
+	if (tcp_message_ssend(socket, &conntmp, sizeof(conntmp))) { //DstWorm
 		fprintf(stderr, "Error configurando Worm externo %d\n", dw->id);
 		return 1;
 	}
@@ -618,7 +630,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, type)) {
 
 			dw->conns[i] = calloc(sizeof(Connection), 1);
-			socket_upgrade_to_async_send(&(dw->conns[i]->socket), socket);
+			socket_sync_to_async_send(&(dw->conns[i]->socket), socket);
 			dw->conns[i]->type = *type;
 			flag = 1;
 			break;
@@ -626,7 +638,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	}
 
 	if (!flag) {
-		close(socket);
+		tcp_sclose(socket);
 		return 1;
 	}
 
