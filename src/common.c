@@ -151,7 +151,6 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 			SSL_load_error_strings();
 			SSL_library_init();
 			sslStarted = 1;
-			fprintf(stderr, "Initializated SSL library\n");
 		}
 
 		if (!config) {
@@ -175,8 +174,6 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 		}
 
 		if (!config) {
-			fprintf(stderr, "Loading certificates...");
-
 			if (!SSL_CTX_load_verify_locations(ret->config, "../certs/ca.pem", NULL)) {
 				ERR_print_errors_fp(stderr);
 				return NULL;
@@ -205,33 +202,28 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 
 			SSL_CTX_set_verify(ret->config, SSL_VERIFY_PEER, NULL);
 			SSL_CTX_set_verify_depth(ret->config, 1);
-			fprintf(stderr, "Done!\n");
 		}
 
 		ret->tls = SSL_new(ret->config);
 		SSL_set_fd(ret->tls, socket);
 
 		if (mode == SRVSSL) {
-			fprintf(stderr, "SERVER MODE\n");
 			int ssl_err = SSL_accept(ret->tls);
 
 			if (ssl_err <= 0) {
-				perror("Error de ssl");
+				perror("SSL ERROR");
 				ERR_print_errors_fp(stderr);
-				fprintf(stderr, "SSL_accept error...(%d)\n", ssl_err);
 				SSL_shutdown(ret->tls);
 				SSL_free(ret->tls);
 				return NULL;
 			}
 
 		} else {
-			fprintf(stderr, "CLIENT MODE\n");
 			int ssl_err = SSL_connect(ret->tls);
 
 			if (ssl_err <= 0) {
-				perror("Error de ssl");
+				perror("SSL ERROR");
 				ERR_print_errors_fp(stderr);
-				fprintf(stderr, "SSL_connect error...(%d)\n", ssl_err);
 				SSL_shutdown(ret->tls);
 				SSL_free(ret->tls);
 				return NULL;
@@ -641,7 +633,6 @@ int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *
 	struct timeval timeout = {.tv_sec = 0, .tv_usec = 10};
 	struct timeval ssltimeout = {.tv_sec = 3, .tv_usec = 0};
 
-	fprintf(stderr, "Stopping thread...\n");
 	pthread_spin_lock(&(socket->lock));
 	socket->finish = 1;
 
@@ -663,7 +654,6 @@ int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *
 
 	pthread_spin_unlock(&(socket->lock));
 	pthread_join(socket->thread, NULL);
-	fprintf(stderr, "Stopped...\n");
 
 	if (setsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&ssltimeout,
 				   sizeof(struct timeval)) < 0) {
@@ -698,8 +688,6 @@ int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *
 	} else {
 		pthread_create(&(socket->thread), 0, send_fun, socket);
 	}
-
-	fprintf(stderr, "Relaunched\n");
 
 	return ret;
 }

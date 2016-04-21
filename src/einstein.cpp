@@ -9,6 +9,7 @@ Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, str
 	this->ws.IP = inet_addr(ip.c_str());
 	this->ws.connectionDescriptionLength = connectionDescription.size();
 	this->ws.connectionDescription = static_cast<uint8_t *>(malloc(connectionDescription.size()));
+	this->ws.isSSLNode = 0; //false
 	memcpy(this->ws.connectionDescription, connectionDescription.c_str(), connectionDescription.size());
 	this->host = host;
 	this->programName = programName;
