@@ -55,6 +55,7 @@ extern "C" {
 		uint32_t connectionDescriptionLength;
 		uint8_t *connectionDescription; // (LISP connection description)
 		int64_t core;
+		uint8_t isSSLNode;
 	} WormSetup;
 
 	typedef struct {

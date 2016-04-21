@@ -77,7 +77,7 @@ void Einstein::readConfig(const string configFileName)
 		if (st == EOF) {
 			break;
 
-		} else if (st != 4) {
+		} else if (st < 4) {
 			cerr << "Only " << st << "fields were found" << '\n';
 			throw std::runtime_error("Bad config file");
 		}
@@ -118,6 +118,14 @@ void Einstein::readConfig(const string configFileName)
 		}
 
 		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1), string(host), string(programName)));
+
+		/*Check for advanced options*/
+
+		/*SSL*/
+		if (string(configLine).find("SSL") != string::npos) {
+			wc->ws.isSSLNode = 1;
+		}
+
 
 		this->ec.createWorm(std::move(wc), ip);
 
