@@ -2,7 +2,6 @@
 
 #include "async_inline.c"
 
-uint32_t WH_load = 0;
 size_t current_send_buf = 0;
 
 uint32_t sslStarted = 0;
@@ -129,7 +128,8 @@ size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync)
 	return received;
 }
 
-const char *ciphers = "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:RC4-SHA";
+//const char *ciphers = "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:RC4-SHA";
+const char *ciphers = "RC4-SHA";
 
 /** tcp_upgrade2syncSocket
 	 * upgrades a simple socket to SyncSocket
@@ -150,10 +150,19 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 		if (!sslStarted) {
 			SSL_load_error_strings();
 			SSL_library_init();
+			sslStarted = 1;
+			fprintf(stderr, "Initializated SSL library\n");
 		}
 
 		if (!config) {
-			ret->config = SSL_CTX_new(TLSv1_2_method());
+
+			if (mode == SRVSSL) {
+				ret->config = SSL_CTX_new(TLSv1_2_server_method());
+
+			} else {
+				ret->config = SSL_CTX_new(TLSv1_2_client_method());
+			}
+
 			SSL_CTX_set_options(ret->config, SSL_OP_SINGLE_DH_USE);
 
 			if (ret->config == NULL) {
@@ -165,69 +174,71 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 			ret->config = config;
 		}
 
-		if (mode == SRVSSL) {
-			SSL_CTX_set_ssl_version(ret->config, TLSv1_2_server_method());
-
-		} else {
-			SSL_CTX_set_ssl_version(ret->config, TLSv1_2_client_method());
-		}
-
 		if (!config) {
+			fprintf(stderr, "Loading certificates...");
+
 			if (!SSL_CTX_load_verify_locations(ret->config, "../certs/ca.pem", NULL)) {
 				ERR_print_errors_fp(stderr);
-				return 0;
+				return NULL;
 			}
 
 			if (!SSL_CTX_use_certificate_file(ret->config, "../certs/worm.pem", SSL_FILETYPE_PEM)) {
 				ERR_print_errors_fp(stderr);
-				return 0;
+				return NULL;
 			}
 
 			if (!SSL_CTX_use_PrivateKey_file(ret->config, "../certs/prv/worm.key.pem", SSL_FILETYPE_PEM)) {
 				ERR_print_errors_fp(stderr);
-				return 0;
+				return NULL;
 			}
 
 			/* verify private key */
 			if (!SSL_CTX_check_private_key(ret->config)) {
 				fprintf(stderr, "Private key does not match the public certificate\n");
-				return 0;
+				return NULL;
 			}
 
 			if (!SSL_CTX_set_cipher_list(ret->config, ciphers)) {
 				fprintf(stderr, "No cipher could be selected\n");
-				return 0;
+				return NULL;
 			}
 
 			SSL_CTX_set_verify(ret->config, SSL_VERIFY_PEER, NULL);
 			SSL_CTX_set_verify_depth(ret->config, 1);
+			fprintf(stderr, "Done!\n");
 		}
 
 		ret->tls = SSL_new(ret->config);
 		SSL_set_fd(ret->tls, socket);
 
 		if (mode == SRVSSL) {
+			fprintf(stderr, "SERVER MODE\n");
 			int ssl_err = SSL_accept(ret->tls);
 
 			if (ssl_err <= 0) {
+				perror("Error de ssl");
 				ERR_print_errors_fp(stderr);
+				fprintf(stderr, "SSL_accept error...(%d)\n", ssl_err);
 				SSL_shutdown(ret->tls);
 				SSL_free(ret->tls);
-				return 0;
+				return NULL;
 			}
 
 		} else {
+			fprintf(stderr, "CLIENT MODE\n");
 			int ssl_err = SSL_connect(ret->tls);
 
 			if (ssl_err <= 0) {
+				perror("Error de ssl");
 				ERR_print_errors_fp(stderr);
+				fprintf(stderr, "SSL_connect error...(%d)\n", ssl_err);
 				SSL_shutdown(ret->tls);
 				SSL_free(ret->tls);
-				return 0;
+				return NULL;
 			}
 		}
 
-		fprintf(stderr, "Connection stablished with %s\n", SSL_get_cipher_name(ret->tls));
+		fprintf(stderr, "Connection established with algorithm: %s\n", SSL_get_cipher_name(ret->tls));
 
 	} else {
 		ret->tls = NULL;
@@ -314,14 +325,14 @@ void tcp_sclose(SyncSocket *socket)
 
 /** syncSocketStartSSL
  * Changes the syncsocketMode in order to start a SSL session.
- * @return 1 if ssl has successfully started or 0 if not.
+ * @return 0 if ssl has successfully started or 1 if not.
  */
 int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig)
 {
 	if (!socket->tls) { //If there is no SSL connection
 		SyncSocket *newSocket = tcp_upgrade2syncSocket(socket->sockfd, mode, sslConfig);
 
-		if (newSocket != NULL) {
+		if (newSocket) {
 			socket->config	= newSocket->config;
 			socket->tls		= newSocket->tls;
 			//socket->tlsIO	= newSocket->tlsIO;
@@ -329,21 +340,13 @@ int syncSocketStartSSL(SyncSocket *socket, enum syncSocketType mode, SSL_CTX *ss
 			return 0;
 
 		} else {
+			fprintf(stderr, "Error creating SSL session...\n");
 			return 1;
 		}
 
 	} else {
 		return 1;
 	}
-}
-
-/** asyncSocketStartSSL
- * Changes the syncsocketMode in order to start a SSL session.
- * @return 1 if ssl has successfully started or 0 if not.
- */
-int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig)
-{
-	return syncSocketStartSSL(socket->ssock, mode, sslConfig);
 }
 
 /************
@@ -369,7 +372,6 @@ void *send_fun(void *args)
 			ts.tv_nsec = 100;
 			nanosleep(&ts, 0);
 			pthread_spin_lock(&(sock->lock));
-			WH_load++;
 
 			if (sock->to_access[current_buf]) {
 				writing = 1;
@@ -380,8 +382,6 @@ void *send_fun(void *args)
 
 			pthread_spin_unlock(&(sock->lock));
 		} while (!writing);
-
-		WH_load = 0;
 
 		if (sock->write_pos[current_buf] > 0) {
 			tcp_message_ssend(sock->ssock, sock->buff[current_buf], sock->write_pos[current_buf]);
@@ -625,4 +625,77 @@ int socket_sync_to_async_recv(AsyncSocket *async_sock, SyncSocket *ssock)
 
 	async_sock->socket_type = RECV_SOCKET;
 	return 0;
+}
+
+/** asyncSocketStartSSL
+ * Changes the syncsocketMode in order to start a SSL session.
+ * IMPORTANT NOTE: All data must be flushed before call this function, or data-loss can happen.
+ * @return 0 if ssl has successfully started or 1 if not.
+ */
+int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig)
+{
+	int ret;
+
+	struct timeval lasttimeout = {.tv_sec = 0, .tv_usec = 10};
+	struct timeval timeout = {.tv_sec = 0, .tv_usec = 10};
+	struct timeval ssltimeout = {.tv_sec = 3, .tv_usec = 0};
+
+	fprintf(stderr, "Stopping thread...\n");
+	pthread_spin_lock(&(socket->lock));
+	socket->finish = 1;
+
+	if (getsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&lasttimeout,
+				   NULL) < 0) {
+		lasttimeout = timeout;
+		lasttimeout.tv_usec = 250000;
+	}
+
+	if (setsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+				   sizeof(struct timeval)) < 0) {
+		fputs("setsockopt failed\n", stderr);
+	}
+
+	if (setsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
+				   sizeof(struct timeval)) < 0) {
+		fputs("setsockopt failed\n", stderr);
+	}
+
+	pthread_spin_unlock(&(socket->lock));
+	pthread_join(socket->thread, NULL);
+	fprintf(stderr, "Stopped...\n");
+
+	if (setsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&ssltimeout,
+				   sizeof(struct timeval)) < 0) {
+		fputs("setsockopt failed\n", stderr);
+	}
+
+	if (setsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&ssltimeout,
+				   sizeof(struct timeval)) < 0) {
+		fputs("setsockopt failed\n", stderr);
+	}
+
+	ret = syncSocketStartSSL(socket->ssock, mode, sslConfig);
+
+	socket->finish = 0;
+
+	if (setsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&lasttimeout,
+				   sizeof(struct timeval)) < 0) {
+		fputs("setsockopt failed\n", stderr);
+	}
+
+	if (setsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&lasttimeout,
+				   sizeof(struct timeval)) < 0) {
+		fputs("setsockopt failed\n", stderr);
+	}
+
+	if (socket->socket_type == RECV_SOCKET) {
+		pthread_create(&(socket->thread), 0, recv_fun, socket);
+
+	} else {
+		pthread_create(&(socket->thread), 0, send_fun, socket);
+	}
+
+	fprintf(stderr, "Relaunched\n");
+
+	return ret;
 }

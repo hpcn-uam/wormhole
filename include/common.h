@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <time.h>
 #include <strings.h>
@@ -150,6 +151,7 @@ extern "C" {
 
 	/** asyncSocketStartSSL
 	 * Changes the syncsocketMode in order to start a SSL session.
+	 * IMPORTANT NOTE: All data must be flushed before call this function, or data-loss can happen.
 	 * @return 0 if ssl has successfully started or 1 if not.
 	 */
 	int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig);
