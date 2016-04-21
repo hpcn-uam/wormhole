@@ -377,6 +377,7 @@ void *send_fun(void *args)
 				writing = 1;
 
 			} else if (sock->finish) {
+				pthread_spin_unlock(&(sock->lock));
 				return 0;
 			}
 
@@ -677,6 +678,9 @@ int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *
 	ret = syncSocketStartSSL(socket->ssock, mode, sslConfig);
 
 	socket->finish = 0;
+
+	socket->to_access[0] = 0;
+	socket->to_access[1] = 0;
 
 	if (setsockopt(socket->ssock->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&lasttimeout,
 				   sizeof(struct timeval)) < 0) {
