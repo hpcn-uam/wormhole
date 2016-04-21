@@ -272,8 +272,10 @@ void *WH_thread(void *arg)
 
 	while (1) {
 		//poll for incomming connections/requests.
-		int socket = tcp_accept(listeningSocket, &ts); //TODO Optimizar para no reconfigurar constantemente el socket
+		int tmpsock = tcp_accept(listeningSocket, &ts); //TODO Optimizar para no reconfigurar constantemente el socket
 		//int socket = tcp_accept(listeningSocket, NULL);
+
+		SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 
 		if (socket < 0) {
 			enum ctrlMsgType type;
@@ -304,63 +306,79 @@ void *WH_thread(void *arg)
 		} else {
 			enum wormMsgType type;
 
-			if (tcp_message_recv(socket, &type, sizeof(type), 1) != sizeof(type)) {
-				fputs("Error abriendo socket\n", stderr);
-				close(socket);
-				continue;
+			while (tcp_message_srecv(socket, &type, sizeof(type), 1) == sizeof(type)) {
+				if (WH_TH_checkMsgType(type, socket)) {
+					break;
+				}
 			}
 
-			switch (type) {
-			case HELLO: //Contestamos a Hello
-			default:
-				WH_TH_hellow(socket);
-				close(socket); //cerramos el socket
-				break;
-
-			case SETUPWORMCONN:  //Establecemos una conexión completa con otro worm
-				WH_TH_setupworm(socket);
-				break;
-			}
-
+			tcp_sclose(socket);
 		}
 	}
 
 	return NULL;
 }
 
+
+/** WH_TH_checkMsgType
+ * check the message type
+ * @return 0 if ok, 1 if some error
+ */
+int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
+{
+	int ret = 0;
+
+	switch (type) {
+	case HELLO: //Contestamos a Hello
+	default:
+		WH_TH_hellow(socket);
+		break;
+
+	case SETUPWORMCONN:  //Establecemos una conexión completa con otro worm
+		WH_TH_setupworm(socket);
+		break;
+
+	case STARTSSL:
+		ret = syncSocketStartSSL(socket, SRVSSL, NULL);
+		break;
+	}
+
+	return  ret;
+}
+
 /** WH_TH_hellow
  * Process a HELLOW message
  */
-inline void WH_TH_hellow(int socket)
+inline void WH_TH_hellow(SyncSocket *socket)
 {
 	enum wormMsgType type;
 	type = WORMINFO; //Con Worm Info
 
 	//fputs("Worm Info Pedida\n", stderr);
 
-	if (tcp_message_send(socket, &type, sizeof(type))) {
+	if (tcp_message_ssend(socket, &type, sizeof(type))) {
 		perror("Error contestando socket [1]\n");
-		close(socket); //cerramos el socket
+		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
-	if (tcp_message_send(socket, &WH_mySetup, sizeof(WH_mySetup))) { //Con wormSetup
+	if (tcp_message_ssend(socket, &WH_mySetup, sizeof(WH_mySetup))) { //Con wormSetup
 		perror("Error contestando socket [2]\n");
-		close(socket); //cerramos el socket
+		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
-	if (tcp_message_send(socket, &WH_myConfig, sizeof(WH_myConfig))) { //Con wormConfig
+	if (tcp_message_ssend(socket, &WH_myConfig, sizeof(WH_myConfig))) { //Con wormConfig
 		perror("Error contestando socket [3]\n");
-		close(socket); //cerramos el socket
+		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
 	//fprintf(stderr, "Enviando config con size=%zu\n", WH_myConfig.numInputTypes);
 
-	if (tcp_message_send(socket, WH_myConfig.inputTypes, sizeof(ConnectionDataType)*WH_myConfig.numInputTypes)) { //Con wormConfig
+	if (tcp_message_ssend(socket, WH_myConfig.inputTypes, sizeof(ConnectionDataType)*WH_myConfig.numInputTypes)) { //Con wormConfig
 		perror("Error contestando socket [4]");
-		close(socket); //cerramos el socket
+		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
@@ -370,11 +388,9 @@ inline void WH_TH_hellow(int socket)
 /** SETUPWORMCONN
  * Process a HELLOW message
  */
-inline void WH_TH_setupworm(int tmpsock)
+inline void WH_TH_setupworm(SyncSocket *socket)
 {
 	DestinationWorm tmpDestWorm;
-
-	SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 
 	//Recibimos un destinationWorm
 	if (tcp_message_srecv(socket, &tmpDestWorm, sizeof(DestinationWorm), 1) != sizeof(DestinationWorm)) {

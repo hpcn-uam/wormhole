@@ -75,15 +75,22 @@ extern "C" {
 	 */
 	void *WH_thread(void *arg);
 
+	/** WH_TH_checkMsgType
+	 * check the message type
+	 * @return 0 if ok, 1 if some error
+	 */
+	int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket);
+
+
 	/** WH_TH_hellow
 	 * Process a HELLOW message
 	 */
-	void WH_TH_hellow(int socket);
+	void WH_TH_hellow(SyncSocket *socket);
 
 	/** SETUPWORMCONN
 	 * Process a HELLOW message
 	 */
-	void WH_TH_setupworm(int socket);
+	void WH_TH_setupworm(SyncSocket *socket);
 
 	/** WH_connectionPoll
 	 * Poll data from some socket
