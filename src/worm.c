@@ -331,14 +331,14 @@ int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 	switch (type) {
 	case HELLO: //Contestamos a Hello
 	default:
-		WH_TH_hellow(socket);
+		WH_TH_hellow(socket); //TODO check if ret should be 1
 		break;
 
 	case SETUPWORMCONN:  //Establecemos una conexión completa con otro worm
 		WH_TH_setupworm(socket);
 		break;
 
-	case STARTSSL:
+	case SSLSTART:
 		ret = syncSocketStartSSL(socket, SRVSSL, NULL);
 		break;
 	}
@@ -585,6 +585,17 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	//setup SSL
 	if (WH_mySetup.isSSLNode) {
+		enum wormMsgType msgtype = SSLSTART; //Con Worm config
+
+		if (tcp_message_ssend(socket, &msgtype, sizeof(msgtype))) {
+			fputs("Error configurando Worm externo [SSL]", stderr);
+			return 1;
+		}
+
+		if (syncSocketStartSSL(socket, CLISSL, NULL)) {
+			fputs("Error configurando Worm externo [SSL 2]", stderr);
+			return 1;
+		}
 
 	} else {
 		socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
