@@ -140,8 +140,25 @@ size_t tcp_message_recv(int socket, void *message, size_t len, uint8_t sync, int
 	return received;
 }
 
-//const char *ciphers = "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:RC4-SHA";
-const char *ciphers = "RC4-SHA";
+const char *ciphers =
+	"ECDHE-RSA-AES256-GCM-SHA384"
+	":ECDHE-ECDSA-AES256-GCM-SHA384"
+	":ECDHE-RSA-AES256-SHA384"
+	":ECDHE-ECDSA-AES256-SHA384"
+//	":RC4-SHA"
+//	":ECDH-ECDSA-RC4-SHA"
+//	":ECDH-RSA-RC4-SHA"
+//	":ECDHE-ECDSA-RC4-SHA"
+//	":ECDHE-RSA-RC4-SHA"
+//	":ECDH-ECDSA-AES128-SHA256"
+//	":ECDH-ECDSA-AES128-GCM-SHA256"
+//	":ECDH-RSA-AES128-SHA256"
+//	":ECDH-RSA-AES128-GCM-SHA256"
+//	":AES128-SHA256"
+//	":DH-RSA-AES128-SHA256"
+//	":ECDH-RSA-AES256-SHA384"
+	;
+//const char *ciphers = "RC4-SHA";
 
 /** tcp_upgrade2syncSocket
 	 * upgrades a simple socket to SyncSocket
@@ -174,8 +191,6 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 				ret->config = SSL_CTX_new(TLSv1_2_client_method());
 			}
 
-			SSL_CTX_set_options(ret->config, SSL_OP_SINGLE_DH_USE);
-
 			if (ret->config == NULL) {
 				ERR_print_errors_fp(stderr);
 				exit(1);
@@ -183,6 +198,19 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 
 		} else {
 			ret->config = config;
+		}
+
+		SSL_CTX_set_mode(ret->config, SSL_MODE_ENABLE_PARTIAL_WRITE);
+		SSL_CTX_set_mode(ret->config, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+
+		/*		if(!SSL_CTX_set_dh_auto(ret->config, 1)){
+					ERR_print_errors_fp(stderr);
+						return NULL;
+					}*/
+
+		if (!SSL_CTX_set_ecdh_auto(ret->config, 1)) {
+			ERR_print_errors_fp(stderr);
+			return NULL;
 		}
 
 		if (!config) {

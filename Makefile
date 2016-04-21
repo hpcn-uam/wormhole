@@ -184,7 +184,7 @@ export CERTINFOCA=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.ca/CN=www.wormhole.
 export CERTINFOWH=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.other/CN=www.wormhole.org" 
 
 certs/prv/%.key.pem: | certs/prv
-	openssl genrsa -out $@ 4096
+	openssl ecparam -name brainpoolP512r1 -genkey -noout -out $@ #-param_enc explicit
 
 certs/prv/%.csr: certs/prv/%.key.pem
 	openssl req $(CERTINFOCA) -new -key $< -out $@
