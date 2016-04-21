@@ -275,9 +275,7 @@ void *WH_thread(void *arg)
 		int tmpsock = tcp_accept(listeningSocket, &ts); //TODO Optimizar para no reconfigurar constantemente el socket
 		//int socket = tcp_accept(listeningSocket, NULL);
 
-		SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
-
-		if (socket < 0) {
+		if (tmpsock < 0) {
 			enum ctrlMsgType type;
 
 			//Lectura desde Einstein
@@ -304,6 +302,8 @@ void *WH_thread(void *arg)
 			}
 
 		} else {
+
+			SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 			enum wormMsgType type;
 
 			while (tcp_message_srecv(socket, &type, sizeof(type), 1) == sizeof(type)) {
@@ -424,7 +424,7 @@ inline void WH_TH_setupworm(SyncSocket *socket)
 		return;
 	}
 
-	socket_upgrade_to_async_recv(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes]->socket), socket);
+	socket_sync_to_async_recv(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes]->socket), socket);
 
 	tmpDestWormPtr->numberOfTypes++;
 #ifdef _WORMLIB_DEBUG_
