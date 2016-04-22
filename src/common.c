@@ -103,13 +103,18 @@ int tcp_message_send(int socket, const void *message, size_t len)
 		if (sent_now > 0) {
 			sent += sent_now;
 
-		} else if (sent_now == 0 || (sent_now == -1 && (errno == EPIPE || errno == ENOTCONN))) {
+		} else if (sent_now == -1 && (errno == EPIPE || errno == ENOTCONN)) {
 			return -1;
 		}
 	} while (sent != (ssize_t)len && sent_now != -1 && sent_now != 0);
 
 	if (sent_now == -1 || sent_now == 0) {
-		return sent;
+		if (sent == 0) {
+			return -2;
+
+		} else {
+			return sent;
+		}
 	}
 
 	return 0;
@@ -195,6 +200,7 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 
 			if (ret->config == NULL) {
 				ERR_print_errors_fp(stderr);
+				fprintf(stderr, "[WH.COMMON]: SSL SSL_CTX_new error\n");
 				exit(1);
 			}
 
@@ -216,17 +222,17 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 		}
 
 		if (!config) {
-			if (!SSL_CTX_load_verify_locations(ret->config, "../certs/ca.pem", NULL)) {
+			if (!SSL_CTX_load_verify_locations(ret->config, "certs/ca.pem", NULL)) {
 				ERR_print_errors_fp(stderr);
 				return NULL;
 			}
 
-			if (!SSL_CTX_use_certificate_file(ret->config, "../certs/worm.pem", SSL_FILETYPE_PEM)) {
+			if (!SSL_CTX_use_certificate_file(ret->config, "certs/worm.pem", SSL_FILETYPE_PEM)) {
 				ERR_print_errors_fp(stderr);
 				return NULL;
 			}
 
-			if (!SSL_CTX_use_PrivateKey_file(ret->config, "../certs/prv/worm.key.pem", SSL_FILETYPE_PEM)) {
+			if (!SSL_CTX_use_PrivateKey_file(ret->config, "certs/prv/worm.key.pem", SSL_FILETYPE_PEM)) {
 				ERR_print_errors_fp(stderr);
 				return NULL;
 			}
@@ -303,12 +309,12 @@ int tcp_message_ssend(SyncSocket *socket, const void *message, size_t len)
 			if (sent_now > 0) {
 				sent += sent_now;
 
-			} else if (sent_now == 0 || (sent_now == -1 && (errno == EPIPE || errno == ENOTCONN))) {
+			} else if ((sent_now == 0 || sent_now == -1) && (errno == EPIPE || errno == ENOTCONN)) {
 				return -1;
 			}
 		} while (sent != (ssize_t)len && sent_now != -1 && sent_now != 0);
 
-		return sent;
+		return 0;
 	}
 }
 

@@ -63,9 +63,10 @@ bin/testLisp.tgz: bin/testLisp lib/libworm.so src/examples/lisprun.sh
 	mv $(TMPDIR)/testLisp.tgz bin/testLisp.tgz
 	rm -rf $(TMPDIR)/testLisp
 	
-bin/testBW.tgz: bin/testBW lib/libworm.so src/examples/bwrun.sh
+bin/testBW.tgz: bin/testBW lib/libworm.so src/examples/bwrun.sh | SSL
 	mkdir -p $(TMPDIR)/testBW/lib
 	cp bin/testBW $(TMPDIR)/testBW
+	cp -r certs $(TMPDIR)/testBW
 	cp lib/libworm.so $(TMPDIR)/testBW/lib
 	cp src/examples/bwrun.sh $(TMPDIR)/testBW/run.sh
 	cd $(TMPDIR);	tar -czf testBW.tgz testBW
@@ -163,6 +164,7 @@ doc/html: $(INCLUDES) $(SRCS) $(JAVAFILES)
 
 bin:
 	mkdir -p bin
+	ln -s ../certs/ bin/.
 
 libs: lib lib/libworm.so
 

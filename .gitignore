@@ -151,7 +151,8 @@ GTAGS
 GSYMS
 
 doc/html
-certs
+certs/
+bin/certs
 dependencies/compiled
 
 tests/performance/flink/bandwith/gentext

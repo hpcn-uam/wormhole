@@ -2,7 +2,7 @@
 #include <worm_private.h>
 
 #include "async_inline.c"
-//#define _WORMLIB_DEBUG_
+#define _WORMLIB_DEBUG_
 //#define _WORMLIB_DEBUG_FLUSH_
 /*
 *Global variables
@@ -305,14 +305,19 @@ void *WH_thread(void *arg)
 
 			SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 			enum wormMsgType type;
+			int retNum = 0;
 
 			while (tcp_message_srecv(socket, &type, sizeof(type), 1) == sizeof(type)) {
-				if (WH_TH_checkMsgType(type, socket)) {
+				retNum = WH_TH_checkMsgType(type, socket);
+
+				if (retNum) {
 					break;
 				}
 			}
 
-			tcp_sclose(socket);
+			if (retNum != 1) { // in case of stop without closing
+				tcp_sclose(socket);
+			}
 		}
 	}
 
@@ -322,7 +327,7 @@ void *WH_thread(void *arg)
 
 /** WH_TH_checkMsgType
  * check the message type
- * @return 0 if ok, 1 if some error
+ * @return 0 if ok, -1 if error, and 1 if socket wont receive more control data.
  */
 int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 {
@@ -331,14 +336,18 @@ int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 	switch (type) {
 	case HELLO: //Contestamos a Hello
 	default:
-		WH_TH_hellow(socket); //TODO check if ret should be 1
+		WH_TH_hellow(socket); //TODO check if ret should be -1
+		//return -1;
 		break;
 
 	case SETUPWORMCONN:  //Establecemos una conexión completa con otro worm
 		WH_TH_setupworm(socket);
-		break;
+		return 1;
 
 	case SSLSTART:
+#ifdef _WORMLIB_DEBUG_
+		fprintf(stderr, "[WH]: Starting SSL session\n");
+#endif
 		ret = syncSocketStartSSL(socket, SRVSSL, NULL);
 		break;
 	}
@@ -358,19 +367,16 @@ inline void WH_TH_hellow(SyncSocket *socket)
 
 	if (tcp_message_ssend(socket, &type, sizeof(type))) {
 		perror("Error contestando socket [1]\n");
-		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
 	if (tcp_message_ssend(socket, &WH_mySetup, sizeof(WH_mySetup))) { //Con wormSetup
 		perror("Error contestando socket [2]\n");
-		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
 	if (tcp_message_ssend(socket, &WH_myConfig, sizeof(WH_myConfig))) { //Con wormConfig
 		perror("Error contestando socket [3]\n");
-		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
@@ -378,7 +384,6 @@ inline void WH_TH_hellow(SyncSocket *socket)
 
 	if (tcp_message_ssend(socket, WH_myConfig.inputTypes, sizeof(ConnectionDataType)*WH_myConfig.numInputTypes)) { //Con wormConfig
 		perror("Error contestando socket [4]");
-		tcp_sclose(socket); //cerramos el socket
 		return;
 	}
 
@@ -581,11 +586,15 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		return 1;
 	}
 
-	SyncSocket *socket = NULL;
+	SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 
 	//setup SSL
 	if (WH_mySetup.isSSLNode) {
 		enum wormMsgType msgtype = SSLSTART; //Con Worm config
+
+#ifdef _WORMLIB_DEBUG_
+		fprintf(stderr, "[WH]: Sending SSLSTART to worm\n");
+#endif
 
 		if (tcp_message_ssend(socket, &msgtype, sizeof(msgtype))) {
 			fputs("Error configurando Worm externo [SSL]", stderr);
@@ -597,10 +606,11 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 			return 1;
 		}
 
-	} else {
-		socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 	}
 
+#ifdef _WORMLIB_DEBUG_
+	fprintf(stderr, "[WH]: Connection established with worm.id=%d\n", dw->id);
+#endif
 
 	int8_t flag = 0;
 
@@ -802,15 +812,16 @@ uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const Connec
 /************************************************************
 	Dynamic Routing Library
 *************************************************************/
-//#define _DYM_ROUTE_DEBUG_
+#define _DYM_ROUTE_DEBUG_
 /***************************************/
 extern uint8_t _binary_obj_structures_h_start;
 extern uint8_t _binary_obj_structures_h_end;
 
 const char *_WH_DymRoute_CC_includes = "\n"
-									   "#include<stdint.h>\n"
-									   "#include<stdio.h>\n"
-									   "#include <pthread.h>\n";
+									   "#include <stdint.h>\n"
+									   "#include <stdio.h>\n"
+									   "#include <pthread.h>\n"
+									   "#include <openssl/ssl.h>\n"; //TODO remove include
 const char *_WH_DymRoute_CC_FuncStart = "\n\n"
 										"uint8_t WH_DymRoute_precompiled_route (const void *const data, const MessageInfo *const mi, DestinationWorms *const cns)\n{\n"
 										"int ret = 0;\n"
