@@ -5,6 +5,7 @@ OUTFILE=$(echo $$)
 #valgrind ./testBW/testBW &> /tmp/lisp.$OUTFILE.out
 #gdbserver 0.0.0.0:2345 ./testBW/testBW &> /tmp/bw.$OUTFILE.out
 
+#valgrind  --vgdb=yes --vgdb-error=0 
 ./testBW &> /tmp/bw.$OUTFILE.out
 
 #sleep 60

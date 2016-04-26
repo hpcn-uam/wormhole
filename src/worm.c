@@ -2,7 +2,7 @@
 #include <worm_private.h>
 
 #include "async_inline.c"
-#define _WORMLIB_DEBUG_
+//#define _WORMLIB_DEBUG_
 //#define _WORMLIB_DEBUG_FLUSH_
 /*
 *Global variables
@@ -125,9 +125,10 @@ uint8_t WH_init(void)
 
 	//TypeSetup
 	if (WH_myConfig.inputTypes == NULL) {
-		ConnectionDataType tmpType;
-		tmpType.type = ARRAY;
-		tmpType.ext.arrayType = UINT8;
+		ConnectionDataType tmpType = {
+			.type = ARRAY,
+			.ext.arrayType = UINT8
+		};
 		WH_setup_types(1, &tmpType);
 	}
 
@@ -812,7 +813,7 @@ uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const Connec
 /************************************************************
 	Dynamic Routing Library
 *************************************************************/
-#define _DYM_ROUTE_DEBUG_
+//#define _DYM_ROUTE_DEBUG_
 /***************************************/
 extern uint8_t _binary_obj_structures_h_start;
 extern uint8_t _binary_obj_structures_h_end;

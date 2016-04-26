@@ -30,6 +30,7 @@ int main(int argc, char **argv)
 	type[0].type = ARRAY;
 	type[0].ext.arrayType = UINT8;
 	type[1].type = UINT8;
+	type[1].ext.arrayType = UINT8; //not necesary, but prevents valgrind errors.
 
 	WH_setup_types(2, type);
 

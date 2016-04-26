@@ -256,9 +256,15 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 		SSL_set_fd(ret->tls, socket);
 
 		if (mode == SRVSSL) {
-			int ssl_err = SSL_accept(ret->tls);
+			int ssl_ret;
+			int ssl_err;
 
-			if (ssl_err <= 0) {
+			do {
+				ssl_ret = SSL_accept(ret->tls);
+				ssl_err = SSL_get_error(ret->tls, ssl_ret);
+			} while (ssl_err == SSL_ERROR_WANT_READ  || ssl_err == SSL_ERROR_WANT_WRITE);
+
+			if (ssl_ret <= 0) {
 				perror("SSL ERROR");
 				ERR_print_errors_fp(stderr);
 				SSL_shutdown(ret->tls);
@@ -267,9 +273,15 @@ SyncSocket *tcp_upgrade2syncSocket(int socket, enum syncSocketType mode, SSL_CTX
 			}
 
 		} else {
-			int ssl_err = SSL_connect(ret->tls);
+			int ssl_ret;
+			int ssl_err;
 
-			if (ssl_err <= 0) {
+			do {
+				ssl_ret = SSL_connect(ret->tls);
+				ssl_err = SSL_get_error(ret->tls, ssl_ret);
+			} while (ssl_err == SSL_ERROR_WANT_READ  || ssl_err == SSL_ERROR_WANT_WRITE);
+
+			if (ssl_ret <= 0) {
 				perror("SSL ERROR");
 				ERR_print_errors_fp(stderr);
 				SSL_shutdown(ret->tls);
