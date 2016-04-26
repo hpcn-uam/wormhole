@@ -173,7 +173,7 @@ javaLibs: lib/libjavaworm.so lib/libjavaworm.jar Jexamples
 buildTools:
 	$(MAKE) -C tools
 
-obj/%.o: src/%.cpp $(INCLUDES)
+obj/%.o: src/%.cpp $(INCLUDES) | Dependencies
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 obj/%.o: src/%.c $(INCLUDES)
