@@ -9,3 +9,24 @@ docs:
     script:
         - make Docs
         - cp -r doc/html /var/www/docs/wormhole
+
+test_commonh_test_async:
+    script:
+        - make bin/testSendAsync bin/testRecvAsync
+        - cd bin
+        - ./testRecvAsync &
+        - ./testSendAsync
+        
+test_commonh_test_SSL:
+    script:
+        - make bin/testSendSSL bin/testRecvSSL
+        - cd bin
+        - ./testRecvSSL &
+        - ./testSendSSL
+        
+test_commonh_test_AsyncSSL:
+    script:
+        - make bin/testSendAsyncSSL bin/testRecvAsyncSSL
+        - cd bin
+        - ./testRecvAsyncSSL &
+        - ./testSendAsyncSSL
