@@ -176,7 +176,7 @@ buildTools:
 obj/%.o: src/%.cpp $(INCLUDES) | Dependencies
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-obj/%.o: src/%.c $(INCLUDES)
+obj/%.o: src/%.c $(INCLUDES) | Dependencies
 	$(CC) $(CFLAGS) -c $< -o $@
 
 SSL: certificates dependencies/compiled
