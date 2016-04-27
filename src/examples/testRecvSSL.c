@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
 	/* Set the ciphers list */
 	/*const char* whc_rc4md5 	= "RC4-MD5";	*/
-	const char *whc_rc4sha 	= "RC4-SHA"; 		/*
+	const char *whc_rc4sha 	= "RC4-SHA:ECDHE-RSA-AES256-GCM-SHA384"; 		/*
 	const char* whc_des 	= "DES-CBC-SHA";
 	const char* whc_3des 	= "DES-CBC3-SHA";
 	const char* whc_aes256A	= "AES256-GCM-SHA384";
