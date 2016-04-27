@@ -12,18 +12,18 @@ test_commonh_test_async:
         - make bin/testSendAsync bin/testRecvAsync
         - cd bin
         - ./testRecvAsync &
-        - ./testSendAsync
+        - ./testSendAsync || (killall -9 testRecvAsync ; false)
         
 test_commonh_test_SSL:
     script:
         - make bin/testSendSSL bin/testRecvSSL
         - cd bin
         - ./testRecvSSL &
-        - ./testSendSSL
+        - ./testSendSSL || (killall -9 testRecvSSL ; false)
         
 test_commonh_test_AsyncSSL:
     script:
         - make bin/testSendAsyncSSL bin/testRecvAsyncSSL
         - cd bin
         - ./testRecvAsyncSSL &
-        - ./testSendAsyncSSL
+        - ./testSendAsyncSSL || (killall -9 testRecvAsyncSSL ; false)
