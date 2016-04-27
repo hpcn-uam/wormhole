@@ -68,6 +68,8 @@ int main(int argc, char **argv)
 		abort();
 	}
 
+	SSL_CTX_set_ecdh_auto(sslctx, 1);
+
 	cSSL = SSL_new(sslctx);
 	SSL_set_fd(cSSL, sock);
 	int ssl_err = SSL_connect(cSSL);
