@@ -5,6 +5,8 @@ import es.hpcn.wormhole.Worm;
 import java.security.SecureRandom;
 import java.nio.charset.StandardCharsets;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import edu.stanford.nlp.sentiment.SentimentPipeline;
 
 public class Sentiment
@@ -15,7 +17,7 @@ public class Sentiment
 
 		if (worm.getId() == 1) {
 			//sender
-			BufferedReader reader = IOUtils.readerFromStdin("utf-8");
+			BufferedReader reader = new BufferedReader(new FileReader("data.txt"));
 
 			for (String line; (line = reader.readLine()) != null;) {
 				worm.send(line);

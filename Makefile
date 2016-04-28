@@ -141,6 +141,9 @@ $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.jav
 .java.class:
 	cd $(JAVAPATH); $(JC) $(JFLAGS) $*.java
 	
+$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java
+	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH)  $*.java
+	
 #Common
 Dependencies: obj lib bin SSL
 
