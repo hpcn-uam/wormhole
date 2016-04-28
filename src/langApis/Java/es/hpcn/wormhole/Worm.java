@@ -26,7 +26,10 @@ public class Worm
 	public native int recv(byte[] data);
 	public native int send(byte[] data);
 
+	@Deprecated
 	public native int recv(String data);
+
+	public native String recv();
 	public native int send(String data);
 
 	public native void flushIO();

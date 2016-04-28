@@ -49,6 +49,14 @@ extern "C" {
 
 	/*
 	 * Class:     es_hpcn_wormhole_Worm
+	 * Method:    recv
+	 * Signature: ()Ljava/lang/String;
+	 */
+	JNIEXPORT jstring JNICALL Java_es_hpcn_wormhole_Worm_recv__
+	(JNIEnv *, jobject);
+
+	/*
+	 * Class:     es_hpcn_wormhole_Worm
 	 * Method:    send
 	 * Signature: (Ljava/lang/String;)I
 	 */

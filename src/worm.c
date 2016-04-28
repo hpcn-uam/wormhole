@@ -197,6 +197,11 @@ uint8_t WH_halt(void)
 
 	WH_flushIO();
 
+	//close all output connections
+	for (size_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
+		WH_removeWorm(&WH_myDstWorms, WH_myDstWorms.worms[WH_myDstWorms.numberOfWorms - (i - 1)].id);
+	}
+
 	while (WH_halting) {
 		nanosleep(&ts, 0);
 	}
@@ -852,7 +857,7 @@ const char *_WH_DymRoute_CC_Catend      =    "default:\n"
 		"ret++;"
 		"}\n";
 
-void *_WH_DymRoute_libHandle;
+void *_WH_DymRoute_libHandle = NULL;
 /***************************************/
 
 /* Name WH_DymRoute_precompiled_route
@@ -900,7 +905,7 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 				//WH_flushIO();
 			}
 		}*/
-	} while ((!c) || ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
+	} while ((!c) && ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
 
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: Msg found!...\n");
@@ -1411,6 +1416,25 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
 	return ret;
 }
 
+/** WH_DymRoute_invalidate
+ * Invalidate the current routing system, and frees the necesary data
+ */
+void WH_DymRoute_invalidate()
+{
+	void *tmppointer;
+
+	if (WH_DymRoute_precompiled_route) {
+		tmppointer = WH_DymRoute_precompiled_route;
+		WH_DymRoute_precompiled_route = NULL;
+	}
+
+	if (_WH_DymRoute_libHandle) {
+		tmppointer = _WH_DymRoute_libHandle;
+		_WH_DymRoute_libHandle = NULL;
+
+		dlclose(tmppointer);
+	}
+}
 
 /* Name WH_findWorm
  * Return the worm mached (if no exists)
@@ -1438,7 +1462,7 @@ size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId)
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 /** WH_addWorm
@@ -1487,5 +1511,35 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
 	wms->numberOfWorms++;
 	return wms->worms + (wms->numberOfWorms - 1);
 }
+
+/** WH_removeWorm
+ * Removes, close connections and frees all the data related to that worm.
+ */
+void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
+{
+	/*if wms is destworm, route table must be disabled*/
+	if (wms == &WH_myDstWorms) {
+		WH_DymRoute_invalidate();
+	}
+
+	DestinationWorm *worm = WH_findWorm(wms, wormId);
+	int index = WH_findWormIndex(wms, wormId);
+
+	wms->numberOfWorms--;
+	memmove(wms->worms + index, wms->worms + index + 1,
+			(wms->numberOfWorms - index)*sizeof(DestinationWorm *));
+
+	for (size_t i = 0; i < worm->numberOfTypes; i++) {
+		if (worm->conns[i]) {
+			destroy_asyncSocket(&(worm->conns[i]->socket));
+			free(worm->conns[i]);
+		}
+	}
+
+	free(worm->conns);
+	free(worm->supportedTypes);
+	free(worm);
+}
+
 
 /************************************************************/

@@ -60,6 +60,11 @@ extern "C" {
 	 */
 	DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const uint8_t init);
 
+	/** WH_removeWorm
+	 * Removes, close connections and frees all the data related to that worm.
+	 */
+	void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId);
+
 	/** WH_findWorm
 	 * @return the worm mached (if no exists)
 	 */
@@ -151,6 +156,11 @@ extern "C" {
 	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const DestinationWorm *const cn);
+
+	/** WH_DymRoute_invalidate
+	 * Invalidate the current routing system, and frees the necesary data
+	 */
+	void WH_DymRoute_invalidate();
 
 
 	/*

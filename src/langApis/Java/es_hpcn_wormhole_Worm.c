@@ -15,6 +15,8 @@ extern "C" {
 	static const ConnectionDataType _JWH_array8type  = {.type = ARRAY, .ext.arrayType = UINT8};
 	static const ConnectionDataType _JWH_array16type = {.type = ARRAY, .ext.arrayType = UINT16};
 	static int hasBeenInitialized = 1;
+	static uint8_t *tmpdata;
+#define TMPDATA_BUFSIZE  1024*1024
 
 	/**************************
 	 * STATIC-PARAMETRIC CONTENT *
@@ -39,6 +41,12 @@ extern "C" {
 			type[1] = _JWH_array16type;
 
 			WH_setup_types(JWH_NUMTYPES, type);
+
+			tmpdata = calloc(TMPDATA_BUFSIZE / 1024, TMPDATA_BUFSIZE / (TMPDATA_BUFSIZE / 1024));
+
+			if (!tmpdata) {
+				return 1;
+			}
 
 			hasBeenInitialized = WH_init();
 		}
@@ -170,6 +178,36 @@ extern "C" {
 #else
 		(*env)->ReleaseStringCritical(env, data,              bytes);
 #endif
+
+		return ret;
+	}
+
+	/*
+	 * Class:     es_hpcn_wormhole_Worm
+	 * Method:    recv
+	 * Signature: ()Ljava/lang/String;
+	 */
+	JNIEXPORT jstring JNICALL Java_es_hpcn_wormhole_Worm_recv__
+	(JNIEnv *env, jobject obj)
+	{
+		UNUSED(obj);
+
+		jstring ret = NULL;
+		MessageInfo mi;
+
+		mi.type = NULL; //TODO check that it has returned AN ARRAY
+		mi.size = TMPDATA_BUFSIZE;
+
+		if (WH_recv(tmpdata, &mi) > 0) {
+
+			if (mi.type->ext.arrayType == UINT8) {
+				ret = (*env)->NewStringUTF(env, (const char *)tmpdata);
+
+			} else if (mi.type->ext.arrayType == UINT16) {
+				ret = (*env)->NewString(env, (const jchar *)tmpdata, mi.size);
+			}
+
+		}
 
 		return ret;
 	}
