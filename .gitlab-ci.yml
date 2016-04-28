@@ -27,6 +27,9 @@ test_commonh_test_AsyncSSL:
         - cd bin
         - ./testRecvAsyncSSL &
         - ./testSendAsyncSSL || (killall -9 testRecvAsyncSSL ; false)
+
+before_script:
+    - killall -9 testSendAsync testRecvAsync testRecvSSL testSendSSL testRecvAsyncSSL testSendAsyncSSL || true
         
 clean:
     script:
