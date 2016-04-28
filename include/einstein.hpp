@@ -16,7 +16,6 @@
 #include <memory>
 #include <stdexcept>
 
-
 using namespace std;
 
 struct Eins2WormConn {

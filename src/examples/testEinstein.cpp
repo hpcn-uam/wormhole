@@ -53,16 +53,7 @@ EinsteinTester::~EinsteinTester()
 
 int main(int argc, char **argv)
 {
-	if (argc != 3) {
-		try {
-			EinsteinTester einsTester;
-			std::cout << "Éxito\n";
-
-		} catch (exception &e) {
-			std::cerr << "Excepción: " << e.what() << '\n';
-		}
-
-	} else if (argc == 4) {
+	if (argc == 4) {
 		try {
 			vector<string> runParams;
 			runParams.push_back(argv[3]);
@@ -73,7 +64,7 @@ int main(int argc, char **argv)
 			std::cerr << "Excepción: " << e.what() << '\n';
 		}
 
-	} else {
+	} else if (argc == 3) {
 		try {
 			EinsteinTester einsTester(argv[1], argv[2], true);
 			std::cout << "Éxito\n";
@@ -81,5 +72,15 @@ int main(int argc, char **argv)
 		} catch (exception &e) {
 			std::cerr << "Excepción: " << e.what() << '\n';
 		}
+
+	}	else  {
+		try {
+			EinsteinTester einsTester;
+			std::cout << "Éxito\n";
+
+		} catch (exception &e) {
+			std::cerr << "Excepción: " << e.what() << '\n';
+		}
+
 	}
 }

@@ -90,6 +90,17 @@ bin/javaTest.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/exam
 	cd $(TMPDIR); tar -czf javaTest.tgz javaTest
 	mv $(TMPDIR)/javaTest.tgz bin/javaTest.tgz
 	rm -rf $(TMPDIR)/javaTest
+	
+bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/javarun.sh dependencies/compiled/data/data.txt
+	mkdir -p $(TMPDIR)/nlp/lib
+	cp lib/libjavaworm.* $(TMPDIR)/nlp/lib #only for java
+	cp lib/libworm.so $(TMPDIR)/nlp/lib
+	cp src/examples/javarun.sh $(TMPDIR)/nlp/run.sh
+	cp -r dependencies/compiled/nlp/* $(TMPDIR)/nlp/lib/.
+	cp -r dependencies/compiled/data/data.txt $(TMPDIR)/nlp/
+	cd $(TMPDIR); tar -czf nlp.tgz nlp
+	mv $(TMPDIR)/nlp.tgz bin/nlp.tgz
+	rm -rf $(TMPDIR)/nlp
 
 #Examples
 bin/testWorm: src/examples/testWorm.c
