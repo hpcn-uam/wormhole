@@ -199,7 +199,9 @@ uint8_t WH_halt(void)
 
 	//close all output connections
 	for (size_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
+#ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "[WH]: asking for free worm data...%lu %lu\n", WH_myDstWorms.numberOfWorms, i);
+#endif
 
 		WH_removeWorm(&WH_myDstWorms, WH_myDstWorms.worms[WH_myDstWorms.numberOfWorms - 1].id);
 	}
@@ -1539,15 +1541,15 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
  */
 void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 {
-	//#ifdef _WORMLIB_DEBUG_
+#ifdef _WORMLIB_DEBUG_
 	fprintf(stderr, "[WH]: Removing worm id=%d...\n", wormId);
-//#endif
+#endif
 
 	/*if wms is destworm, route table must be disabled*/
 	if (wms == &WH_myDstWorms) {
-		//#ifdef _WORMLIB_DEBUG_
+#ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "[WH]: Invalidating route table...\n");
-//#endif
+#endif
 		WH_DymRoute_invalidate();
 	}
 
@@ -1557,13 +1559,16 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 	wms->numberOfWorms--;
 
 	if (index == -1) {
+#ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "[WH]: worm not found! %d (%ld)\n", wormId, index);
+#endif
 		return;
 	}
 
-
 	if ((wms->numberOfWorms - index) > 0) {
+#ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "[WH]: memmoving...(index=%ld, nworms=%lu)\n", index, wms->numberOfWorms);
+#endif
 		memmove(wms->worms + index, wms->worms + index + 1,
 				(wms->numberOfWorms - index)*sizeof(DestinationWorm *));
 	}
@@ -1571,16 +1576,12 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 	for (size_t i = 0; i < worm->numberOfTypes; i++) {
 		if (worm->conns[i]) {
 			destroy_asyncSocket(&(worm->conns[i]->socket));
-			fprintf(stderr, "[WH]: Free 1...\n");
 			free(worm->conns[i]);
 		}
 	}
 
-	fprintf(stderr, "[WH]: Free 2...\n");
 	free(worm->conns);
-	fprintf(stderr, "[WH]: Free 3...\n");
 	free(worm->supportedTypes);
-	fprintf(stderr, "[WH]: Free 4...\n");
 	free(worm);
 }
 
