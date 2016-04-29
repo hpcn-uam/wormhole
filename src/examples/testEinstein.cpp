@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 			std::cerr << "Excepción: " << e.what() << '\n';
 		}
 
-	}	else  {
+	} else {
 		try {
 			EinsteinTester einsTester;
 			std::cout << "Éxito\n";
@@ -81,6 +81,5 @@ int main(int argc, char **argv)
 		} catch (exception &e) {
 			std::cerr << "Excepción: " << e.what() << '\n';
 		}
-
 	}
 }

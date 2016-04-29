@@ -19,7 +19,7 @@ done
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib
 echo "LIBPATH = " $LD_LIBRARY_PATH &>> /tmp/jbw.$OUTFILE.out
 
-java -cp lib/libjavaworm.jar es.hpcn.wormhole.test.BandWith &>> /tmp/jbw.$OUTFILE.out
+java -cp "lib/*" es.hpcn.wormhole.test.BandWith &>> /tmp/jbw.$OUTFILE.out
 
 #sleep 60
 #rm -f /tmp/*c /tmp/*so /tmp/*out;

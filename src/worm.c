@@ -199,7 +199,9 @@ uint8_t WH_halt(void)
 
 	//close all output connections
 	for (size_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
-		WH_removeWorm(&WH_myDstWorms, WH_myDstWorms.worms[WH_myDstWorms.numberOfWorms - (i - 1)].id);
+		fprintf(stderr, "[WH]: asking for free worm data...%lu %lu\n", WH_myDstWorms.numberOfWorms, i);
+
+		WH_removeWorm(&WH_myDstWorms, WH_myDstWorms.worms[WH_myDstWorms.numberOfWorms - 1].id);
 	}
 
 	while (WH_halting) {
@@ -451,6 +453,8 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 {
 	static uint32_t wormIndex = 0;
 	static uint32_t connIndex = 0;
+	uint32_t closedWorms = 0;
+	uint32_t unclosedWorms = 0;
 
 	connIndex++;
 
@@ -475,6 +479,12 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 	do {
 		if (can_be_read(&(wms->worms[wormIndex].conns[connIndex]->socket))) {
 			return wms->worms[wormIndex].conns[connIndex];
+
+		} else if (wms->worms[wormIndex].conns[connIndex]->socket.closed) {
+			closedWorms++;
+
+		} else {
+			unclosedWorms++;
 		}
 
 		connIndex++;
@@ -482,6 +492,14 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 		while (connIndex >= wms->worms[wormIndex].numberOfTypes) {
 			wormIndex = (wormIndex + 1) % wms->numberOfWorms;
 			connIndex = 0;
+
+			if (wormIndex == 0 && unclosedWorms > 0) {
+				unclosedWorms = 0;
+				closedWorms = 0;
+
+			} else if (wormIndex == 0 && unclosedWorms == 0 && closedWorms > 0) {
+				return NULL;
+			}
 		}
 	} while (!(wormIndex == startingWormIndex && connIndex == startingConnIndex)); //arreglado bug
 
@@ -1517,27 +1535,48 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
  */
 void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 {
+	//#ifdef _WORMLIB_DEBUG_
+	fprintf(stderr, "[WH]: Removing worm id=%d...\n", wormId);
+//#endif
+
 	/*if wms is destworm, route table must be disabled*/
 	if (wms == &WH_myDstWorms) {
+		//#ifdef _WORMLIB_DEBUG_
+		fprintf(stderr, "[WH]: Invalidating route table...\n");
+//#endif
 		WH_DymRoute_invalidate();
 	}
 
 	DestinationWorm *worm = WH_findWorm(wms, wormId);
-	int index = WH_findWormIndex(wms, wormId);
+	ssize_t index = WH_findWormIndex(wms, wormId);
 
 	wms->numberOfWorms--;
-	memmove(wms->worms + index, wms->worms + index + 1,
-			(wms->numberOfWorms - index)*sizeof(DestinationWorm *));
+
+	if (index == -1) {
+		fprintf(stderr, "[WH]: worm not found! %d (%ld)\n", wormId, index);
+		return;
+	}
+
+
+	if ((wms->numberOfWorms - index) > 0) {
+		fprintf(stderr, "[WH]: memmoving...(index=%ld, nworms=%lu)\n", index, wms->numberOfWorms);
+		memmove(wms->worms + index, wms->worms + index + 1,
+				(wms->numberOfWorms - index)*sizeof(DestinationWorm *));
+	}
 
 	for (size_t i = 0; i < worm->numberOfTypes; i++) {
 		if (worm->conns[i]) {
 			destroy_asyncSocket(&(worm->conns[i]->socket));
+			fprintf(stderr, "[WH]: Free 1...\n");
 			free(worm->conns[i]);
 		}
 	}
 
+	fprintf(stderr, "[WH]: Free 2...\n");
 	free(worm->conns);
+	fprintf(stderr, "[WH]: Free 3...\n");
 	free(worm->supportedTypes);
+	fprintf(stderr, "[WH]: Free 4...\n");
 	free(worm);
 }
 

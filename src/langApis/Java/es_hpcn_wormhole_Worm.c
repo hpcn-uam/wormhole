@@ -194,17 +194,17 @@ extern "C" {
 
 		jstring ret = NULL;
 		MessageInfo mi;
+		uint32_t recvnbytes;
 
 		mi.type = NULL; //TODO check that it has returned AN ARRAY
-		mi.size = TMPDATA_BUFSIZE;
+		mi.size = TMPDATA_BUFSIZE / sizeof(jchar);
 
-		if (WH_recv(tmpdata, &mi) > 0) {
-
+		if ((recvnbytes = WH_recv(tmpdata, &mi)) > 0) {
 			if (mi.type->ext.arrayType == UINT8) {
 				ret = (*env)->NewStringUTF(env, (const char *)tmpdata);
 
 			} else if (mi.type->ext.arrayType == UINT16) {
-				ret = (*env)->NewString(env, (const jchar *)tmpdata, mi.size);
+				ret = (*env)->NewString(env, (const jchar *)tmpdata, recvnbytes);
 			}
 
 		}
