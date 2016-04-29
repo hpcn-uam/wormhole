@@ -52,7 +52,7 @@ void Einstein::readConfig(const string configFileName)
 {
 
 	// TODO: Leer realmente el fichero
-	uint16_t id = 1;
+	uint16_t id = 0;
 	uint16_t baseListenPort = 10000;
 	int64_t core = 0;
 	//string connectionDescription = "(LISP connection description)";
@@ -63,17 +63,20 @@ void Einstein::readConfig(const string configFileName)
 		throw std::runtime_error("Config file doesn't exist");
 	}
 
+	char id_string[128]; //TODO FIX POSIBLE OVERFLOW
 	char configLine[4096]; //TODO FIX POSIBLE OVERFLOW
-	char programName[4096]; //TODO FIX POSIBLE OVERFLOW
-	char host[4096]; //TODO FIX POSIBLE OVERFLOW
+	char programName[512]; //TODO FIX POSIBLE OVERFLOW
+	char host[512]; //TODO FIX POSIBLE OVERFLOW
 	char connectionDescription[4096]; //TODO FIX POSIBLE OVERFLOW
+
+	bool createAnotherWorm = false;
 
 	while (!feof(configFile)) {
 		if (fgets(configLine, 4096, configFile) == 0) {
 			break;
 		}
 
-		int st = sscanf(configLine, "%hu %s %s %lx", &id, programName, host, &core);
+		int st = sscanf(configLine, "%s %s %s %lx", id_string, programName, host, &core);
 
 		if (st == EOF) {
 			break;
@@ -87,49 +90,72 @@ void Einstein::readConfig(const string configFileName)
 			throw std::runtime_error("Missing worm routing");
 		}
 
-		cerr << "[" << id << "] " << host << " " << programName << endl;
-		connectionDescription[strlen(connectionDescription) - 1] = 0;
+		do {
+			if (string(id_string).find("-") != string::npos) {
+				int firstId = atoi(strtok(id_string, "-"));
+				int lastId  = atoi(strtok(NULL, "-"));
 
-		if (connectionDescription[0] != '\t') {
-			throw std::runtime_error("Missing worm routing");
-		}
+				if (firstId <= lastId) {
+					throw std::runtime_error("Non valid id range: \"" + string(id_string) + "\"");
+				}
 
-		cerr << "Description: |" << connectionDescription + 1 << "|\n";
+				if (id < firstId) {
+					id = firstId;
+					createAnotherWorm = true;
 
-		//check if ipaddr or name
-		struct sockaddr_in sa;
-		int result = inet_pton(AF_INET, host, &(sa.sin_addr));
-		string ip;
+				} else if (id >= firstId && id < (lastId - 1)) {
+					id++;
+					createAnotherWorm = true;
 
-		if (result == -1 || result == 0) {
-			struct hostent *tmp = gethostbyname(host);
+				} else {
+					id++;
+					createAnotherWorm = false;
+				}
 
-			if (tmp == NULL) {
-				throw std::runtime_error("Host '" + string(host) + "' does not exists");
 			}
 
-			if (tmp->h_addr_list[0] == NULL) {
-				throw std::runtime_error("Host '" + string(host) + "' does not have a valid IP");
+			cerr << "[" << id << "] " << host << " " << programName << endl;
+			connectionDescription[strlen(connectionDescription) - 1] = 0;
+
+			if (connectionDescription[0] != '\t') {
+				throw std::runtime_error("Missing worm routing");
 			}
 
-			ip = string(inet_ntoa(*((struct in_addr *)tmp->h_addr_list[0])));
+			cerr << "Description: |" << connectionDescription + 1 << "|\n";
 
-		} else {
-			ip = string(host);
-		}
+			//check if ipaddr or name
+			struct sockaddr_in sa;
+			int result = inet_pton(AF_INET, host, &(sa.sin_addr));
+			string ip;
 
-		unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1), string(host), string(programName)));
+			if (result == -1 || result == 0) {
+				struct hostent *tmp = gethostbyname(host);
 
-		/*Check for advanced options*/
+				if (tmp == NULL) {
+					throw std::runtime_error("Host '" + string(host) + "' does not exists");
+				}
 
-		/*SSL*/
-		if (string(configLine).find("SSL") != string::npos) {
-			wc->ws.isSSLNode = 1;
-		}
+				if (tmp->h_addr_list[0] == NULL) {
+					throw std::runtime_error("Host '" + string(host) + "' does not have a valid IP");
+				}
 
+				ip = string(inet_ntoa(*((struct in_addr *)tmp->h_addr_list[0])));
 
-		this->ec.createWorm(std::move(wc), ip);
+			} else {
+				ip = string(host);
+			}
 
+			unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1), string(host), string(programName)));
+
+			/*Check for advanced options*/
+
+			/*SSL*/
+			if (string(configLine).find("SSL") != string::npos) {
+				wc->ws.isSSLNode = 1;
+			}
+
+			this->ec.createWorm(std::move(wc), ip);
+		} while (createAnotherWorm);
 	}
 
 	cerr << "Launched all worms\n";

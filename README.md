@@ -21,9 +21,9 @@ Einstein <Configuration_File> <Listen_IP>
 ```
 
 The Topology is defined have the following fields
-- `IP`                  [**Mandatory**] : The IP where the worm would be deployed.
+- `ID`                  [**Mandatory**] : The Worm ID. It is accepted to provide a range (like 1-5), so 5 worms(1,2,3,4,5) would be deployed **WITH THE SAME** configuration, but diferent ID.
 - `Program_Name`        [**Mandatory**] : [The program name](#how-worms-are-deployed)
-- `Deploy_IP`           [**Mandatory**] : The IP address where the worm would be copied and started
+- `Deploy_IP`           [**Mandatory**] : The IP address where the worm would be deployed
 - `Affinity_hex_mask`   [**Mandatory**] : The core-affinity of the worm. -1 means that there is no affinity
 - `SSL`                 [**Optional**]  : If SSL is present in a Worm definition, that worm would encript thougt TLS1.2 the communications **with any other worm** (input and output). Also, SSL would check if is an authorized worm.
 
