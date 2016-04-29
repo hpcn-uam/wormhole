@@ -901,7 +901,7 @@ uint8_t WH_send(const void *const data, const MessageInfo *const mi)
  */
 uint32_t WH_recv(void *data, MessageInfo *mi)
 {
-	int pollCnt = 0;
+	//int pollCnt = 0;
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: Polling...\n");
 #endif
