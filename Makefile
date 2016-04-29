@@ -152,8 +152,15 @@ $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.jav
 .java.class:
 	cd $(JAVAPATH); $(JC) $(JFLAGS) $*.java
 	
-$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java
+$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java | dependencies/compiled/nlp
 	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH)  $*.java
+	
+dependencies/compiled/nlp:
+	mkdir -p dependencies/compiled/nlp
+	cd dependencies/compiled ; wget http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip
+	cd dependencies/compiled ; unzip stanford-corenlp-full-2015-12-09.zip
+	cd dependencies/compiled ; rm stanford-corenlp-full-2015-12-09.zip
+	cd dependencies/compiled ; mv stanford* nlp
 	
 #Common
 Dependencies: obj lib bin SSL
