@@ -901,7 +901,7 @@ uint8_t WH_send(const void *const data, const MessageInfo *const mi)
  */
 uint32_t WH_recv(void *data, MessageInfo *mi)
 {
-	//int pollCnt = 0;
+	int pollCnt = 0;
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: Polling...\n");
 #endif
@@ -924,6 +924,10 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 			}
 		}*/
 	} while ((!c) && ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
+
+	if (c == NULL) { //no msg found
+		return 0;
+	}
 
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: Msg found!...\n");
