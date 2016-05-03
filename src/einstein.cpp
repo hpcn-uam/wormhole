@@ -14,16 +14,23 @@ Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, str
 	this->host = host;
 	this->programName = programName;
 	this->halting = false;
+	this->deployed = false;
 }
 
 Eins2WormConn::~Eins2WormConn()
 {
 	free(this->ws.connectionDescription);
-	ctrlMsgType msg = HALT;
-	cerr << "Enviando HALT al Worm id = " << this->ws.id << endl;
 
-	if (tcp_message_send(this->socket, &msg, sizeof(msg)) != 0) {
-		throw std::runtime_error("Error sending HALT");
+	if (this->deployed) {
+		ctrlMsgType msg = HALT;
+		cerr << "Enviando HALT al Worm id = " << this->ws.id << endl;
+
+		if (tcp_message_send(this->socket, &msg, sizeof(msg)) != 0) {
+			throw std::runtime_error("Error sending HALT");
+		}
+
+	} else {
+		cerr << "Worm with id = " << this->ws.id << " has not alredy been deployed, do not sending HALT..." << endl;
 	}
 }
 
@@ -90,20 +97,24 @@ void Einstein::readConfig(const string configFileName)
 			throw std::runtime_error("Missing worm routing");
 		}
 
-		do {
-			if (string(id_string).find("-") != string::npos) {
-				int firstId = atoi(strtok(id_string, "-"));
-				int lastId  = atoi(strtok(NULL, "-"));
+		connectionDescription[strlen(connectionDescription) - 1] = 0;
 
-				if (firstId <= lastId) {
+		do {
+			int firstId, lastId;
+
+			if (string(id_string).find("-") != string::npos) {
+				firstId = atoi(strtok(id_string, "-"));
+				lastId  = atoi(strtok(NULL, "-"));
+
+				if (firstId >= lastId) {
 					throw std::runtime_error("Non valid id range: \"" + string(id_string) + "\"");
 				}
 
-				if (id < firstId) {
-					id = firstId;
-					createAnotherWorm = true;
+				id = firstId;
+				createAnotherWorm = true;
 
-				} else if (id >= firstId && id < (lastId - 1)) {
+			} else if (createAnotherWorm) {
+				if (id >= firstId && id < (lastId - 1)) {
 					id++;
 					createAnotherWorm = true;
 
@@ -117,7 +128,6 @@ void Einstein::readConfig(const string configFileName)
 			}
 
 			cerr << "[" << id << "] " << host << " " << programName << endl;
-			connectionDescription[strlen(connectionDescription) - 1] = 0;
 
 			if (connectionDescription[0] != '\t') {
 				throw std::runtime_error("Missing worm routing");
@@ -401,6 +411,8 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 	if (system(executable.c_str())) {
 		cerr << "error executing comand: \"" << executable << "\"" << endl;
 	}
+
+	wc.deployed = true;
 }
 
 void EinsConn::pollWorms()
