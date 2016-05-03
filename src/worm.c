@@ -1589,13 +1589,17 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 	for (size_t i = 0; i < worm->numberOfTypes; i++) {
 		if (worm->conns[i]) {
 			destroy_asyncSocket(&(worm->conns[i]->socket));
+//fprintf(stderr, "[WH] free conns[%lu]\n",i);
 			free(worm->conns[i]);
 		}
 	}
 
+//fprintf(stderr, "[WH] free conns\n");
 	free(worm->conns);
+//fprintf(stderr, "[WH] free supportedTypes\n");
 	free(worm->supportedTypes);
-	free(worm);
+//fprintf(stderr, "[WH] free worm\n");
+	//free(worm); //TODO this causes free corruption... why!?
 }
 
 
