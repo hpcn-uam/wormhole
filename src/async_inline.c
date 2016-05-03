@@ -26,8 +26,13 @@ inline int can_be_read(AsyncSocket *s)
 	int can_read = 0;
 	pthread_spin_lock(&(s->lock));
 
-	if (s->to_access[s->current_recv_buf] && !s->closed) {
-		can_read = 1;
+	if (s->to_access[s->current_recv_buf]) {
+		if (!s->closed) {
+			can_read = 1;
+
+		} else {
+			can_read = s->read_pos[s->current_recv_buf] != s->write_pos[s->current_recv_buf];
+		}
 	}
 
 	pthread_spin_unlock(&(s->lock));
@@ -83,11 +88,12 @@ inline int tcp_message_recv_async(AsyncSocket *sock, void *message, size_t len)
 
 			if (sock->to_access[sock->current_recv_buf]) {
 				sock->can_read = 1;
+
 			} else if (sock->closed) {
 				pthread_spin_unlock(&(sock->lock));
 				return -1;
 			}
-				
+
 
 			pthread_spin_unlock(&(sock->lock));
 		}

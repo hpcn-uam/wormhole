@@ -486,6 +486,8 @@ void *recv_fun(void *args)
 				//closed socket
 				pthread_spin_lock(&(sock->lock));
 				sock->closed = 1;
+				sock->to_access[current_buf] = 1;
+				sock->write_pos[current_buf] = received;
 				pthread_spin_unlock(&(sock->lock));
 				return 0;
 			}

@@ -21,8 +21,8 @@ pthread_t WH_wormThread;
 __thread int WH_errno = 0;
 
 #define WH_ERRNO_CLEAR 0
-#define WH_ERRNO_EMPTY 1
-#define WH_ERRNO_CLOSED 2
+#define WH_ERRNO_EMPTY  (1<<0) // = 1
+#define WH_ERRNO_CLOSED (1<<1) // = 2
 
 volatile uint8_t WH_bussy = 0;
 volatile uint8_t WH_halting = 0;
@@ -245,6 +245,9 @@ uint8_t WH_flushIO(void)
 			}
 		}
 	}
+
+	//volatile int k=0;
+	//while(!k);
 
 	// for each recvWorm
 	/*for (int i = 0; i < WH_myRcvWorms.numberOfWorms; i++) {
@@ -932,9 +935,11 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 				//WH_flushIO();
 			}
 		}*/
-	} while ((!c && WH_errno == WH_ERRNO_CLEAR) && ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
+	} while ((!c && (WH_errno == WH_ERRNO_CLEAR || WH_errno == WH_ERRNO_EMPTY))
+			 && ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
 
 	if (c == NULL) { //no msg found
+		fprintf(stderr, "Saliendo con Errno=%d\n", WH_errno);
 		WH_errno = WH_ERRNO_CLEAR;
 		return 0;
 	}
