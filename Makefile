@@ -160,7 +160,7 @@ dependencies/compiled/nlp:
 	cd dependencies/compiled ; wget http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip
 	cd dependencies/compiled ; unzip stanford-corenlp-full-2015-12-09.zip
 	cd dependencies/compiled ; rm stanford-corenlp-full-2015-12-09.zip
-	cd dependencies/compiled ; mv stanford* nlp
+	cd dependencies/compiled ; rm -rf nlp ; mv stanford* nlp
 	
 #Common
 Dependencies: obj lib bin SSL

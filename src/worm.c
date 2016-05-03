@@ -18,6 +18,11 @@ WormConfig WH_myConfig = {0};
 
 pthread_t WH_wormThread;
 
+__thread int WH_errno = 0;
+
+#define WH_ERRNO_CLEAR 0
+#define WH_ERRNO_EMPTY 1
+#define WH_ERRNO_CLOSED 2
 
 volatile uint8_t WH_bussy = 0;
 volatile uint8_t WH_halting = 0;
@@ -466,6 +471,7 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 		connIndex = 0;
 
 		if (wms->numberOfWorms == 0) {
+			WH_errno = WH_ERRNO_EMPTY;
 			return NULL;    // Check por si aun no se ha conectado a ningún nodo de entrada.
 		}
 	}
@@ -500,6 +506,7 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 				closedWorms = 0;
 
 			} else if (wormIndex == 0 && unclosedWorms == 0 && closedWorms > 0) {
+				WH_errno = WH_ERRNO_CLOSED;
 				return NULL;
 			}
 		}
@@ -916,7 +923,7 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 			pollCnt++;
 
 			if (pollCnt > 100000) { //TODO poner un valor menos "aleatorio"
-				pollCnt = 0;
+				break;
 
 				//struct timespec ts;
 				//ts.tv_sec = 0;
@@ -925,9 +932,10 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 				//WH_flushIO();
 			}
 		}*/
-	} while ((!c) && ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
+	} while ((!c && WH_errno == WH_ERRNO_CLEAR) && ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
 
 	if (c == NULL) { //no msg found
+		WH_errno = WH_ERRNO_CLEAR;
 		return 0;
 	}
 

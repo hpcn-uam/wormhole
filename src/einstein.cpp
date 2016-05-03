@@ -112,6 +112,8 @@ void Einstein::readConfig(const string configFileName)
 					createAnotherWorm = false;
 				}
 
+			} else {
+				id = atoi(id_string);
 			}
 
 			cerr << "[" << id << "] " << host << " " << programName << endl;
