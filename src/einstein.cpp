@@ -385,7 +385,7 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 	string executable = "";
 
 	if (copyData) {
-		executable = "scp " + wc.programName + ".tgz " + wc.host + ":~";
+		executable = "rsync -au " + wc.programName + ".tgz " + wc.host + ":~";
 
 		if (system(executable.c_str())) {
 			cerr << "error executing comand: \"" << executable << "\"" << endl;
