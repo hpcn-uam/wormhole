@@ -152,7 +152,7 @@ $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.jav
 .java.class:
 	cd $(JAVAPATH); $(JC) $(JFLAGS) $*.java
 
-$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java | dependencies/compiled/nlp
+$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class | dependencies/compiled/nlp
 	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH)  $*.java
 
 $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class: $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.java
