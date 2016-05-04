@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include "../async_inline.c"
 
-#define NUM_SMALL_MESSAGES 500000000
-#define NUM_BIG_MESSAGES 5000000
+#define NUM_SMALL_MESSAGES 50000000
+#define NUM_BIG_MESSAGES 500000
 #define SIZE_BUFFER 1024*4
 
 int main(int argc, char **argv)

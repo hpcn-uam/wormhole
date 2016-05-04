@@ -13,3 +13,6 @@
 [submodule "dependencies/repos/CoreNLP"]
 	path = dependencies/repos/CoreNLP
 	url = https://github.com/stanfordnlp/CoreNLP
+[submodule "dependencies/repos/httpDissector"]
+	path = dependencies/repos/httpDissector
+	url = git@repit.ii.uam.es:hilo/httpDissector.git

@@ -41,7 +41,7 @@ Docs: doc/html
 
 langLibs: javaLibs
 
-Examples: bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
+Examples: bin/pcapReader.tgz bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
 Jexamples: bin/testJBW.tgz bin/javaTest.tgz
 
 #Tars
@@ -101,6 +101,15 @@ bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/
 	cd $(TMPDIR); tar -czf nlp.tgz nlp
 	mv $(TMPDIR)/nlp.tgz bin/nlp.tgz
 	rm -rf $(TMPDIR)/nlp
+	
+bin/pcapReader.tgz: bin/pcapReader lib/libworm.so src/examples/pcapReader.sh
+	mkdir -p $(TMPDIR)pcapReader/lib
+	cp bin/pcapReader $(TMPDIR)pcapReader
+	cp lib/libworm.so $(TMPDIR)pcapReader/lib
+	cp src/examples/pcapReader.sh $(TMPDIR)pcapReader
+	cd $(TMPDIR);	tar -czf pcapReader.tgz pcapReader
+	mv $(TMPDIR)pcapReader.tgz bin/pcapReader.tgz
+	rm -rf $(TMPDIR)/pcapReader
 
 #Examples
 bin/testWorm: src/examples/testWorm.c
@@ -118,17 +127,8 @@ bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
 bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
 	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS) 
 	
-bin/testSendSSL: src/examples/testSendSSL.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
-
-bin/testRecvSSL: src/examples/testRecvSSL.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
-
-bin/testSendAsyncSSL: src/examples/testSendAsyncSSL.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
-
-bin/testRecvAsyncSSL: src/examples/testRecvAsyncSSL.c obj/common.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(SSLLDFLAGS) $(SSLLDFLAGS)
+bin/%: src/examples/%.c lib/libworm.so
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<  -Llib -lworm $(SSLLDFLAGS) $(SSLLDFLAGS)
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o obj/einstein.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $@ $^ $(SSLLDFLAGS)
@@ -222,7 +222,6 @@ certs/%.pem: certs/prv/%.csr certs/ca.pem certs/prv/ca.key.pem
 
 certs/ca.pem: certs/prv/ca.key.pem
 	openssl req $(CERTINFOWH) -x509 -new -nodes -key certs/prv/ca.key.pem -sha512 -days 1024  -extensions v3_ca -out certs/ca.pem
-
 
 clean:
 	rm -rf obj lib bin

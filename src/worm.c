@@ -939,7 +939,6 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 			 && ((mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
 
 	if (c == NULL) { //no msg found
-		fprintf(stderr, "Saliendo con Errno=%d\n", WH_errno);
 		WH_errno = WH_ERRNO_CLEAR;
 		return 0;
 	}
