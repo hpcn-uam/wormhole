@@ -145,6 +145,18 @@ extern "C" {
 	 */
 	uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
+	/** WH_DymRoute_route_createFuncHash
+	 * Adds a "c code" for hashing splitting.
+	 * @return 0 if OK, something else if error.
+	 */
+	uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
+
+	/** WH_DymRoute_route_countElems
+	 * Counts the following elements, for example (1 2), returns 2, but (1 (2 3)) also returns 2.
+	 * @return the number of elements.
+	 */
+	uint32_t WH_DymRoute_route_countElems(const uint8_t *const routeDescription);
+
 	/** WH_DymRoute_route
 	 * Enrute a message
 	 * @return the number of msgs sent

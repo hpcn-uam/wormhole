@@ -11,13 +11,13 @@ for FILE in "~/.bashrc" "~/.profile" "/etc/profile"
 do
     if [ -e "$FILE" ]
     then
-        . $FILE &>> /tmp/jbw.$OUTFILE.out
+        . $FILE &>> /tmp/pcapReader.$OUTFILE.out
     fi
 done
 
 #cd testJBW
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib
-echo "LIBPATH = " $LD_LIBRARY_PATH &>> /tmp/jbw.$OUTFILE.out
+echo "LIBPATH = " $LD_LIBRARY_PATH &>> /tmp/pcapReader.$OUTFILE.out
 
 ./pcapReader "$@" &>> /tmp/pcapReader.$OUTFILE.out
 

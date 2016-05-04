@@ -41,7 +41,7 @@ Docs: doc/html
 
 langLibs: javaLibs
 
-Examples: bin/pcapReader.tgz bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
+Examples: bin/pcapReader.tgz bin/httpDissector.tgz bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
 Jexamples: bin/testJBW.tgz bin/javaTest.tgz
 
 #Tars
@@ -110,6 +110,16 @@ bin/pcapReader.tgz: bin/pcapReader lib/libworm.so src/examples/pcapReader.sh
 	cd $(TMPDIR);	tar -czf pcapReader.tgz pcapReader
 	mv $(TMPDIR)pcapReader.tgz bin/pcapReader.tgz
 	rm -rf $(TMPDIR)/pcapReader
+	
+bin/httpDissector.tgz: lib/libworm.so src/examples/httpDissector.sh
+	cd dependencies ; make httpDissector
+	mkdir -p $(TMPDIR)httpDissector/lib
+	cp dependencies/repos/httpDissector/httpDissector_wormhole $(TMPDIR)httpDissector
+	cp lib/libworm.so $(TMPDIR)httpDissector/lib
+	cp src/examples/httpDissector.sh $(TMPDIR)httpDissector
+	cd $(TMPDIR);	tar -czf httpDissector.tgz httpDissector
+	mv $(TMPDIR)httpDissector.tgz bin/httpDissector.tgz
+	rm -rf $(TMPDIR)/httpDissector
 
 #Examples
 bin/testWorm: src/examples/testWorm.c

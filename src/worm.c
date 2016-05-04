@@ -887,6 +887,14 @@ const char *_WH_DymRoute_CC_Catend      =    "default:\n"
 		"ret++;"
 		"}\n";
 
+//Hash special
+const char *_WH_DymRoute_CC_Hashswitch   =    "switch(((mi->hash)\%(%u))){\n";
+const char *_WH_DymRoute_CC_Hashcase     =    "case %d :\n{ ";
+const char *_WH_DymRoute_CC_Hashbreak    =    "break;\n} ";
+const char *_WH_DymRoute_CC_Hashend      =    "default:\n"
+		"ret++;"
+		"}\n";
+
 void *_WH_DymRoute_libHandle = NULL;
 /***************************************/
 
@@ -1299,6 +1307,14 @@ uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescript
 #endif
 		return WH_DymRoute_route_createFuncCat(f, routeDescription + i, wms);
 
+	case 'h':
+	case 'H':
+		// Category Function
+#ifdef _DYM_ROUTE_DEBUG_
+		fprintf(stderr, "ROUTEDEBUG: Calling HASH...\n");
+#endif
+		return WH_DymRoute_route_createFuncHash(f, routeDescription + i, wms);
+
 	default:
 #ifdef _DYM_ROUTE_DEBUG_
 		fprintf(stderr, "ROUTEDEBUG: Unexpected routing function.");
@@ -1450,6 +1466,121 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
 
 	fprintf(f, "%s", _WH_DymRoute_CC_Catend);
 	return ret;
+}
+
+/* Name WH_DymRoute_route_createFuncHash
+ * Adds a "c code"  for hashing splitting.
+ * Return 0 if OK, something else if error.
+ * Used Constants:
+		TODO
+ */
+uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+{
+	uint8_t ret = 0;
+	int16_t parentesys = 0;
+	uint16_t i = 0;
+
+	uint16_t myHash = 0;
+
+	unsigned numOptions = WH_DymRoute_route_countElems(routeDescription);
+
+	fprintf(f, _WH_DymRoute_CC_Hashswitch, numOptions);
+
+	while (routeDescription[i] != '\0') {
+		if (routeDescription[i] == ')') {
+			parentesys--;
+
+			if (parentesys < 0) {
+				break;
+			}
+
+		} else if (routeDescription[i] == '(') {
+
+			if (parentesys == 0) {
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Hash switching: %d\n", myCat);
+#endif
+				fprintf(f, _WH_DymRoute_CC_Hashcase, myHash);
+				myHash++;
+
+			} else if (parentesys == 1) {
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
+#endif
+				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+
+				fprintf(f, "%s", _WH_DymRoute_CC_Hashbreak);
+			}
+
+			parentesys++;
+		}
+
+		i++;
+	}
+
+	fprintf(f, "%s", _WH_DymRoute_CC_Hashend);
+	return ret;
+}
+
+/** WH_DymRoute_route_countElems
+ * Counts the following elements, for example (1 2), returns 2, but (1 (2 3)) also returns 2.
+ * @return the number of elements.
+ */
+uint32_t WH_DymRoute_route_countElems(const uint8_t *const routeDescription)
+{
+	uint32_t numElems = 0;
+	uint32_t parentesys = 1;
+	uint8_t *pointer = (uint8_t *) routeDescription;
+
+	if (pointer[0] == '(') {
+		pointer++;
+	}
+
+	while (parentesys) {
+		switch (pointer[0]) {
+		case '(':
+			if (parentesys == 1) {
+				numElems++;
+			}
+
+			parentesys++;
+			break;
+
+		case ')':
+			parentesys--;
+			break;
+
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+
+			if (parentesys == 1) {
+				numElems++;
+
+				while (pointer[0] >= '0' && pointer[0] <= '9') {
+					pointer++;
+				}
+			}
+
+			break;
+
+		default:
+			break;
+
+		}
+
+		pointer++;
+	}
+
+
+	return numElems;
 }
 
 /** WH_DymRoute_invalidate

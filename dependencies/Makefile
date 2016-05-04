@@ -34,6 +34,11 @@ repos/hptimelib/README.md:
 #LibreSSL
 LibreSSL: compiled/libressl/usr
 
+httpDissector: repos/httpDissector/httpDissector_wormhole
+
+repos/httpDissector/httpDissector_wormhole: repos/httpDissector/httpDissector.c
+	cd repos/httpDissector ; make
+
 export LIBSSLCFLAGS='-O3 -fPIC'
 compiled/libressl: repos/libressl/Makefile | compiled
 	mkdir -p compiled compiled/libressl
