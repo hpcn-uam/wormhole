@@ -106,20 +106,20 @@ bin/pcapReader.tgz: bin/pcapReader lib/libworm.so src/examples/pcapReader.sh
 	mkdir -p $(TMPDIR)pcapReader/lib
 	cp bin/pcapReader $(TMPDIR)pcapReader
 	cp lib/libworm.so $(TMPDIR)pcapReader/lib
-	cp src/examples/pcapReader.sh $(TMPDIR)pcapReader
+	cp src/examples/pcapReader.sh $(TMPDIR)pcapReader/run.sh
 	cd $(TMPDIR);	tar -czf pcapReader.tgz pcapReader
 	mv $(TMPDIR)pcapReader.tgz bin/pcapReader.tgz
-	rm -rf $(TMPDIR)/pcapReader
+	rm -rf $(TMPDIR)pcapReader
 	
 bin/httpDissector.tgz: lib/libworm.so src/examples/httpDissector.sh
 	cd dependencies ; make httpDissector
 	mkdir -p $(TMPDIR)httpDissector/lib
-	cp dependencies/repos/httpDissector/httpDissector_wormhole $(TMPDIR)httpDissector
+	cp dependencies/repos/httpDissector/httpDissector_wormhole $(TMPDIR)httpDissector/httpDissector
 	cp lib/libworm.so $(TMPDIR)httpDissector/lib
-	cp src/examples/httpDissector.sh $(TMPDIR)httpDissector
+	cp src/examples/httpDissector.sh $(TMPDIR)httpDissector/run.sh
 	cd $(TMPDIR);	tar -czf httpDissector.tgz httpDissector
 	mv $(TMPDIR)httpDissector.tgz bin/httpDissector.tgz
-	rm -rf $(TMPDIR)/httpDissector
+	rm -rf $(TMPDIR)httpDissector
 
 #Examples
 bin/testWorm: src/examples/testWorm.c

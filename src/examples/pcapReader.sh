@@ -19,7 +19,10 @@ done
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib
 echo "LIBPATH = " $LD_LIBRARY_PATH &>> /tmp/pcapReader.$OUTFILE.out
 
+
+date &> /tmp/pcapReader.time
 ./pcapReader "$@" &>> /tmp/pcapReader.$OUTFILE.out
+date &>> /tmp/pcapReader.time
 
 #sleep 60
 #rm -f /tmp/*c /tmp/*so /tmp/*out;

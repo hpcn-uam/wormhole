@@ -19,7 +19,9 @@ done
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib
 echo "LIBPATH = " $LD_LIBRARY_PATH &>> /tmp/httpDissector.$OUTFILE.out
 
-./httpDissector -i prueba &>> /tmp/httpDissector.$OUTFILE.out
+date &> /tmp/httpDissector.time
+./httpDissector -i prueba --raw &>> /tmp/httpDissector.$OUTFILE.out
+date &>> /tmp/httpDissector.time
 
 #sleep 60
 #rm -f /tmp/*c /tmp/*so /tmp/*out;

@@ -1479,6 +1479,7 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 	uint8_t ret = 0;
 	int16_t parentesys = 0;
 	uint16_t i = 0;
+	uint16_t nextNode = 0;
 
 	uint16_t myHash = 0;
 
@@ -1497,22 +1498,47 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 		} else if (routeDescription[i] == '(') {
 
 			if (parentesys == 0) {
-#ifdef _DYM_ROUTE_DEBUG_
-				fprintf(stderr, "ROUTEDEBUG: Hash switching: %d\n", myCat);
-#endif
 				fprintf(f, _WH_DymRoute_CC_Hashcase, myHash);
-				myHash++;
 
-			} else if (parentesys == 1) {
 #ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: Hash switching: %d\n", myHash);
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
 				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
 
-				fprintf(f, "%s", _WH_DymRoute_CC_Hashbreak);
+				myHash++;
+				fprintf(f, _WH_DymRoute_CC_Hashbreak, myHash);
 			}
 
 			parentesys++;
+
+		} else if (parentesys == 0 && (routeDescription[i] >= '0' && routeDescription[i] <= '9')) {
+			nextNode = atoi((char *)(routeDescription + i));
+
+			while (routeDescription[i] >= '0' && routeDescription[i] <= '9') {
+				i++;
+			}
+
+			DestinationWorm *worm = WH_addWorm(wms, nextNode, 1);
+
+			if (worm) {
+
+				fprintf(f, _WH_DymRoute_CC_Hashcase, myHash);
+				//RR
+				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
+				fprintf(f, "%s", _WH_DymRoute_CC_send);
+
+#ifdef _DYM_ROUTE_DEBUG_
+				fprintf(stderr, "ROUTEDEBUG: %d in Hash switch %lu\n", nextNode, myHash);
+#endif
+				fprintf(f, "%s", _WH_DymRoute_CC_Hashbreak);
+				myHash++;
+
+			} else {
+				return 76;    //some random error code
+			}
+
+			i--;
 		}
 
 		i++;
@@ -1567,9 +1593,15 @@ uint32_t WH_DymRoute_route_countElems(const uint8_t *const routeDescription)
 				while (pointer[0] >= '0' && pointer[0] <= '9') {
 					pointer++;
 				}
+
+				pointer --;
 			}
 
 			break;
+
+		case '\0':
+			fprintf(stderr, "ERROR routing counting %d\n", numElems);
+			return numElems; //ERROR!
 
 		default:
 			break;

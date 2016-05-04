@@ -67,7 +67,6 @@ int main(int argc, char **argv)
 	type.type = ARRAY;
 	type.ext.arrayType = UINT8;
 	mi.type = &type;
-	mi.category = 1;
 
 	while (flag) {
 		if (fread(header, sizeof(pcaprec_hdr_tJZ), 1, pcap) <= 0) {
@@ -79,6 +78,8 @@ int main(int argc, char **argv)
 			fprintf(stderr, "[ERROR]: half packet readed!!!\n");
 			break;
 		}
+
+		mi.hash = data[14 + 19];
 
 		mi.size = header->incl_len;
 
