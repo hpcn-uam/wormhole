@@ -91,7 +91,7 @@ bin/javaTest.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/exam
 	mv $(TMPDIR)/javaTest.tgz bin/javaTest.tgz
 	rm -rf $(TMPDIR)/javaTest
 	
-bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/javarun.sh dependencies/compiled/data/data.txt
+bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/javarun.sh dependencies/compiled/data/data.txt src/langApis/Java/edu/stanford/nlp/sentiment/SentimentPipeline.class
 	mkdir -p $(TMPDIR)/nlp/lib
 	cp lib/libjavaworm.* $(TMPDIR)/nlp/lib #only for java
 	cp lib/libworm.so $(TMPDIR)/nlp/lib
@@ -151,9 +151,14 @@ $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.jav
 
 .java.class:
 	cd $(JAVAPATH); $(JC) $(JFLAGS) $*.java
-	
+
 $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java | dependencies/compiled/nlp
 	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH)  $*.java
+
+$(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class: $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.java
+	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH) -sourcepath "dependencies/repos/CoreNLP/src/" $*.java
+	cd $(JAVAPATH) ; jar uf ../../../dependencies/compiled/nlp/stanford-corenlp-3.6.0.jar edu/stanford/nlp/sentiment/SentimentPipeline*class
+	
 	
 dependencies/compiled/nlp:
 	mkdir -p dependencies/compiled
