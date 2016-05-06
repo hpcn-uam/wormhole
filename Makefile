@@ -127,16 +127,16 @@ bin/testWorm: src/examples/testWorm.c
 
 bin/testLisp: src/examples/testLisp.c
 	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
-	
+
 bin/testBW: src/examples/testBW.c
 	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
 
 bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
-	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS) 
+	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS)
 
 bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
-	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS) 
-	
+	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS)
+
 bin/%: src/examples/%.c lib/libworm.so
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<  -Llib -lworm $(SSLLDFLAGS) $(SSLLDFLAGS)
 
@@ -155,7 +155,7 @@ lib/libjavaworm.jar: $(CLASSFILES)
 
 $(JAVAPATH)es_hpcn_wormhole_Worm.h: $(JAVAPATH)es/hpcn/wormhole/Worm.java
 	cd $(JAVAPATH) ; rm -f es_hpcn_wormhole_Worm.h ; javah es.hpcn.wormhole.Worm
-	
+
 $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.java
 	cd $(JAVAPATH) ; rm -f es_hpcn_wormhole_Einstein.h ; javah es.hpcn.wormhole.Einstein
 
@@ -168,15 +168,15 @@ $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/te
 $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class: $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.java
 	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH) -sourcepath "dependencies/repos/CoreNLP/src/" $*.java
 	cd $(JAVAPATH) ; jar uf ../../../dependencies/compiled/nlp/stanford-corenlp-3.6.0.jar edu/stanford/nlp/sentiment/SentimentPipeline*class
-	
-	
+
+
 dependencies/compiled/nlp:
 	mkdir -p dependencies/compiled
 	cd dependencies/compiled ; wget http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip
 	cd dependencies/compiled ; unzip stanford-corenlp-full-2015-12-09.zip
 	cd dependencies/compiled ; rm stanford-corenlp-full-2015-12-09.zip
 	cd dependencies/compiled ; rm -rf nlp ; mv stanford* nlp
-	
+
 #Common
 Dependencies: obj lib bin SSL
 
@@ -188,7 +188,7 @@ bin/einstein: src/examples/testEinstein.cpp lib/libworm.so
 
 obj:
 	mkdir -p obj
-	
+
 certs/prv:
 	mkdir -p certs/prv
 
@@ -218,8 +218,8 @@ obj/%.o: src/%.c $(INCLUDES) | Dependencies
 SSL: certificates dependencies/compiled
 certificates: certs/ca.pem certs/worm.pem certs/einstein.pem
 
-export CERTINFOCA=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.ca/CN=www.wormhole.org" 
-export CERTINFOWH=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.other/CN=www.wormhole.org" 
+export CERTINFOCA=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.ca/CN=www.wormhole.org"
+export CERTINFOWH=-subj "/C=ES/ST=Madrid/L=Madrid/O=WormHole.other/CN=www.wormhole.org"
 
 certs/prv/%.key.pem: | certs/prv
 	openssl ecparam -name brainpoolP512r1 -genkey -noout -out $@ || openssl ecparam -name secp521r1 -genkey -noout -out $@
