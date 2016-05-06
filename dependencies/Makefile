@@ -41,7 +41,7 @@ repos/httpDissector/httpDissector_wormhole: repos/httpDissector/httpDissector.c
 
 export LIBSSLCFLAGS='-O3 -fPIC'
 compiled/libressl: repos/libressl/Makefile | compiled
-	mkdir -p compiled compiled/libressl
+	mkdir -p compiled/libressl
 
 compiled/libressl/usr: compiled/libressl
 	cd repos/libressl; make install DESTDIR=$(CURRDIR)/compiled/libressl
@@ -65,3 +65,4 @@ clean:
 	git submodule foreach git clean -f -d
 	rm -rf compiled
 	cd repos/libressl ; make clean #clean libressl
+	cd repos/libressl ; rm -rf openbsd configure Makefile

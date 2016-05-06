@@ -2,7 +2,7 @@
 #include <worm_private.h>
 
 #include "async_inline.c"
-//#define _WORMLIB_DEBUG_
+#define _WORMLIB_DEBUG_
 //#define _WORMLIB_DEBUG_FLUSH_
 /*
 *Global variables
@@ -203,7 +203,9 @@ uint8_t WH_halt(void)
 	WH_flushIO();
 
 	//close all output connections
-	for (size_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
+	size_t numworms = WH_myDstWorms.numberOfWorms;
+
+	for (size_t i = 0; i < numworms; i++) {
 #ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "[WH]: asking for free worm data...%lu %lu\n", WH_myDstWorms.numberOfWorms, i);
 #endif
