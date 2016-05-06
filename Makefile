@@ -176,6 +176,7 @@ dependencies/compiled/nlp:
 	cd dependencies/compiled ; unzip stanford-corenlp-full-2015-12-09.zip
 	cd dependencies/compiled ; rm stanford-corenlp-full-2015-12-09.zip
 	cd dependencies/compiled ; rm -rf nlp ; mv stanford* nlp
+	cd dependencies/repos/CoreNLP ; ../../compiled/gradle/bin/gradle assembleDist
 
 #Common
 Dependencies: obj lib bin SSL

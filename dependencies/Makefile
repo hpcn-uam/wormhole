@@ -18,7 +18,7 @@ unexport CFLAGS
 unexport CXXFLAGS
 unexport LDFLAGS
 
-all: LibreSSL
+all: LibreSSL GRADLE
 
 #Common
 compiled:
@@ -33,6 +33,15 @@ repos/hptimelib/README.md:
 
 #LibreSSL
 LibreSSL: compiled/libressl/usr
+
+GRADLE: compiled/gradle
+
+compiled/gradle:
+	cd compiled ; rm -rf gradle
+	cd compiled ; wget https://services.gradle.org/distributions/gradle-2.13-bin.zip
+	cd compiled ; unzip *.zip
+	cd compiled ; rm *.zip
+	cd compiled ; mv gradle* gradle
 
 httpDissector: repos/httpDissector/httpDissector_wormhole
 
