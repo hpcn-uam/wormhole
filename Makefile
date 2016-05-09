@@ -182,7 +182,7 @@ dependencies/compiled/nlp:
 Dependencies: obj lib bin SSL
 
 dependencies/compiled forceCompileDependencies:
-	cd dependencies; $(MAKE)
+	cd dependencies; $(MAKE) -j9
 
 bin/einstein: src/examples/testEinstein.cpp lib/libworm.so
 	$(CXX) $(CXXFLAGS) -o $@ $<  -Llib -lworm $(LDFLAGS)
