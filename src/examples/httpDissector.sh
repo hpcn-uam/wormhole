@@ -20,6 +20,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib
 echo "LIBPATH = " $LD_LIBRARY_PATH &>> /tmp/httpDissector.$OUTFILE.out
 
 date &> /tmp/httpDissector.time
+#valgrind --vgdb=yes --vgdb-error=0 --track-origins=yes \
 ./httpDissector -i prueba --raw &>> /tmp/httpDissector.$OUTFILE.out
 date &>> /tmp/httpDissector.time
 
