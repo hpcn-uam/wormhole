@@ -46,13 +46,13 @@ public class BandwithMeter
 {
 
 	private static final long numMsg = 5000;
-	private static final long msgSize = (1048576 / 2);
+	private static final long msgSize = (64 / 2);
 
 	public static class ExclamationBolt extends BaseRichBolt
 	{
 		OutputCollector _collector;
 
-		private static long printIter = 800;//8000000;
+		private static long printIter = 8000000;
 		private long num = 0;
 		private PrintWriter writer;
 		private long startTime;

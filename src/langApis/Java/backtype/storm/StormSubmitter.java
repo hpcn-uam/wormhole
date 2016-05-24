@@ -87,10 +87,16 @@ public class StormSubmitter
 					me.prepare(null, null, collector);
 
 					Tuple t = new Tuple();
-					String msg = String.join("", Collections.nCopies(1024 * 1024, String.valueOf("x")));
+					//String msg = String.join("", Collections.nCopies(1024 * 1024, String.valueOf("x")));
 
 					while (true) {
-						worm.recv(msg);
+						//worm.recv(msg);
+						String msg = worm.recv();
+
+						if (msg == null) {
+							break;
+						}
+
 						t.setWHString(msg);
 						me.execute(t);
 					}

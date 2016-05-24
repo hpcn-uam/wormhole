@@ -12,7 +12,7 @@ WormHole Streaming Library is divided into 2 differnt parts: Einsteins and Worms
 #### Einstein
 There is planned that there would be more than Einstein instence.
 The master instance, ensures that the topology described is running at it should do. This means: Deploy new worms, check for worm over/underload, check if a worm has stopped, etc.
-Also, the master Einstein instance "heart-beat" the other instances telling any modification in the deployed topology. So, if something goes wrong with the master Einstein, other instance can take the control of the topology.
+Also, the master Einstein instance "heart-beat" the other instances telling any modification in the deployed topology. So, if something goes wrong with the master Einstein, another instance can take the control of the topology.
 
 To run a topology, we have to start Einstein in the following way:
 
@@ -20,16 +20,26 @@ To run a topology, we have to start Einstein in the following way:
 Einstein <Configuration_File> <Listen_IP>
 ```
 
-The Topology is defined have the following fields
+A Topology is defined by a group of worm and their interconnections.
+Each worm, is also defined by 2 different lines: a General configuration line and a Output Topology.
+The first line (general conf.) is composed by the following item:
 - `ID`                  [**Mandatory**] : The Worm ID. It is accepted to provide a range (like 1-5), so 5 worms(1,2,3,4,5) would be deployed **WITH THE SAME** configuration, but diferent ID.
 - `Program_Name`        [**Mandatory**] : [The program name](#how-worms-are-deployed)
 - `Deploy_IP`           [**Mandatory**] : The IP address where the worm would be deployed
 - `Affinity_hex_mask`   [**Mandatory**] : The core-affinity of the worm. -1 means that there is no affinity
 - `SSL`                 [**Optional**]  : If SSL is present in a Worm definition, that worm would encript thougt TLS1.2 the communications **with any other worm** (input and output). Also, SSL would check if is an authorized worm.
 
+The second line has a tab. in the begining. Then a S-Expression defines how the routing would be. There are 4 possible operators:
+- `DUP`    : This operator duplicates each message between each following item. If no operator is def . Example: `(DUP 1 2 3)`
+- `RR`     : This operator _ . Example: `(RR 1 2 3)`
+- `CAT`    : This operator _ . Example: `(CAT (1.(1 2)) (5.(6 7)))`
+- `HASH`   : This operator _ . Example: `(HASH 1 2 3)`
+
+
 A configuration file looks like:
 ```
 <ID> <Program_Name> <Deploy_IP> <Affinity_hex_mask (-1 means no affinity)> [SSL]
+	(Cat (1.(DUP 1 2 3)) (2.(RR 1 2 (HASH 3 4))))
 ```
 
 ###### How worms are deployed
