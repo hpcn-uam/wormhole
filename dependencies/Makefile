@@ -46,7 +46,7 @@ compiled/gradle:
 httpDissector: repos/httpDissector/httpDissector_wormhole
 
 repos/httpDissector/httpDissector_wormhole: repos/httpDissector/httpDissector.c
-	cd repos/httpDissector ; make
+	cd repos/httpDissector ; make httpDissector_wormhole
 
 export LIBSSLCFLAGS='-O3 -fPIC'
 compiled/libressl: repos/libressl/Makefile | compiled
