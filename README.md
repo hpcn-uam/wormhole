@@ -30,10 +30,10 @@ The first line (general conf.) is composed by the following item:
 - `SSL`                 [**Optional**]  : If SSL is present in a Worm definition, that worm would encript thougt TLS1.2 the communications **with any other worm** (input and output). Also, SSL would check if is an authorized worm.
 
 The second line has a tab. in the begining. Then a S-Expression defines how the routing would be. There are 4 possible operators:
-- `DUP`    : This operator duplicates each message between each following item. If no operator is def . Example: `(DUP 1 2 3)`
-- `RR`     : This operator _ . Example: `(RR 1 2 3)`
-- `CAT`    : This operator _ . Example: `(CAT (1.(1 2)) (5.(6 7)))`
-- `HASH`   : This operator _ . Example: `(HASH 1 2 3)`
+- `DUP`    : This operator duplicates each message between each following item. If no operator is defined, DUP operator would be supposed. Example: `(DUP 1 2 3)`
+- `RR`     : This operator simply uses roundrobin algorithm. Example: `(RR 1 2 3)`
+- `CAT`    : This operator check the fild category, and send acordly to it. Example: `(CAT (1.(1 2)) (5.(6 7)))`
+- `HASH`   : This operator check the field hash, and perform a modulus of the numbrer of outputs in order to define the output. Example: `(HASH 1 2 3)`
 
 
 A configuration file looks like:
