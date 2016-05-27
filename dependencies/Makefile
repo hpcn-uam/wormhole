@@ -18,7 +18,7 @@ unexport CFLAGS
 unexport CXXFLAGS
 unexport LDFLAGS
 
-all: LibreSSL GRADLE
+all: LibreSSL GRADLE HPTLib
 
 #Common
 compiled:
@@ -35,6 +35,11 @@ repos/hptimelib/README.md:
 LibreSSL: compiled/libressl/usr
 
 GRADLE: compiled/gradle
+
+HPTLib: repos/hptimelib/lib/hptl.a
+
+repos/hptimelib/lib/hptl.a:
+	cd repos/hptimelib; make
 
 compiled/gradle:
 	cd compiled ; rm -rf gradle

@@ -7,6 +7,11 @@ extern "C" {
 
 #include "common.h"
 
+// Usable defines:
+#define _WORMLIB_DEBUG_
+//#define _DYM_ROUTE_DEBUG_
+#define _WORMLIB_STATISTICS_
+
 	enum DataType {
 		CUSTOM = -3, COMPOUND, STRING, ARRAY, INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64
 	};
@@ -33,6 +38,14 @@ extern "C" {
 		size_t numInputTypes;
 		ConnectionDataType *inputTypes;
 	} WormConfig;
+
+#ifdef _WORMLIB_STATISTICS_
+	typedef struct {
+		uint64_t totalIO;
+		uint64_t lastIO;
+		uint64_t lastCheck; //hptl_t
+	} ConnectionStatistics;
+#endif
 
 	/** WH_setup_types
 	 * Setups the available types of this Worm.

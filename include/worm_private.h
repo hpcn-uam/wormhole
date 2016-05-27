@@ -20,6 +20,9 @@ extern "C" {
 	typedef struct {
 		AsyncSocket socket;
 		ConnectionDataType type;
+#ifdef _WORMLIB_STATISTICS_
+		ConnectionStatistics stats;
+#endif
 	} Connection;
 
 	typedef struct {

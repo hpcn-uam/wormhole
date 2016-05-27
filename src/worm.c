@@ -2,7 +2,6 @@
 #include <worm_private.h>
 
 #include "async_inline.c"
-#define _WORMLIB_DEBUG_
 //#define _WORMLIB_DEBUG_FLUSH_
 /*
 *Global variables
@@ -90,6 +89,14 @@ uint8_t WH_init(void)
 #ifdef _WORMLIB_DEBUG_
 		perror("[WH]: Error connecting to Einstein");
 #endif
+		return 1;
+	}
+
+	if (hptl_init(NULL)) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Error Initializing hptl");
+#endif
+		close(WH_einsConn.socket);
 		return 1;
 	}
 
@@ -688,10 +695,12 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		return 1;
 	}
 
-	Connection conntmp;
-	conntmp.type = *type;
-	conntmp.socket = (AsyncSocket) {
-		0
+	Connection conntmp = {
+		.type = *type,
+		.socket = {0}
+#ifdef _WORMLIB_DEBUG_
+		, .stats = {.totalIO = 0, .lastIO = 0, .lastCheck = hptl_get()}
+#endif
 	};
 
 	if (tcp_message_ssend(socket, &conntmp, sizeof(conntmp))) { //DstWorm
@@ -850,7 +859,6 @@ uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const Connec
 /************************************************************
 	Dynamic Routing Library
 *************************************************************/
-//#define _DYM_ROUTE_DEBUG_
 /***************************************/
 extern uint8_t _binary_obj_structures_h_start;
 extern uint8_t _binary_obj_structures_h_end;
