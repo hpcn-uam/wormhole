@@ -353,7 +353,9 @@ void *WH_thread(void *arg)
 
 				} else {
 					if (WH_TH_checkCtrlMsgType(type, WH_einsConn.socket)) {
-						//connection lost with Einstein, Reconnect!!
+						//TODO: connection lost with Einstein, Reconnect!!
+						fputs("EINSTEIN connection lost...! Forced Shutdown\n", stderr);
+						exit(1);
 					}
 				}
 			}
@@ -402,6 +404,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 		}
 
 	default:
+		ret = 1; //Error!
 		break;
 	}
 

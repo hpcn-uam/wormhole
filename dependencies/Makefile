@@ -38,7 +38,7 @@ GRADLE: compiled/gradle
 
 HPTLib: repos/hptimelib/lib/hptl.a
 
-repos/hptimelib/lib/hptl.a:
+repos/hptimelib/lib/hptl.a: | initRepositories
 	cd repos/hptimelib; make
 
 compiled/gradle:
