@@ -1,8 +1,10 @@
 #define _GNU_SOURCE //TODO find a better and standar way of set affinity
 #include <worm_private.h>
 
+#include <sched.h>
+//#undef _GNU_SOURCE
+
 #include "async_inline.c"
-//#define _WORMLIB_DEBUG_FLUSH_
 /*
 *Global variables
 */
@@ -63,9 +65,6 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
 	return 0;
 }
 
-#include <sched.h>
-//#undef _GNU_SOURCE
-
 /* Name WH_init
 * Starts the WormHole Library
 * Return 0 if OK, something else if error.
@@ -83,12 +82,22 @@ uint8_t WH_init(void)
 	WH_einsConn.Port = atoi(getenv("EINSTEIN_PORT"));
 	WH_einsConn.IP = inet_addr(getenv("EINSTEIN_IP"));
 
-	WH_einsConn.socket = tcp_connect_to(getenv("EINSTEIN_IP"), WH_einsConn.Port);
+	int EinsteinSocket = tcp_connect_to(getenv("EINSTEIN_IP"), WH_einsConn.Port);
 
-	if (WH_einsConn.socket == -1) {
+	if (EinsteinSocket == -1) {
 #ifdef _WORMLIB_DEBUG_
 		perror("[WH]: Error connecting to Einstein");
 #endif
+		return 1;
+	}
+
+	WH_einsConn.socket = tcp_upgrade2syncSocket(EinsteinSocket, NOSSL, NULL);
+
+	if (WH_einsConn.socket == NULL) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Error connecting to Einstein");
+#endif
+		close(EinsteinSocket);
 		return 1;
 	}
 
@@ -96,7 +105,7 @@ uint8_t WH_init(void)
 #ifdef _WORMLIB_DEBUG_
 		perror("[WH]: Error Initializing hptl");
 #endif
-		close(WH_einsConn.socket);
+		tcp_sclose(WH_einsConn.socket);
 		return 1;
 	}
 
@@ -108,7 +117,7 @@ uint8_t WH_init(void)
 	* ((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))) = htons(WH_myId);
 
 	// Send hello message
-	if (tcp_message_send(WH_einsConn.socket, hellomsg, hellomsgSize) != 0) {
+	if (tcp_message_ssend(WH_einsConn.socket, hellomsg, hellomsgSize) != 0) {
 #ifdef _WORMLIB_DEBUG_
 		perror("[WH]: Error sending HELLO to Einstein");
 #endif
@@ -116,9 +125,41 @@ uint8_t WH_init(void)
 	}
 
 	// Receive WormSetup
+
+//Check ctrl msg
+	if (tcp_message_srecv(WH_einsConn.socket, msgType, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Error recv myconfig.response from Einstein");
+#endif
+		return 1;
+	}
+
+	if (*msgType == STARTSSL) {
+		if (syncSocketStartSSL(WH_einsConn.socket, CLISSL, NULL)) {
+#ifdef _WORMLIB_DEBUG_
+			perror("[WH]: Error stablishing SSL with Einstein");
+#endif
+			return 1;
+		}
+
+		if (tcp_message_srecv(WH_einsConn.socket, msgType, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
+#ifdef _WORMLIB_DEBUG_
+			perror("[WH]: Error recv myconfig.response from Einstein");
+#endif
+			return 1;
+		}
+	}
+
+	if (*msgType != SETUP) {
+#ifdef _WORMLIB_DEBUG_
+		perror("[WH]: Unexpected message from einstein");
+#endif
+		return 1;
+	}
+
 	uint8_t *wormSetupMsg = (uint8_t *) &WH_mySetup;
 
-	if (tcp_message_recv(WH_einsConn.socket, wormSetupMsg, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
+	if (tcp_message_srecv(WH_einsConn.socket, wormSetupMsg, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
 #ifdef _WORMLIB_DEBUG_
 		perror("[WH]: Error recv myconfig from Einstein");
 #endif
@@ -128,7 +169,7 @@ uint8_t WH_init(void)
 	// Receive connectionDescription
 	WH_mySetup.connectionDescription = calloc(WH_mySetup.connectionDescriptionLength + 1, sizeof(char));
 
-	if (tcp_message_recv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) != WH_mySetup.connectionDescriptionLength) {
+	if (tcp_message_srecv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) != WH_mySetup.connectionDescriptionLength) {
 #ifdef _WORMLIB_DEBUG_
 		perror("[WH]: Error recv connectionDescription from Einstein");
 #endif
@@ -175,12 +216,12 @@ uint8_t WH_init(void)
 	ts.tv_sec  =   0;
 	ts.tv_usec = 50000;
 
-	if (setsockopt(WH_einsConn.socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&ts,
+	if (setsockopt(WH_einsConn.socket->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&ts,
 				   sizeof(struct timeval)) < 0) {
 		fputs("[TH] setsockopt failed [1]\n", stderr);
 	}
 
-	if (setsockopt(WH_einsConn.socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&ts,
+	if (setsockopt(WH_einsConn.socket->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&ts,
 				   sizeof(struct timeval)) < 0) {
 		fputs("[TH] setsockopt failed [2]\n", stderr);
 	}
@@ -197,7 +238,7 @@ uint8_t WH_halt(void)
 	//TODO fix this function, in order to orderly shutdown
 	enum ctrlMsgType type = HALT;
 
-	if (tcp_message_send(WH_einsConn.socket, &type, sizeof(type))) {
+	if (tcp_message_ssend(WH_einsConn.socket, &type, sizeof(type))) {
 		return 1;
 	}
 
@@ -307,23 +348,12 @@ void *WH_thread(void *arg)
 
 			//Lectura desde Einstein
 			if (!WH_bussy) {
-				if (tcp_message_recv(WH_einsConn.socket, &type, sizeof(type), 0) != sizeof(type)) {
+				if (tcp_message_srecv(WH_einsConn.socket, &type, sizeof(type), 0) != sizeof(type)) {
 					continue;
 
 				} else {
-					switch (type) {
-					case HALT:
-						fputs("Halting Worm by EINSTEIN...\n", stderr);
-
-						if (WH_halting) {
-							WH_halting = 0;
-
-						} else {
-							exit(0);
-						}
-
-					default:
-						continue;
+					if (WH_TH_checkCtrlMsgType(type, WH_einsConn.socket)) {
+						//connection lost with Einstein, Reconnect!!
 					}
 				}
 			}
@@ -351,6 +381,32 @@ void *WH_thread(void *arg)
 	return NULL;
 }
 
+/** WH_TH_checkCtrlMsgType
+ * check a control message type from Einstein
+ * @return 0 if ok, -1 if error, and 1 if socket wont receive more control data.
+ */
+int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
+{
+	int ret = 0;
+	UNUSED(socket);
+
+	switch (type) {
+	case HALT:
+		fputs("Halting Worm by EINSTEIN...\n", stderr);
+
+		if (WH_halting) {
+			WH_halting = 0;
+
+		} else {
+			exit(0);
+		}
+
+	default:
+		break;
+	}
+
+	return  ret;
+}
 
 /** WH_TH_checkMsgType
  * check the message type
@@ -738,15 +794,15 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 {
 	enum ctrlMsgType ctrlMsg = QUERYID;
 
-	if (tcp_message_send(WH_einsConn.socket, (uint8_t *) &ctrlMsg, sizeof(enum ctrlMsgType)) != 0) {
+	if (tcp_message_ssend(WH_einsConn.socket, (uint8_t *) &ctrlMsg, sizeof(enum ctrlMsgType)) != 0) {
 		return 1;
 	}
 
-	if (tcp_message_send(WH_einsConn.socket, (void *) &wormId, sizeof(uint16_t)) != 0) {
+	if (tcp_message_ssend(WH_einsConn.socket, (void *) &wormId, sizeof(uint16_t)) != 0) {
 		return 1;
 	}
 
-	if (tcp_message_recv(WH_einsConn.socket, (uint8_t *) &ctrlMsg, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
+	if (tcp_message_srecv(WH_einsConn.socket, (uint8_t *) &ctrlMsg, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
 		return 1;
 	}
 
@@ -754,7 +810,7 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 		return 1;
 	}
 
-	if (tcp_message_recv(WH_einsConn.socket, (uint8_t *) ws, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
+	if (tcp_message_srecv(WH_einsConn.socket, (uint8_t *) ws, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
 		return 1;
 	}
 

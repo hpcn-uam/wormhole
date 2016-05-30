@@ -334,6 +334,12 @@ int EinsConn::setupWorm()
 	// Send configuration message
 	const void *wormSetup = static_cast<const void *>(& (this->connections.at(wormId)->ws));
 
+	*msgType = SETUP;
+
+	if (tcp_message_send(currentWormSocket, msgType, sizeof(enum ctrlMsgType)) != 0) {
+		throw std::runtime_error("Error sending SETUP message");
+	}
+
 	if (tcp_message_send(currentWormSocket, wormSetup, sizeof(WormSetup)) != 0) {
 		throw std::runtime_error("Error sending message");
 	}

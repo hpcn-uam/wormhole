@@ -14,7 +14,7 @@ extern "C" {
 	typedef struct {
 		uint16_t Port;
 		uint32_t IP; //TODO fix para ipv6
-		int socket;
+		SyncSocket *socket;
 	} Worm2EinsConn;
 
 	typedef struct {
@@ -82,6 +82,12 @@ extern "C" {
 	 * A worm Thread listening for info/petitions.
 	 */
 	void *WH_thread(void *arg);
+
+	/** WH_TH_checkCtrlMsgType
+	 * check a control message type from Einstein
+	 * @return 0 if ok, -1 if error, and 1 if socket wont receive more control data.
+	 */
+	int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket);
 
 	/** WH_TH_checkMsgType
 	 * check the message type
