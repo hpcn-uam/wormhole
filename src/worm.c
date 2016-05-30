@@ -390,11 +390,20 @@ void *WH_thread(void *arg)
 int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 {
 	int ret = 0;
-	UNUSED(socket);
+	enum ctrlMsgType response;
 
 	switch (type) {
+	case PING:
+		response = PONG;
+
+		if (tcp_message_ssend(socket, &response, sizeof(response))) {
+			perror("[WH]: Pong error\n");
+		}
+
+		break;
+
 	case HALT:
-		fputs("Halting Worm by EINSTEIN...\n", stderr);
+		fputs("[WH]: Halting Worm by EINSTEIN...\n", stderr);
 
 		if (WH_halting) {
 			WH_halting = 0;
@@ -402,6 +411,8 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 		} else {
 			exit(0);
 		}
+
+		break;
 
 	default:
 		ret = 1; //Error!
