@@ -30,6 +30,7 @@ test_commonh_test_AsyncSSL:
 
 before_script:
     - killall -9 testSendAsync testRecvAsync testRecvSSL testSendSSL testRecvAsyncSSL testSendAsyncSSL || true
+    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
         
 clean:
     script:
