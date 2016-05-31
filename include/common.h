@@ -172,13 +172,13 @@ extern "C" {
 	 * Connects to a host using TCP over IPv4
 	 * @return -1 if ERROR, else the socket file descriptor.
 	 */
-	int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock);
+	int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock, enum syncSocketType mode, SSL_CTX *sslConfig);
 
 	/** tcp_accept_async
 	 * Accepts a new connection from a listen socket
 	 * @return -1 if ERROR, else the socket file descriptor.
 	 */
-	int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout);
+	int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout, enum syncSocketType mode, SSL_CTX *sslConfig);
 
 
 	int socket_upgrade_to_async_send(AsyncSocket *async_sock, int sockfd);

@@ -26,10 +26,9 @@ int main(int argc, char **argv)
 	int ret = 0;
 
 	do {
-		ret = tcp_accept_async(listen_socket, &sock, 0);
+		ret = tcp_accept_async(listen_socket, &sock, 0, SRVSSL, NULL);
 	} while (ret);
 
-	ret = asyncSocketStartSSL(&sock, SRVSSL, NULL); //START SSL
 	assert(ret == 0);
 
 	struct timeval start, end;

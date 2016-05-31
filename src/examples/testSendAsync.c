@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
 
 	AsyncSocket sock;
-	int st = tcp_connect_to_async("127.0.0.1", 5000, &sock);
+	int st = tcp_connect_to_async("127.0.0.1", 5000, &sock, NOSSL, NULL);
 
 	assert(st == 0);
 

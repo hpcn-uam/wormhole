@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	int ret = 0;
 
 	do {
-		ret = tcp_accept_async(listen_socket, &sock, 0);
+		ret = tcp_accept_async(listen_socket, &sock, 0, NOSSL, NULL);
 	} while (ret);
 
 	struct timeval start, end;

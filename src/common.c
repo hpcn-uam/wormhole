@@ -614,11 +614,11 @@ void destroy_asyncSocket(AsyncSocket *sock)
 	tcp_sclose(sock->ssock);
 }
 
-int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
+int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock, enum syncSocketType mode, SSL_CTX *sslConfig)
 {
 	size_t buf_len = OPTIMAL_BUFFER_SIZE;
 	int sockfd = tcp_connect_to(ip, port);
-	sock->ssock = tcp_upgrade2syncSocket(sockfd, NOSSL, NULL);
+	sock->ssock = tcp_upgrade2syncSocket(sockfd, mode, sslConfig);
 
 
 	if (sock->ssock == NULL) {
@@ -635,11 +635,11 @@ int tcp_connect_to_async(char *ip, uint16_t port, AsyncSocket *sock)
 	return 0;
 }
 
-int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout)
+int tcp_accept_async(int listen_socket, AsyncSocket *sock, struct timeval *timeout, enum syncSocketType mode, SSL_CTX *sslConfig)
 {
 	size_t buf_len = OPTIMAL_BUFFER_SIZE;
 	int sockfd = tcp_accept(listen_socket, timeout);
-	sock->ssock = tcp_upgrade2syncSocket(sockfd, NOSSL, NULL);
+	sock->ssock = tcp_upgrade2syncSocket(sockfd, mode, sslConfig);
 
 	if (sock->ssock == NULL) {
 		return 1;
@@ -711,6 +711,7 @@ int socket_sync_to_async_recv(AsyncSocket *async_sock, SyncSocket *ssock)
  * Changes the syncsocketMode in order to start a SSL session.
  * IMPORTANT NOTE: All data must be flushed before call this function, or data-loss can happen.
  * @return 0 if ssl has successfully started or 1 if not.
+ * //TODO: this function is pretty Buggy, since there are a data race.
  */
 int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig)
 {
