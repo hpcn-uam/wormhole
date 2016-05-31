@@ -1,187 +1,16 @@
-#include <einstein.hpp>
+#include <einstein/connection.hpp>
 
+using namespace einstein;
 
-Eins2WormConn::Eins2WormConn(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName)
-{
-	this->ws.id = id;
-	this->ws.listenPort = listenPort;
-	this->ws.core = core;
-	this->ws.IP = inet_addr(ip.c_str());
-	this->ws.connectionDescriptionLength = connectionDescription.size();
-	this->ws.connectionDescription = static_cast<uint8_t *>(malloc(connectionDescription.size()));
-	this->ws.isSSLNode = 0; //false
-	memcpy(this->ws.connectionDescription, connectionDescription.c_str(), connectionDescription.size());
-	this->host = host;
-	this->programName = programName;
-	this->halting = false;
-	this->deployed = false;
-}
+bool Connection::keepRunning = true;
 
-Eins2WormConn::~Eins2WormConn()
-{
-	free(this->ws.connectionDescription);
+Connection::Connection(string listenIp, uint16_t listenPort)
+	: Connection(listenIp, listenPort, true) {}
 
-	if (this->deployed) {
-		ctrlMsgType msg = HALT;
-		cerr << "Enviando HALT al Worm id = " << this->ws.id << endl;
+Connection::Connection(const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
+	: Connection(listenIp, listenPort, autoDeployWorms, vector<string>()) {}
 
-		if (tcp_message_send(this->socket, &msg, sizeof(msg)) != 0) {
-			throw std::runtime_error("Error sending HALT");
-		}
-
-	} else {
-		cerr << "Worm with id = " << this->ws.id << " has not alredy been deployed, do not sending HALT..." << endl;
-	}
-}
-
-bool EinsConn::keepRunning = true;
-
-Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort)
-	: Einstein(configFileName, listenIp, listenPort, true) {}
-
-Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
-	: Einstein(configFileName, listenIp, listenPort, autoDeployWorms, vector<string>()) {}
-
-Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms, vector<string> runParams)
-	: ec(listenIp, listenPort, autoDeployWorms, runParams)
-{
-
-	this->readConfig(configFileName);
-	ec.run();
-}
-
-Einstein::~Einstein()
-{
-	cerr << "Eliminando Einstein" << endl;
-}
-
-void Einstein::readConfig(const string configFileName)
-{
-
-	// TODO: Leer realmente el fichero
-	uint16_t id = 0;
-	uint16_t baseListenPort = 10000;
-	int64_t core = 0;
-	//string connectionDescription = "(LISP connection description)";
-
-	FILE *configFile = fopen(configFileName.c_str(), "r");
-
-	if (configFile == 0) {
-		throw std::runtime_error("Config file doesn't exist");
-	}
-
-	char id_string[128]; //TODO FIX POSIBLE OVERFLOW
-	char configLine[4096]; //TODO FIX POSIBLE OVERFLOW
-	char programName[512]; //TODO FIX POSIBLE OVERFLOW
-	char host[512]; //TODO FIX POSIBLE OVERFLOW
-	char connectionDescription[4096]; //TODO FIX POSIBLE OVERFLOW
-
-	bool createAnotherWorm = false;
-
-	while (!feof(configFile)) {
-		if (fgets(configLine, 4096, configFile) == 0) {
-			break;
-		}
-
-		int st = sscanf(configLine, "%s %s %s %lx", id_string, programName, host, &core);
-
-		if (st == EOF) {
-			break;
-
-		} else if (st < 4) {
-			cerr << "Only " << st << "fields were found" << '\n';
-			throw std::runtime_error("Bad config file");
-		}
-
-		if (fgets(connectionDescription, 4096, configFile) == 0) {
-			throw std::runtime_error("Missing worm routing");
-		}
-
-		connectionDescription[strlen(connectionDescription) - 1] = 0;
-
-		do {
-			int firstId, lastId;
-
-			if (string(id_string).find("-") != string::npos) {
-				firstId = atoi(strtok(id_string, "-"));
-				lastId  = atoi(strtok(NULL, "-"));
-
-				if (firstId >= lastId) {
-					throw std::runtime_error("Non valid id range: \"" + string(id_string) + "\"");
-				}
-
-				id = firstId;
-				createAnotherWorm = true;
-
-			} else if (createAnotherWorm) {
-				if (id >= firstId && id < (lastId - 1)) {
-					id++;
-					createAnotherWorm = true;
-
-				} else {
-					id++;
-					createAnotherWorm = false;
-				}
-
-			} else {
-				id = atoi(id_string);
-			}
-
-			cerr << "[" << id << "] " << host << " " << programName << endl;
-
-			if (connectionDescription[0] != '\t') {
-				throw std::runtime_error("Missing worm routing");
-			}
-
-			cerr << "Description: |" << connectionDescription + 1 << "|\n";
-
-			//check if ipaddr or name
-			struct sockaddr_in sa;
-			int result = inet_pton(AF_INET, host, &(sa.sin_addr));
-			string ip;
-
-			if (result == -1 || result == 0) {
-				struct hostent *tmp = gethostbyname(host);
-
-				if (tmp == NULL) {
-					throw std::runtime_error("Host '" + string(host) + "' does not exists");
-				}
-
-				if (tmp->h_addr_list[0] == NULL) {
-					throw std::runtime_error("Host '" + string(host) + "' does not have a valid IP");
-				}
-
-				ip = string(inet_ntoa(*((struct in_addr *)tmp->h_addr_list[0])));
-
-			} else {
-				ip = string(host);
-			}
-
-			unique_ptr<Eins2WormConn> wc(new Eins2WormConn(id, baseListenPort + id, core, ip, string(connectionDescription + 1), string(host), string(programName)));
-
-			/*Check for advanced options*/
-
-			/*SSL*/
-			if (string(configLine).find("SSL") != string::npos) {
-				wc->ws.isSSLNode = 1;
-			}
-
-			this->ec.createWorm(std::move(wc), ip);
-		} while (createAnotherWorm);
-	}
-
-	cerr << "Launched all worms\n";
-
-	fclose(configFile);
-}
-
-EinsConn::EinsConn(string listenIp, uint16_t listenPort)
-	: EinsConn(listenIp, listenPort, true) {}
-
-EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
-	: EinsConn(listenIp, listenPort, autoDeployWorms, vector<string>()) {}
-
-EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDeployWorms, vector<string> runParams)
+Connection::Connection(const string listenIp, const uint16_t listenPort, bool autoDeployWorms, vector<string> runParams)
 {
 	// Start socket to receive connections from worms
 	this->listenIpStr = listenIp;
@@ -201,17 +30,17 @@ EinsConn::EinsConn(const string listenIp, const uint16_t listenPort, bool autoDe
 	this->previousPollIndex = 0;
 	this->autoDeployWorms = autoDeployWorms;
 
-	signal((int) SIGINT, EinsConn::signal_callback_handler);
+	signal((int) SIGINT, Connection::signal_callback_handler);
 }
 
-void EinsConn::signal_callback_handler(int signum)
+void Connection::signal_callback_handler(int signum)
 {
 	UNUSED(signum);
 
 	keepRunning = false;
 }
 
-EinsConn::~EinsConn()
+Connection::~Connection()
 {
 	this->deleteAllWorms();
 	close(this->listeningSocket);
@@ -229,7 +58,7 @@ EinsConn::~EinsConn()
 	}
 }
 
-void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip)
+void Connection::createWorm(unique_ptr<Worm> wc, const string ip)
 {
 	UNUSED(ip); //TODO remove!
 	// TODO: Conectarse al remoto y crear worm
@@ -258,14 +87,14 @@ void EinsConn::createWorm(unique_ptr<Eins2WormConn> wc, const string ip)
 }
 
 
-void EinsConn::deleteWorm(const uint16_t id)
+void Connection::deleteWorm(const uint16_t id)
 {
 	cerr << "Deleting worm id = " << id << endl;
 
 	this->connections.erase(id);
 }
 
-void EinsConn::deleteAllWorms()
+void Connection::deleteAllWorms()
 {
 	cerr << "Deleting all worms" << endl;
 
@@ -276,7 +105,7 @@ void EinsConn::deleteAllWorms()
 	cerr << "Done" << endl;
 }
 
-void EinsConn::run()
+void Connection::run()
 {
 	// Deploy worms
 	if (this->autoDeployWorms) {
@@ -301,7 +130,7 @@ void EinsConn::run()
 	throw std::runtime_error("Forcing to delete Einstein");
 }
 
-int EinsConn::setupWorm()
+int Connection::setupWorm()
 {
 	struct timeval ts;
 	ts.tv_sec  =   3; //TODO parametrizar esta variable
@@ -354,7 +183,7 @@ int EinsConn::setupWorm()
 	return 0;
 }
 
-void EinsConn::connectWorm(const uint16_t id, const int socket)
+void Connection::connectWorm(const uint16_t id, const int socket)
 {
 	this->connections.at(id)->socket = socket;
 
@@ -365,7 +194,7 @@ void EinsConn::connectWorm(const uint16_t id, const int socket)
 	// TODO: Insert socket descriptor in property wormSockets
 }
 
-void EinsConn::deployWorm(Eins2WormConn &wc)
+void Connection::deployWorm(Worm &wc)
 {
 	//Check if alredy deployed
 	auto v = deployedWorms.find(wc.host);
@@ -421,7 +250,7 @@ void EinsConn::deployWorm(Eins2WormConn &wc)
 	wc.deployed = true;
 }
 
-void EinsConn::pollWorms()
+void Connection::pollWorms()
 {
 
 	int i = 0, j = 0;

@@ -165,6 +165,7 @@ extern "C" {
 	 * Changes the syncsocketMode in order to start a SSL session.
 	 * IMPORTANT NOTE: All data must be flushed before call this function, or data-loss can happen.
 	 * @return 0 if ssl has successfully started or 1 if not.
+	 * //TODO: this function is pretty Buggy, since there are a data race.
 	 */
 	int asyncSocketStartSSL(AsyncSocket *socket, enum syncSocketType mode, SSL_CTX *sslConfig);
 

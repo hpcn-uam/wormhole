@@ -1,6 +1,7 @@
 #include "es_hpcn_wormhole_Einstein.h"
 
-#include <einstein.hpp>
+#include <einstein/einstein.hpp>
+using namespace einstein;
 
 Einstein *_JWH_einstein;
 

@@ -20,7 +20,13 @@ export CXXFLAGS=$(FLAGS) $(SSLCFLAGS) -std=gnu++11
 #export SSLLDFLAGS= -Ldependencies/libressl/compiled/usr/local/lib/ -static -lssl -lcrypto #-Wl,-Bdynamic
 export SSLLDFLAGS= dependencies/compiled/libressl/usr/local/lib/libtls.a dependencies/compiled/libressl/usr/local/lib/libssl.a dependencies/compiled/libressl/usr/local/lib/libcrypto.a
 
-export LDFLAGS=-fPIC -ldl -lpthread -lstdc++ dependencies/repos/hptimelib/lib/hptl.a
+export LDFLAGS=-fPIC -ldl -lpthread -lstdc++
+export LIBWORMLDFLAGS=$(LDFLAGS) dependencies/repos/hptimelib/lib/hptl.a $(SSLLDFLAGS)
+
+#Einstein
+export EINSTEINHEADERS  := $(wildcard src/einstein/*.hpp)
+export EINSTEINSRCS     := $(filter-out einstein/main.cpp,$(wildcard src/einstein/*.cpp))
+export EINSTEINOBJ      := $(patsubst src/einstein/%,obj/einstein/%,$(EINSTEINSRCS:.cpp=.o))
 
 #Java
 export JFLAGS = -g
@@ -30,7 +36,7 @@ export JLDFLAGS=$(LDFLAGS) -Llib -lworm
 export JAVALIBSRC := $(wildcard src/langApis/Java/es/hpcn/wormhole/*.java src/langApis/Java/es/hpcn/wormhole/test/*.java)
 export STRMLIBSRC := $(wildcard src/langApis/Java/backtype/storm/*.java src/langApis/Java/backtype/storm/spout/*.java src/langApis/Java/backtype/storm/task/*.java src/langApis/Java/backtype/storm/topology/*.java src/langApis/Java/backtype/storm/topology/base/*.java src/langApis/Java/backtype/storm/tuple/*.java src/langApis/Java/backtype/storm/utils/*.java src/langApis/Java/backtype/storm/generated/*.java src/langApis/Java/backtype/storm/wh/tests/*.java)
 export JAVAFILES  := $(JAVALIBSRC) $(STRMLIBSRC)
-export CLASSFILES :=  $(patsubst $(JAVAPATH)%,%,$(JAVAFILES:.java=.class))
+export CLASSFILES := $(patsubst $(JAVAPATH)%,%,$(JAVAFILES:.java=.class))
 
 export INCLUDES := $(wildcard include/*.h include/*.hpp)
 export SRCS := $(wildcard src/*.c src/*.cpp src/examples/*.c src/examples/*.cpp)
@@ -140,8 +146,8 @@ bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
 bin/%: src/examples/%.c lib/libworm.so
 	$(CC) $(CFLAGS) -o $@ $< -Llib -lworm $(LDFLAGS) $(SSLLDFLAGS)
 
-lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o obj/einstein.o
-	$(CC) $(CFLAGS) -shared -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS)
+lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o $(EINSTEINOBJ)
+	$(CC) $(CFLAGS) -shared -o $@ $^  $(LIBWORMLDFLAGS)
 
 #JAVALibs
 lib/libjavaworm.so: lib/libworm.so $(JAVAPATH)es_hpcn_wormhole_Worm.h $(JAVAPATH)es_hpcn_wormhole_Worm.c $(JAVAPATH)es_hpcn_wormhole_Einstein.h $(JAVAPATH)es_hpcn_wormhole_Einstein.cpp
@@ -184,11 +190,12 @@ Dependencies: obj lib bin SSL
 dependencies/compiled forceCompileDependencies:
 	cd dependencies; $(MAKE) -j9
 
-bin/einstein: src/examples/testEinstein.cpp lib/libworm.so
-	$(CXX) $(CXXFLAGS) -o $@ $<  -Llib -lworm $(LDFLAGS)
+bin/einstein: src/einstein/main.cpp lib/libworm.so  
+	$(CXX) $(CXXFLAGS) -o $@ $< -Llib -lworm $(LDFLAGS)
 
-obj:
+obj obj/einstein:
 	mkdir -p obj
+	mkdir -p obj/einstein
 
 certs/prv:
 	mkdir -p certs/prv
