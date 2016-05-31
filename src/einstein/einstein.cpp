@@ -13,12 +13,26 @@ Einstein::Einstein(const string configFileName, string listenIp, uint16_t listen
 {
 
 	this->readConfig(configFileName);
-	ec.run();
 }
 
 Einstein::~Einstein()
 {
 	cerr << "Eliminando Einstein" << endl;
+	this->ec.keepRunning = false;
+
+	if (this->thr.joinable()) {
+		this->thr.join();
+	}
+}
+
+void Einstein::openHoles()
+{
+	ec.run();
+}
+
+void Einstein::openThreadedHoles()
+{
+	this->thr = thread([this] {this->openHoles();}); //Lambda
 }
 
 void Einstein::readConfig(const string configFileName)

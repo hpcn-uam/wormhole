@@ -32,6 +32,7 @@ JNIEXPORT jint JNICALL Java_es_hpcn_wormhole_Einstein_init
 
 	try {
 		_JWH_einstein = new Einstein(c_configFileName, c_listenIp, listenPort, autoDeployWorms == JNI_TRUE, runparams);
+		_JWH_einstein->openHoles();
 
 	} catch (std::runtime_error) {
 		delete _JWH_einstein;

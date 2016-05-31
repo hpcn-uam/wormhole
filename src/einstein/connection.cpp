@@ -127,7 +127,7 @@ void Connection::run()
 		pollWorms();
 	}
 
-	throw std::runtime_error("Forcing to delete Einstein");
+	//throw std::runtime_error("Forcing to delete Einstein"); //TODO: Is necesary?
 }
 
 int Connection::setupWorm()
@@ -255,6 +255,7 @@ void Connection::pollWorms()
 
 	int i = 0, j = 0;
 
+	// Add all socket descriptors to a poll array. Try to reconnect if one of the sockets is closed.
 	for (i = 0, j = 0; i < this->numWormSockets; ++i, ++j) {
 		memset(& (this->fdinfo[i]), 0, sizeof(struct pollfd));
 

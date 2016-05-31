@@ -15,6 +15,7 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include <thread>
 #include <stdexcept>
 
 using namespace std;
@@ -23,8 +24,9 @@ namespace einstein
 {
 class Einstein
 {
-	friend class EinsConnection;
+	friend class Connection;
 	Connection ec;
+	thread thr;
 
  public:
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort);
@@ -32,7 +34,15 @@ class Einstein
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms, vector<string> runParams);
 	~Einstein();
 
-	void openHoles(); // Starts everything
+	/*
+	 *Starts everything SYNCRONIOUSLY
+	 */
+	void openHoles();
+
+	/*
+	 *Starts everything ASYNCRONIOUSLY
+	 */
+	void openThreadedHoles();
 
  private:
 	void readConfig(const string configFileName);
