@@ -3,6 +3,7 @@
 
 #include <common.h>
 #include <einstein/einstein.hpp>
+#include <einstein/shellcommand.hpp>
 
 #include <poll.h>
 #include <signal.h>
@@ -23,8 +24,13 @@ namespace einstein
 {
 class EinsShell
 {
-	friend class Einstein;
 	shared_ptr<Einstein> eins;
+	set<ShellCommand> commands;
+
+	string prompt;
+	string historyPath;
+	int historyLength;
+	bool continueShell;
 
  public:
 	EinsShell(shared_ptr<Einstein> eins);
@@ -37,7 +43,7 @@ class EinsShell
 	int startShell();
 
  private:
-
+	int executeCmd(string cmd);
 };
 }
 

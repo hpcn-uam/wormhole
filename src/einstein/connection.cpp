@@ -121,7 +121,7 @@ void Connection::run()
 		}
 	}
 
-	cerr << "Completed setup of all worms\n";
+	cerr << "Completed setup of all worms" << endl;
 
 	for (; keepRunning;) {
 		pollWorms();
@@ -179,7 +179,7 @@ int Connection::setupWorm()
 		throw std::runtime_error("Error sending message");
 	}
 
-	cerr << "Completed setup of worm " << wormId << '\n';
+	cerr << "Completed setup of worm " << wormId << endl;
 	return 0;
 }
 

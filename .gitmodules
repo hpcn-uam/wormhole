@@ -16,3 +16,6 @@
 [submodule "dependencies/repos/httpDissector"]
 	path = dependencies/repos/httpDissector
 	url = git@repit.ii.uam.es:hilo/httpDissector.git
+[submodule "dependencies/repos/linenoise"]
+	path = dependencies/repos/linenoise
+	url = https://github.com/antirez/linenoise

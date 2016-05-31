@@ -69,7 +69,7 @@ void Einstein::readConfig(const string configFileName)
 			break;
 
 		} else if (st < 4) {
-			cerr << "Only " << st << "fields were found" << '\n';
+			cerr << "Only " << st << "fields were found" << endl;
 			throw std::runtime_error("Bad config file");
 		}
 
@@ -113,7 +113,7 @@ void Einstein::readConfig(const string configFileName)
 				throw std::runtime_error("Missing worm routing");
 			}
 
-			cerr << "Description: |" << connectionDescription + 1 << "|\n";
+			cerr << "Description: |" << connectionDescription + 1 << "|" << endl;
 
 			//check if ipaddr or name
 			struct sockaddr_in sa;
@@ -150,7 +150,7 @@ void Einstein::readConfig(const string configFileName)
 		} while (createAnotherWorm);
 	}
 
-	cerr << "Launched all worms\n";
+	cerr << "Launched all worms" << endl;
 
 	fclose(configFile);
 }

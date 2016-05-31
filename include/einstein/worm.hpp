@@ -18,6 +18,9 @@
 
 using namespace std;
 
+//fix to einsshell
+#define endl "\r"<<endl
+
 namespace einstein
 {
 struct Worm {
