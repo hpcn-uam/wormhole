@@ -26,7 +26,7 @@ class Connection
 	friend class Einstein;
 	friend class ShellCommand;
 
-	map <uint16_t, unique_ptr<Worm>> connections;
+	map <uint16_t, shared_ptr<Worm>> connections;
 	string listenIpStr;
 	uint32_t listenIp;
 	uint16_t listenPort;
@@ -53,7 +53,7 @@ class Connection
 	~Connection();
 
 	// Connects to IP and launches a worm with configuration ws
-	void createWorm(unique_ptr<Worm> wc, const string ip);
+	void createWorm(shared_ptr<Worm> wc, const string ip);
 
 	void pingWorm(const uint16_t id);
 	void pingWorms();

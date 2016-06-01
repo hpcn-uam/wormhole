@@ -36,17 +36,19 @@ ShellCommand::~ShellCommand()
 
 }
 
+string ShellCommand::normalize(string str)
+{
+	string out = str;
+	transform(out.begin(), out.end(), out.begin(), [](char x) {
+		return toupper(x, locale());
+	});
+	return out;
+}
+
 bool ShellCommand::operator< (const ShellCommand &rhs) const
 {
-	string a = this->cmd;
-	string b = rhs.cmd;
-
-	transform(a.begin(), a.end(), a.begin(), [](char x) {
-		return toupper(x, locale());
-	});
-	transform(b.begin(), b.end(), b.begin(), [](char x) {
-		return toupper(x, locale());
-	});
+	string a = normalize(this->cmd);
+	string b = normalize(rhs.cmd);
 
 	return a < b;
 	//return this->cmd < rhs.cmd;
@@ -73,6 +75,14 @@ set<ShellCommand> ShellCommand::getCommandList()
 		cmdHalt,
 		"Stops all worms and closes einstein",
 		"Stops all worms sending a special HALT message and closes einstein"));
+
+	ret.insert(ShellCommand(
+		"list",
+		cmdList,
+		"Lists information about many things",
+		"Lists information about many internal thigs, such as worms, etc.",
+		"[worms]"));
+
 
 	return ret;
 }
@@ -116,4 +126,17 @@ int ShellCommand::cmdHalt(string cmd)
 	eins->ec.keepRunning = false;
 
 	return 1;
+}
+
+int ShellCommand::cmdList(string cmd)
+{
+	if (normalize(cmd).find(normalize("worms")) != string::npos) {
+		cout << "Listing all worms:" << endl;
+
+	for (auto elem : eins->ec.connections) {
+			cout << *elem.second << endl;
+		}
+	}
+
+	return 0;
 }

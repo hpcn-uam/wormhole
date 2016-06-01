@@ -34,3 +34,14 @@ Worm::~Worm()
 		cerr << "Worm with id = " << this->ws.id << " has not alredy been deployed, do not sending HALT..." << endl;
 	}
 }
+
+ostream &einstein::operator<<(ostream &os, Worm const &obj)
+{
+	return os
+		   <<  "ID: " << obj.ws.id
+		   << " ADDR: " <<  obj.host << ":" << obj.ws.listenPort
+		   << (obj.ws.isSSLNode ? " [SSL]" : "")
+		   << " | " << obj.programName << " " << endl
+		   << "\t Route: " << obj.ws.connectionDescription
+		   ;
+}

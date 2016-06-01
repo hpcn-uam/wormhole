@@ -38,7 +38,8 @@ export STRMLIBSRC := $(wildcard src/langApis/Java/backtype/storm/*.java src/lang
 export JAVAFILES  := $(JAVALIBSRC) $(STRMLIBSRC)
 export CLASSFILES := $(patsubst $(JAVAPATH)%,%,$(JAVAFILES:.java=.class))
 
-export INCLUDES := $(wildcard include/*.h include/*.hpp)
+export INCLUDES := $(wildcard include/*.h)
+export CPPINCLUDES := $(wildcard include/*.h include/*.hpp) $(EINSTEINHEADERS)
 export SRCS := $(wildcard src/*.c src/*.cpp src/examples/*.c src/examples/*.cpp)
 
 all: Dependencies libs langLibs bin/einstein Examples # doc/html
@@ -217,7 +218,7 @@ javaLibs: lib/libjavaworm.so lib/libjavaworm.jar Jexamples
 buildTools:
 	$(MAKE) -C tools
 
-obj/%.o: src/%.cpp $(INCLUDES) | Dependencies
+obj/%.o: src/%.cpp $(CPPINCLUDES) | Dependencies
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 obj/%.o: src/%.c $(INCLUDES) | Dependencies

@@ -24,6 +24,7 @@ using namespace std;
 namespace einstein
 {
 struct Worm {
+ public:
 	WormSetup ws;
 	int socket;
 	string host;
@@ -34,6 +35,8 @@ struct Worm {
 	Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName);
 	~Worm();
 };
+
+ostream &operator<<(ostream &os, Worm const &obj);
 }
 
 #endif

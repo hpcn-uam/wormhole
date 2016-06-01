@@ -58,12 +58,12 @@ Connection::~Connection()
 	}
 }
 
-void Connection::createWorm(unique_ptr<Worm> wc, const string ip)
+void Connection::createWorm(shared_ptr<Worm> wc, const string ip)
 {
 	UNUSED(ip); //TODO remove!
 	// TODO: Conectarse al remoto y crear worm
 
-	this->connections.insert(make_pair(wc->ws.id, std::move(wc)));
+	this->connections.insert(make_pair(wc->ws.id, wc));
 	this->numWormSockets = this->connections.size();
 	void *ret = realloc(static_cast<void *>(wormSockets), this->numWormSockets * sizeof(int));
 

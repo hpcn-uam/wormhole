@@ -35,8 +35,9 @@ class ShellCommand
 
 	string shortHelp;
 	string longHelp;
-
 	string hints;
+
+	//set<ShellCommand> subCommands;
 
 	//methods
 	ShellCommand(
@@ -62,8 +63,10 @@ class ShellCommand
 	//Commands for methods
 	static int cmdHelp(string cmd);
 	static int cmdHalt(string cmd);
+	static int cmdList(string cmd);
  private:
 	ShellCommand(string cmd);
+	static string normalize(string str);
 };
 }
 

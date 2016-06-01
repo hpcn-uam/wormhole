@@ -103,11 +103,13 @@ int EinsShell::startShell()
 			linenoiseHistoryAdd(tmp);
 			linenoiseHistorySave(this->historyPath.c_str());
 
-			if (this->executeCmd(string(tmp)) == 1) {
+			int result = this->executeCmd(string(tmp));
+
+			if (result == 1) {
 				ret = 0;
 				this->continueShell = false;
 
-			} else if (this->executeCmd(string(tmp))) {
+			} else if (result) {
 				ret = 1;
 				this->continueShell = false;
 			}
