@@ -34,6 +34,8 @@ struct Worm {
 
 	Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName);
 	~Worm();
+
+	uint64_t ping(); //returns the ms passed from the ping
 };
 
 ostream &operator<<(ostream &os, Worm const &obj);

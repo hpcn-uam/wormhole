@@ -64,6 +64,7 @@ class ShellCommand
 	static int cmdHelp(string cmd);
 	static int cmdHalt(string cmd);
 	static int cmdList(string cmd);
+	static int cmdPing(string cmd);
  private:
 	ShellCommand(string cmd);
 	static string normalize(string str);

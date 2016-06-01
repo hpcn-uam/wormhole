@@ -83,6 +83,12 @@ set<ShellCommand> ShellCommand::getCommandList()
 		"Lists information about many internal thigs, such as worms, etc.",
 		"[worms]"));
 
+	ret.insert(ShellCommand(
+		"ping",
+		cmdPing,
+		"Pings a worm",
+		"Send a Ping command to a worm, waiting for a pong response.",
+		"<worm id/all>"));
 
 	return ret;
 }
@@ -135,6 +141,34 @@ int ShellCommand::cmdList(string cmd)
 
 	for (auto elem : eins->ec.connections) {
 			cout << *elem.second << endl;
+		}
+
+	} else {
+		cout << "Cant list that." << endl;
+	}
+
+	return 0;
+}
+
+int ShellCommand::cmdPing(string cmd)
+{
+	//all worms
+	if (normalize(cmd).find(normalize("all")) != string::npos) {
+	for (auto elem : eins->ec.connections) {
+			cout << "Pinging Worm ID=" << elem.second->ws.id << "..." << flush;
+			uint64_t us = elem.second->ping();
+			cout << "Pong! " << us / 1000 << "," << us - (us / 1000) * 1000 << " us" << endl;
+		}
+
+	} else {
+		try {
+			auto elem = eins->ec.connections.at(stoi(cmd.substr(cmd.find(' ') + 1, cmd.length())));
+			cout << "Pinging Worm ID=" << elem->ws.id << "..." << flush;
+			uint64_t us = elem->ping();
+			cout << "Pong! " << us / 1000 << "," << us - (us / 1000) * 1000 << " us" << endl;
+
+		} catch (exception) {
+			cout << "Worm with ID=\"" << cmd.substr(cmd.find(' ') + 1, cmd.length()) << "\" does not exists." << endl;
 		}
 	}
 

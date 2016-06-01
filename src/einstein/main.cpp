@@ -12,6 +12,8 @@ int main(int argc, char **argv)
 {
 	shared_ptr<Einstein> eins;
 
+	hptl_init(NULL);
+
 	if (argc == 4) {
 		try {
 			vector<string> runParams;

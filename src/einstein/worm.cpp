@@ -45,3 +45,18 @@ ostream &einstein::operator<<(ostream &os, Worm const &obj)
 		   << "\t Route: " << obj.ws.connectionDescription
 		   ;
 }
+
+
+uint64_t Worm::ping()
+{
+	hptl_t begin = hptl_get();
+
+	ctrlMsgType msg = PING;
+	tcp_message_send(this->socket, &msg, sizeof(msg));
+	tcp_message_recv(this->socket, &msg, sizeof(msg), 0);
+
+	hptl_t end = hptl_get();
+
+	return hptl_ntimestamp(end - begin) / 1000;
+}
+

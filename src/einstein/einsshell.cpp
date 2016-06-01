@@ -23,7 +23,7 @@ extern "C"
 			});
 
 			if (transfelement == temp) {
-				linenoiseAddCompletion(lc, element.cmd.c_str());
+				linenoiseAddCompletion(lc, (element.cmd + " ").c_str());
 			}
 		}
 	}
@@ -70,7 +70,7 @@ EinsShell::EinsShell(shared_ptr<Einstein> eins)
 {
 	this->eins  		= eins;
 	this->prompt		= "Einstein> ";
-	this->historyPath	= "~/.einstein.history";
+	this->historyPath	= string(getenv("HOME")) + "/.einstein.hist";
 	this->historyLength	= 500;
 	this->continueShell	= true;
 
@@ -101,7 +101,11 @@ int EinsShell::startShell()
 
 		if (tmp != NULL && tmp[0] != 0) {
 			linenoiseHistoryAdd(tmp);
-			linenoiseHistorySave(this->historyPath.c_str());
+
+			if (linenoiseHistorySave(this->historyPath.c_str())) {
+				perror("WTF");
+				cerr << "Cant save history to: " << this->historyPath.c_str() << endl;
+			}
 
 			int result = this->executeCmd(string(tmp));
 
