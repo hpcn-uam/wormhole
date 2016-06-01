@@ -2,6 +2,8 @@
 
 using namespace einstein;
 
+shared_ptr<Einstein> ShellCommand::eins;
+
 ShellCommand::ShellCommand(string cmd)
 {
 	this->cmd  		= cmd;
@@ -110,5 +112,8 @@ int ShellCommand::cmdHalt(string cmd)
 {
 	UNUSED(cmd);
 
-	return 0;
+	cout << "Halting Einstein and all worms..." << endl;
+	eins->ec.keepRunning = false;
+
+	return 1;
 }

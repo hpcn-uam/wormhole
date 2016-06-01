@@ -83,6 +83,8 @@ EinsShell::EinsShell(shared_ptr<Einstein> eins)
 
 	linenoiseSetCompletionCallback(completeln);
 	linenoiseSetHintsCallback(hintsln);
+
+	ShellCommand::eins = eins;
 }
 
 EinsShell::~EinsShell()
@@ -101,7 +103,11 @@ int EinsShell::startShell()
 			linenoiseHistoryAdd(tmp);
 			linenoiseHistorySave(this->historyPath.c_str());
 
-			if (this->executeCmd(string(tmp))) {
+			if (this->executeCmd(string(tmp)) == 1) {
+				ret = 0;
+				this->continueShell = false;
+
+			} else if (this->executeCmd(string(tmp))) {
 				ret = 1;
 				this->continueShell = false;
 			}

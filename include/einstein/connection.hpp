@@ -24,6 +24,8 @@ namespace einstein
 class Connection
 {
 	friend class Einstein;
+	friend class ShellCommand;
+
 	map <uint16_t, unique_ptr<Worm>> connections;
 	string listenIpStr;
 	uint32_t listenIp;

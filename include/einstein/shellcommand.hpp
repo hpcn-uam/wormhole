@@ -29,6 +29,7 @@ class ShellCommand
 
  public:
 	//variables
+	static shared_ptr<Einstein> eins;
 	string cmd;
 	function<int(string)> exec;
 
