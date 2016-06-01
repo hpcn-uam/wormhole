@@ -12,12 +12,21 @@ ShellCommand::ShellCommand(
 	function<int(string)> exec,
 	string shortHelp,
 	string longHelp)
+	: ShellCommand::ShellCommand(cmd, exec, shortHelp, longHelp, "") {};
+
+ShellCommand::ShellCommand(
+	string cmd,
+	function<int(string)> exec,
+	string shortHelp,
+	string longHelp,
+	string hints)
 {
 	this->cmd  		= cmd;
 	this->exec		= exec;
 
 	this->shortHelp	= shortHelp;
 	this->longHelp	= longHelp;
+	this->hints		= hints;
 }
 
 ShellCommand::~ShellCommand()
@@ -54,7 +63,8 @@ set<ShellCommand> ShellCommand::getCommandList()
 		"help",
 		cmdHelp,
 		"Prints this menu",
-		"Shows information about commands or the general usage of this application"));
+		"Shows information about commands or the general usage of this application",
+		"[Command to show information]"));
 
 	ret.insert(ShellCommand(
 		"halt",

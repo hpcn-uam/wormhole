@@ -27,13 +27,23 @@ class ShellCommand
 {
 	friend class EinsShell;
 
+ public:
+	//variables
 	string cmd;
 	function<int(string)> exec;
 
 	string shortHelp;
 	string longHelp;
 
- public:
+	string hints;
+
+	//methods
+	ShellCommand(
+		string cmd,
+		function<int(string)> exec,
+		string shortHelp,
+		string longHelp,
+		string hits);
 	ShellCommand(
 		string cmd,
 		function<int(string)> exec,

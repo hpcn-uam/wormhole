@@ -5,6 +5,8 @@
 #include <einstein/einstein.hpp>
 #include <einstein/shellcommand.hpp>
 
+#include <linenoise.h>
+
 #include <poll.h>
 #include <signal.h>
 
@@ -24,15 +26,17 @@ namespace einstein
 {
 class EinsShell
 {
+ public:
+	//variables
 	shared_ptr<Einstein> eins;
-	set<ShellCommand> commands;
+	static set<ShellCommand> commands;
 
 	string prompt;
 	string historyPath;
 	int historyLength;
 	bool continueShell;
 
- public:
+	//methods
 	EinsShell(shared_ptr<Einstein> eins);
 	~EinsShell();
 

@@ -1,8 +1,70 @@
 #include <einstein/einsshell.hpp>
 
-#include <linenoise.h>
-
 using namespace einstein;
+
+set<ShellCommand> EinsShell::commands;
+
+extern "C"
+{
+	void completeln(const char *buf, linenoiseCompletions *lc)
+	{
+		//search for similar:
+		string temp = string(buf);
+
+		transform(temp.begin(), temp.end(), temp.begin(), [](char x) {
+			return toupper(x, locale());
+		});
+
+	for (auto element : EinsShell::commands) {
+			string transfelement = element.cmd.substr(0, temp.length());
+
+			transform(transfelement.begin(), transfelement.end(), transfelement.begin(), [](char x) {
+				return toupper(x, locale());
+			});
+
+			if (transfelement == temp) {
+				linenoiseAddCompletion(lc, element.cmd.c_str());
+			}
+		}
+	}
+	char *hintsln(const char *buf, int *color, int *bold)
+	{
+		//search for similar:
+		string temp = string(buf);
+
+		transform(temp.begin(), temp.end(), temp.begin(), [](char x) {
+			return toupper(x, locale());
+		});
+
+	for (auto element : EinsShell::commands) {
+			string transfelement = element.cmd;
+
+			transform(transfelement.begin(), transfelement.end(), transfelement.begin(), [](char x) {
+				return toupper(x, locale());
+			});
+
+			string shortedElement =  transfelement.substr(0, temp.length());
+
+			if (transfelement == temp) {
+				*bold = 1;
+				*color = 35;
+				return (char *)(" " + element.hints).c_str(); //show hints if full word
+
+			} else if (transfelement + " " == temp) {
+				*bold = 1;
+				*color = 35;
+				return (char *)(element.hints).c_str(); //show hints if complete word + space
+
+			} else if (shortedElement == temp) { //TODO: consider remove, seems to be confusing
+				*bold = 0;
+				*color = 34;
+				return (char *)element.cmd.substr(temp.length(), element.cmd.length()).c_str(); //complete to the closest word
+			}
+		}
+
+		return NULL;
+	}
+}
 
 EinsShell::EinsShell(shared_ptr<Einstein> eins)
 {
@@ -18,6 +80,9 @@ EinsShell::EinsShell(shared_ptr<Einstein> eins)
 	linenoiseHistoryLoad(this->historyPath.c_str());
 	linenoiseClearScreen();
 	linenoiseSetMultiLine(1);
+
+	linenoiseSetCompletionCallback(completeln);
+	linenoiseSetHintsCallback(hintsln);
 }
 
 EinsShell::~EinsShell()
