@@ -40,9 +40,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	eins->openThreadedHoles();
-
 	unique_ptr<EinsShell> cmd(new EinsShell(eins));
+
+	std::cerr << "Launching Einstein, please wait..." << endl;
+	eins->openThreadedHoles();
+	cmd->waitForEinstein();
+
 	int ret = cmd->startShell();
 
 	if (ret)

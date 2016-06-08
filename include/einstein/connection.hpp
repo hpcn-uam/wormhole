@@ -24,6 +24,7 @@ namespace einstein
 class Connection
 {
 	friend class Einstein;
+	friend class EinsShell;
 	friend class ShellCommand;
 
 	map <uint16_t, shared_ptr<Worm>> connections;
@@ -43,6 +44,7 @@ class Connection
 	int numWormSockets;
 	int previousPollIndex;
 	int numFilledPolls;
+	int startedWorms;
 
 	bool autoDeployWorms = true;
 

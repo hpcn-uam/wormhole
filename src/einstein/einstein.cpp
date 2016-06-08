@@ -113,7 +113,7 @@ void Einstein::readConfig(const string configFileName)
 				throw std::runtime_error("Missing worm routing");
 			}
 
-			cerr << "Description: |" << connectionDescription + 1 << "|" << endl;
+			cerr << "Description: |" << Worm::expandCDescription(string(connectionDescription)) << "|" << endl;
 
 			//check if ipaddr or name
 			struct sockaddr_in sa;
@@ -137,7 +137,7 @@ void Einstein::readConfig(const string configFileName)
 				ip = string(host);
 			}
 
-			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, ip, string(connectionDescription + 1), string(host), string(programName)));
+			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, ip, string(connectionDescription), string(host), string(programName)));
 
 			/*Check for advanced options*/
 

@@ -45,6 +45,58 @@ string ShellCommand::normalize(string str)
 	return out;
 }
 
+int ShellCommand::forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn)
+{
+	//all worms
+	int ret = 0;
+
+	auto pos = normalize(cmd).find(normalize("all"));
+
+	if (pos != string::npos) {
+		string param;
+
+		if (pos + 4 <= cmd.length()) {
+			param = cmd.substr(pos + 4, cmd.length());
+
+		} else {
+			param = "";
+		}
+
+	for (auto elem : eins->ec.connections) {
+			ret += fn(elem.second, param);
+		}
+
+	} else {
+		try {
+			auto elem = eins->ec.connections.at(stoi(cmd.substr(cmd.find(' ') + 1, cmd.length())));
+			string param = cmd.substr(cmd.find(' ') + 1, cmd.length());
+
+			auto parampos = param.find(' ');
+
+			if (parampos != string::npos) {
+				param = param.substr(parampos, param.length());
+
+				if (param.length() > 1) {
+					param = param.substr(1, param.length());
+
+				} else {
+					param = "";
+				}
+
+			} else {
+				param = "";
+			}
+
+			ret += fn(elem, param);
+
+		} catch (exception) {
+			cout << "Worm with ID=\"" << cmd.substr(cmd.find(' ') + 1, cmd.length()) << "\" does not exists." << endl;
+		}
+	}
+
+	return ret;
+}
+
 bool ShellCommand::operator< (const ShellCommand &rhs) const
 {
 	string a = normalize(this->cmd);
@@ -90,6 +142,13 @@ set<ShellCommand> ShellCommand::getCommandList()
 		"Send a Ping command to a worm, waiting for a pong response.",
 		"<worm id/all>"));
 
+	ret.insert(ShellCommand(
+		"chRoute",
+		cmdChRoute,
+		"Changes the route of one or all worms",
+		"Changes the route of one or all worms",
+		"<worm id/all> <new route>"));
+
 	return ret;
 }
 
@@ -98,7 +157,7 @@ int ShellCommand::cmdHelp(string cmd)
 	auto commandList = ShellCommand::getCommandList();
 
 	// No second parameter
-	if (cmd.length() < 6 && cmd.find(' ') == string::npos) {
+	if (cmd.length() < 6 || cmd.find(' ') == string::npos) {
 		cout << "Welcome to Einstein!" << endl;
 		cout << endl;
 		cout << "Available commands are:" << endl;
@@ -152,25 +211,24 @@ int ShellCommand::cmdList(string cmd)
 
 int ShellCommand::cmdPing(string cmd)
 {
-	//all worms
-	if (normalize(cmd).find(normalize("all")) != string::npos) {
-	for (auto elem : eins->ec.connections) {
-			cout << "Pinging Worm ID=" << elem.second->ws.id << "..." << flush;
-			uint64_t us = elem.second->ping();
-			cout << "Pong! " << us / 1000 << "," << us - (us / 1000) * 1000 << " us" << endl;
-		}
+	return forWorm(cmd, [](shared_ptr<Worm> elem, string param)->int {
+		UNUSED(param);
 
-	} else {
-		try {
-			auto elem = eins->ec.connections.at(stoi(cmd.substr(cmd.find(' ') + 1, cmd.length())));
-			cout << "Pinging Worm ID=" << elem->ws.id << "..." << flush;
-			uint64_t us = elem->ping();
-			cout << "Pong! " << us / 1000 << "," << us - (us / 1000) * 1000 << " us" << endl;
+		cout << "Pinging Worm ID=" << elem->ws.id << "..." << flush;
+		uint64_t us = elem->ping();
+		cout << "Pong! " << us / 1000 << "," << us - (us / 1000) * 1000 << " us" << endl;
+		return 0;
+	});
+}
 
-		} catch (exception) {
-			cout << "Worm with ID=\"" << cmd.substr(cmd.find(' ') + 1, cmd.length()) << "\" does not exists." << endl;
-		}
-	}
+int ShellCommand::cmdChRoute(string cmd)
+{
+	return forWorm(cmd, [](shared_ptr<Worm> elem, string param)->int {
 
-	return 0;
+		cout << "Changing worm " << elem->ws.id << " route into: \"" << Worm::expandCDescription(param) << "\"" << endl;
+
+		elem->chroute(param);
+
+		return 0;
+	});
 }

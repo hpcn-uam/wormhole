@@ -6,6 +6,7 @@
 #include <poll.h>
 #include <signal.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -35,7 +36,10 @@ struct Worm {
 	Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName);
 	~Worm();
 
+	static string expandCDescription(string cd);
+
 	uint64_t ping(); //returns the ms passed from the ping
+	uint64_t chroute(string newRoute); //returns 0 if changed, and 1 if not
 };
 
 ostream &operator<<(ostream &os, Worm const &obj);

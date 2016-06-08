@@ -25,6 +25,7 @@ namespace einstein
 class Einstein
 {
 	friend class Connection;
+	friend class EinsShell;
 	friend class ShellCommand;
 	Connection ec;
 	thread thr;

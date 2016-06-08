@@ -19,11 +19,7 @@ WormConfig WH_myConfig = {0};
 
 pthread_t WH_wormThread;
 
-__thread int WH_errno = 0;
-
-#define WH_ERRNO_CLEAR 0
-#define WH_ERRNO_EMPTY  (1<<0) // = 1
-#define WH_ERRNO_CLOSED (1<<1) // = 2
+__thread enum wormErrorType WH_errno = 0;
 
 volatile uint8_t WH_bussy = 0;
 volatile uint8_t WH_halting = 0;
@@ -414,6 +410,46 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 
 		break;
 
+	case CHANGEROUTE: {
+			uint32_t routesize;
+			uint8_t *newroute = NULL;
+
+			fprintf(stderr, "Hey!, stablishing new route!\n");
+			fflush(stderr);
+
+			if (tcp_message_srecv(socket, &routesize, sizeof(routesize), 1)) {
+				ret = 1;
+			}
+
+			if (!ret) {
+				newroute = malloc(routesize);
+			}
+
+			if (newroute) if (tcp_message_srecv(socket, newroute, routesize, 1)) {
+					ret = 1;
+				}
+
+			if (!ret) {
+				fprintf(stderr, "Toute : %s\n", newroute);
+			}
+
+			fflush(stderr);
+
+			if (!ret) {
+				ret = WH_DymRoute_init(newroute, &WH_myDstWorms);
+			}
+
+			if (ret) {
+				type = CTRL_ERROR;
+
+			} else {
+				type = CTRL_OK;
+			}
+
+			tcp_message_ssend(socket, &type, sizeof(type));
+			break;
+		}
+
 	default:
 		ret = 1; //Error!
 		break;
@@ -433,7 +469,7 @@ int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 	switch (type) {
 	case HELLO: //Contestamos a Hello
 	default:
-		WH_TH_hellow(socket); //TODO check if ret should be -1
+		WH_TH_hello(socket); //TODO check if ret should be -1
 		//return -1;
 		break;
 
@@ -452,10 +488,10 @@ int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 	return  ret;
 }
 
-/** WH_TH_hellow
- * Process a HELLOW message
+/** WH_TH_hello
+ * Process a HELLO message
  */
-inline void WH_TH_hellow(SyncSocket *socket)
+inline void WH_TH_hello(SyncSocket *socket)
 {
 	enum wormMsgType type;
 	type = WORMINFO; //Con Worm Info
@@ -488,7 +524,7 @@ inline void WH_TH_hellow(SyncSocket *socket)
 }
 
 /** SETUPWORMCONN
- * Process a HELLOW message
+ * Process a HELLO message
  */
 inline void WH_TH_setupworm(SyncSocket *socket)
 {
@@ -568,6 +604,7 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 
 	do {
 		if (can_be_read(&(wms->worms[wormIndex].conns[connIndex]->socket))) {
+			WH_errno = WH_ERRNO_CLEAR;
 			return wms->worms[wormIndex].conns[connIndex];
 
 		} else if (wms->worms[wormIndex].conns[connIndex]->socket.closed) {
@@ -1024,7 +1061,7 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 			}
 		}*/
 	} while ((!c && (WH_errno == WH_ERRNO_CLEAR || WH_errno == WH_ERRNO_EMPTY))
-			 || ((c && mi->type) ? (c->type.type != mi->type->type) : 1)); //TODO, tener en cuenta tipos internos en arrays, etc.
+			 || ((c && mi->type) ? WH_connectionDataTypecmp(&c->type, mi->type) : 1));
 
 	if (c == NULL) { //no msg found
 		WH_errno = WH_ERRNO_CLEAR;
@@ -1222,9 +1259,9 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 	/*Link the .SO*/
 	if (!ret) {
 		sprintf(tmpString, "/tmp/%d.so", myPid);
-		_WH_DymRoute_libHandle = dlopen(tmpString, RTLD_NOW);
+		void *tmplibHandle = dlopen(tmpString, RTLD_NOW);
 
-		if (!_WH_DymRoute_libHandle) {
+		if (!tmplibHandle) {
 #ifdef _DYM_ROUTE_DEBUG_
 			fprintf(stderr, "ROUTEDEBUG: %s\n", dlerror());
 #endif
@@ -1232,11 +1269,22 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 			return 5;
 		}
 
-		WH_DymRoute_precompiled_route = dlsym(_WH_DymRoute_libHandle, "WH_DymRoute_precompiled_route");
+		WH_DymRoute_precompiled_route = dlsym(tmplibHandle, "WH_DymRoute_precompiled_route");
 
-		if ((errorString = dlerror()) != NULL)  {
+		if ((errorString = dlerror()) != NULL || WH_DymRoute_precompiled_route == NULL)  {
 			fputs(errorString, stderr);
 			ret = 6;
+		}
+
+		if (_WH_DymRoute_libHandle) {
+			void *libtofree = _WH_DymRoute_libHandle;
+
+			_WH_DymRoute_libHandle = tmplibHandle;
+
+			dlclose(libtofree);
+
+		} else {
+			_WH_DymRoute_libHandle = tmplibHandle;
 		}
 	}
 

@@ -11,6 +11,10 @@ extern "C" {
 		HELLO, SSLSTART, WORMINFO, SETUPWORMCONN
 	};
 
+	enum wormErrorType {
+		WH_ERRNO_CLEAR = 0, WH_ERRNO_EMPTY = 1, WH_ERRNO_CLOSED = 2
+	};
+
 	typedef struct {
 		uint16_t Port;
 		uint32_t IP; //TODO fix para ipv6
@@ -96,10 +100,10 @@ extern "C" {
 	int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket);
 
 
-	/** WH_TH_hellow
+	/** WH_TH_hello
 	 * Process a HELLOW message
 	 */
-	void WH_TH_hellow(SyncSocket *socket);
+	void WH_TH_hello(SyncSocket *socket);
 
 	/** SETUPWORMCONN
 	 * Process a HELLOW message

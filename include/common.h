@@ -47,17 +47,20 @@ extern "C" {
 		SEND_SOCKET, RECV_SOCKET
 	};
 	enum ctrlMsgType {
-		HELLOEINSTEIN, STARTSSL, SETUP, QUERYID, RESPONSEID, PING, PONG, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR, HALT
+		HELLOEINSTEIN, STARTSSL, SETUP, QUERYID, RESPONSEID, PING, PONG, CHANGEROUTE, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR, HALT
 	};
 
-	typedef struct {
+	typedef struct { //__attribute__(packet)??
 		uint16_t id;
 		uint16_t listenPort;
 		uint32_t IP; //TODO fix para ipv6
+		uint8_t isSSLNode;
+		uint8_t reservedFlag4; //Prevents valgrind unitialized errors. Is not used at all
+		uint8_t reservedFlag2; //Prevents valgrind unitialized errors. Is not used at all
+		uint8_t reservedFlag3; //Prevents valgrind unitialized errors. Is not used at all
 		uint32_t connectionDescriptionLength;
 		uint8_t *connectionDescription; // (LISP connection description)
 		int64_t core;
-		uint8_t isSSLNode;
 	} WormSetup;
 
 	typedef struct {

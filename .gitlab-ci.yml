@@ -1,11 +1,15 @@
-compilation:
-    script:
-        - make
-
 docs:
     script:
         - make Docs
         - cp -r doc/html /var/www/docs/wormhole
+
+compilation_basic:
+    script:
+        - make bin/einstein
+
+compilation_full:
+    script:
+        - make
 
 test_commonh_test_async:
     script:

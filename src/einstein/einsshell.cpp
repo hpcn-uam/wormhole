@@ -27,6 +27,7 @@ extern "C"
 			}
 		}
 	}
+
 	char *hintsln(const char *buf, int *color, int *bold)
 	{
 		//search for similar:
@@ -48,21 +49,28 @@ extern "C"
 			if (transfelement == temp) {
 				*bold = 1;
 				*color = 35;
-				return (char *)(" " + element.hints).c_str(); //show hints if full word
+				return strdup((" " + element.hints).c_str()); //show hints if full word
 
 			} else if (transfelement + " " == temp) {
 				*bold = 1;
 				*color = 35;
-				return (char *)(element.hints).c_str(); //show hints if complete word + space
+				return strdup((element.hints).c_str()); //show hints if complete word + space
 
 			} else if (shortedElement == temp) { //TODO: consider remove, seems to be confusing
 				*bold = 0;
 				*color = 34;
-				return (char *)element.cmd.substr(temp.length(), element.cmd.length()).c_str(); //complete to the closest word
+				return strdup(element.cmd.substr(temp.length(), element.cmd.length()).c_str()); //complete to the closest word
 			}
 		}
 
 		return NULL;
+	}
+
+	void hintsFree(void *elem)
+	{
+		if (elem) {
+			free(elem);
+		}
 	}
 }
 
@@ -83,13 +91,15 @@ EinsShell::EinsShell(shared_ptr<Einstein> eins)
 
 	linenoiseSetCompletionCallback(completeln);
 	linenoiseSetHintsCallback(hintsln);
+	linenoiseSetFreeHintsCallback(hintsFree);
 
 	ShellCommand::eins = eins;
 }
 
 EinsShell::~EinsShell()
 {
-
+	linenoiseHistorySetMaxLen(1);
+	linenoiseHistorySetMaxLen(0);
 }
 
 int EinsShell::startShell()
@@ -125,6 +135,13 @@ int EinsShell::startShell()
 	}
 
 	return ret;
+}
+
+void EinsShell::waitForEinstein()
+{
+	while (this->eins->ec.connections.size() > (unsigned)this->eins->ec.startedWorms) {
+		hptl_waitns(50 * 1000 * 1000UL);
+	}
 }
 
 int EinsShell::executeCmd(string cmd)

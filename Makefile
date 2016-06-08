@@ -48,7 +48,7 @@ Docs: doc/html
 
 langLibs: javaLibs
 
-Examples: bin/pcapReader.tgz bin/httpDissector.tgz bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/testBW.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
+Examples: bin/pcapReader.tgz bin/httpDissector.tgz bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/randomEmitter.tgz bin/bandwithMetter.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
 Jexamples: bin/testJBW.tgz bin/javaTest.tgz
 
 #Tars
@@ -70,15 +70,25 @@ bin/testLisp.tgz: bin/testLisp lib/libworm.so src/examples/lisprun.sh
 	mv $(TMPDIR)/testLisp.tgz bin/testLisp.tgz
 	rm -rf $(TMPDIR)/testLisp
 	
-bin/testBW.tgz: bin/testBW lib/libworm.so src/examples/bwrun.sh | SSL
-	mkdir -p $(TMPDIR)/testBW/lib
-	cp bin/testBW $(TMPDIR)/testBW
-	cp -r certs $(TMPDIR)/testBW
-	cp lib/libworm.so $(TMPDIR)/testBW/lib
-	cp src/examples/bwrun.sh $(TMPDIR)/testBW/run.sh
-	cd $(TMPDIR);	tar -czf testBW.tgz testBW
-	mv $(TMPDIR)/testBW.tgz bin/testBW.tgz
-	rm -rf $(TMPDIR)/testBW
+bin/randomEmitter.tgz: bin/randomEmitter lib/libworm.so src/examples/rnderun.sh | SSL
+	mkdir -p $(TMPDIR)/randomEmitter/lib
+	cp bin/randomEmitter $(TMPDIR)/randomEmitter
+	cp -r certs $(TMPDIR)/randomEmitter
+	cp lib/libworm.so $(TMPDIR)/randomEmitter/lib
+	cp src/examples/rnderun.sh $(TMPDIR)/randomEmitter/run.sh
+	cd $(TMPDIR);	tar -czf randomEmitter.tgz randomEmitter
+	mv $(TMPDIR)/randomEmitter.tgz bin/randomEmitter.tgz
+	rm -rf $(TMPDIR)/randomEmitter
+
+bin/bandwithMetter.tgz: bin/bandwithMetter lib/libworm.so src/examples/bmrun.sh | SSL
+	mkdir -p $(TMPDIR)/bandwithMetter/lib
+	cp bin/bandwithMetter $(TMPDIR)/bandwithMetter
+	cp -r certs $(TMPDIR)/bandwithMetter
+	cp lib/libworm.so $(TMPDIR)/bandwithMetter/lib
+	cp src/examples/bmrun.sh $(TMPDIR)/bandwithMetter/run.sh
+	cd $(TMPDIR);	tar -czf bandwithMetter.tgz bandwithMetter
+	mv $(TMPDIR)/bandwithMetter.tgz bin/bandwithMetter.tgz
+	rm -rf $(TMPDIR)/bandwithMetter
 	
 bin/testJBW.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/jbwrun.sh
 	mkdir -p $(TMPDIR)/testJBW/lib

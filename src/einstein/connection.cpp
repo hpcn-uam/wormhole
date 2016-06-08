@@ -28,6 +28,7 @@ Connection::Connection(const string listenIp, const uint16_t listenPort, bool au
 	this->fdinfo = 0;
 	this->numWormSockets = 0;
 	this->previousPollIndex = 0;
+	this->startedWorms = 0;
 	this->autoDeployWorms = autoDeployWorms;
 
 	signal((int) SIGINT, Connection::signal_callback_handler);
@@ -118,6 +119,9 @@ void Connection::run()
 	for (size_t i = 0; i < this->connections.size(); i++) {
 		if (setupWorm() != 0) {
 			i--;
+
+		} else {
+			this->startedWorms++;
 		}
 	}
 
@@ -212,7 +216,7 @@ void Connection::deployWorm(Worm &wc)
 			v->second.insert(wc.programName);
 
 		} else {
-			cerr << "Trying to copy program to worm " << wc.ws.id << " but alredy copied" << endl;
+			cerr << "Program " << wc.programName << " alredy copied to worm " << wc.ws.id << endl;
 			copyData = false;
 		}
 	}
@@ -392,6 +396,25 @@ void Connection::pollWorms()
 				case UNDERLOAD:
 
 					// TODO
+
+				case CTRL_ERROR:
+
+					// TODO better implementation
+					for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+						if (it->second->socket == this->wormSockets[i]) {
+							cerr << "ERROR MSG from worm.id = " << it->first << endl;
+						}
+					}
+
+				case CTRL_OK:
+
+					// TODO better implementation
+					for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+						if (it->second->socket == this->wormSockets[i]) {
+							cerr << "OK MSG from worm.id = " << it->first << endl;
+						}
+					}
+
 				default:
 					// Send error
 					enum ctrlMsgType errorMsg = CTRL_ERROR;

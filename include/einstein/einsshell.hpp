@@ -46,6 +46,11 @@ class EinsShell
 	 */
 	int startShell();
 
+	/*
+	 * Waits until einstein successfully starts
+	 */
+	void waitForEinstein();
+
  private:
 	int executeCmd(string cmd);
 };
