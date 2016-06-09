@@ -457,15 +457,9 @@ void Connection::pollWorms()
 
 }
 
-void Connection::mutex_init() {
-	pthread_mutex_init(&mutex, 0);
-}
 void Connection::mutex_lock() {
-	pthread_mutex_lock(&mutex);
+	mtx.lock();
 }
 void Connection::mutex_unlock() {
-	pthread_mutex_unlock(&mutex);
-}
-void Connection::mutex_destroy() {
-	pthread_mutex_destroy(&mutex);
+	mtx.unlock();
 }

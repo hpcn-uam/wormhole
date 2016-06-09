@@ -3,7 +3,6 @@
 
 #include <common.h>
 #include <einstein/connection.hpp>
-#include <einstein/einsthreads.hpp>
 
 #include <poll.h>
 #include <signal.h>
@@ -32,8 +31,6 @@ class Einstein
 	Connection ec;
 	thread thr;
 
-	einsmutex mtx;
-
  public:
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort);
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms);
@@ -50,10 +47,8 @@ class Einstein
 	 */
 	void openThreadedHoles();
 
-	void mutex_init();
 	void mutex_lock();
 	void mutex_unlock();
-	void mutex_destroy();
 
  private:
 	void readConfig(const string configFileName);

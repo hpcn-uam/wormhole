@@ -3,7 +3,6 @@
 
 #include <common.h>
 #include <einstein/worm.hpp>
-#include <einstein/einsthreads.hpp>
 
 #include <poll.h>
 #include <signal.h>
@@ -17,6 +16,7 @@
 #include <set>
 #include <memory>
 #include <stdexcept>
+#include <mutex>
 
 using namespace std;
 
@@ -49,7 +49,7 @@ class Connection
 
 	bool autoDeployWorms = true;
 
-	einsmutex mutex;
+	mutex mtx;
 
  public:
 	Connection(const string listenIp, const uint16_t listenPort);
@@ -68,10 +68,8 @@ class Connection
 
 	void run();
 
-	void mutex_init();
 	void mutex_lock();
 	void mutex_unlock();
-	void mutex_destroy();
 
  private:
 	// Add socket to worm
