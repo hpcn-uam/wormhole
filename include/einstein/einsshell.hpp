@@ -4,6 +4,7 @@
 #include <common.h>
 #include <einstein/einstein.hpp>
 #include <einstein/shellcommand.hpp>
+#include <einstein/einsthreads.hpp>
 
 #include <linenoise.h>
 

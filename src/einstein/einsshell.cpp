@@ -156,7 +156,12 @@ int EinsShell::executeCmd(string cmd)
 	auto found = this->commands.find(ShellCommand(searchcmd));
 
 	if (found != this->commands.end()) {
-		return found->exec(cmd);
+
+		this->eins->mutex_lock();
+		int ret = found->exec(cmd);
+		this->eins->mutex_unlock();
+
+		return ret;
 
 	} else {
 		cout << "Command \"" << cmd << "\" not available" << endl;

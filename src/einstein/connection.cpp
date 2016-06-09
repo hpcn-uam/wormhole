@@ -127,8 +127,15 @@ void Connection::run()
 
 	cerr << "Completed setup of all worms" << endl;
 
-	for (; keepRunning;) {
+	for (;;) {
+
+		mutex_lock();
 		pollWorms();
+
+		if (!keepRunning) {
+			break;
+		}
+		mutex_unlock();
 	}
 
 	//throw std::runtime_error("Forcing to delete Einstein"); //TODO: Is necesary?
@@ -285,7 +292,7 @@ void Connection::pollWorms()
 	this->numFilledPolls = i;
 
 	int st;
-	st = poll(this->fdinfo, this->numFilledPolls, 1);
+	st = poll(this->fdinfo, this->numFilledPolls, 10);
 
 	if (st == -1) {
 		if (keepRunning) {
@@ -448,4 +455,17 @@ void Connection::pollWorms()
 	}
 
 
+}
+
+void Connection::mutex_init() {
+	pthread_mutex_init(&mutex, 0);
+}
+void Connection::mutex_lock() {
+	pthread_mutex_lock(&mutex);
+}
+void Connection::mutex_unlock() {
+	pthread_mutex_unlock(&mutex);
+}
+void Connection::mutex_destroy() {
+	pthread_mutex_destroy(&mutex);
 }

@@ -12,6 +12,8 @@ Einstein::Einstein(const string configFileName, string listenIp, uint16_t listen
 	: ec(listenIp, listenPort, autoDeployWorms, runParams)
 {
 
+	mutex_init();
+
 	this->readConfig(configFileName);
 }
 
@@ -23,6 +25,8 @@ Einstein::~Einstein()
 	if (this->thr.joinable()) {
 		this->thr.join();
 	}
+
+	mutex_destroy();
 }
 
 void Einstein::openHoles()
@@ -153,4 +157,17 @@ void Einstein::readConfig(const string configFileName)
 	cerr << "Launched all worms" << endl;
 
 	fclose(configFile);
+}
+
+void Einstein::mutex_init() {
+	ec.mutex_init();
+}
+void Einstein::mutex_lock() {
+	ec.mutex_lock();
+}
+void Einstein::mutex_unlock() {
+	ec.mutex_unlock();
+}
+void Einstein::mutex_destroy() {
+	ec.mutex_destroy();
 }
