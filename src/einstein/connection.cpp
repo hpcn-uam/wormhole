@@ -216,7 +216,7 @@ void Connection::deployWorm(Worm &wc)
 			v->second.insert(wc.programName);
 
 		} else {
-			cerr << "Program " << wc.programName << " alredy copied to worm " << wc.ws.id << endl;
+			cerr << "Program \"" << wc.programName << "\" alredy copied to worm " << wc.ws.id << endl;
 			copyData = false;
 		}
 	}
@@ -366,6 +366,7 @@ void Connection::pollWorms()
 							if (it->second->socket == this->wormSockets[i]) {
 								it->second->halting = true;
 								cerr << "El worm " << it->first << " ha finalizado su tarea." << endl;
+								break;
 							}
 						}
 
@@ -403,8 +404,11 @@ void Connection::pollWorms()
 					for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
 						if (it->second->socket == this->wormSockets[i]) {
 							cerr << "ERROR MSG from worm.id = " << it->first << endl;
+							break;
 						}
 					}
+
+					break;
 
 				case CTRL_OK:
 
@@ -412,8 +416,11 @@ void Connection::pollWorms()
 					for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
 						if (it->second->socket == this->wormSockets[i]) {
 							cerr << "OK MSG from worm.id = " << it->first << endl;
+							break;
 						}
 					}
+
+					break;
 
 				default:
 					// Send error
@@ -425,8 +432,6 @@ void Connection::pollWorms()
 						continue;
 					}
 				}
-
-
 
 			} else if (this->fdinfo[i].revents & POLLHUP || this->fdinfo[i].revents & POLLRDNORM || this->fdinfo[i].revents & POLLNVAL) {
 				this->wormSockets[i] = -1;

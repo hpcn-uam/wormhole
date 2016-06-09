@@ -91,10 +91,11 @@ uint64_t Worm::chroute(string newRoute)
 	this->ws.connectionDescription = (uint8_t *)realloc(this->ws.connectionDescription, length);
 	memcpy(this->ws.connectionDescription, newRoute.c_str(), length);
 
-	if (tcp_message_recv(this->socket, &msg, sizeof(msg), 0) == 0 || msg != CTRL_OK) {
+	/*if (tcp_message_recv(this->socket, &msg, sizeof(msg), 0) == 0 || msg != CTRL_OK) {
 		return 1;
 
 	} else {
 		return 0;
-	}
+	}*/
+	return 0;
 }

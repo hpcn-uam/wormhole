@@ -8,9 +8,9 @@ extern "C" {
 #include "common.h"
 
 // Usable defines:
-//#define _WORMLIB_DEBUG_
+#define _WORMLIB_DEBUG_
 //#define _DYM_ROUTE_DEBUG_
-#define _WORMLIB_STATISTICS_
+//#define _WORMLIB_STATISTICS_
 
 	enum DataType {
 		CUSTOM = -3, COMPOUND, STRING, ARRAY, INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64

@@ -345,10 +345,16 @@ void *WH_thread(void *arg)
 			//Lectura desde Einstein
 			if (!WH_bussy) {
 				if (tcp_message_srecv(WH_einsConn.socket, &type, sizeof(type), 0) != sizeof(type)) {
+					if (errno == EPIPE || errno == ENOTCONN) {
+						//TODO: connection lost with Einstein, Reconnect!!
+						fputs("EINSTEIN connection lost...! Forced Shutdown\n", stderr);
+						exit(1);
+					}
+
 					continue;
 
 				} else {
-					if (WH_TH_checkCtrlMsgType(type, WH_einsConn.socket)) {
+					if (WH_TH_checkCtrlMsgType(type, WH_einsConn.socket) > 0) {
 						//TODO: connection lost with Einstein, Reconnect!!
 						fputs("EINSTEIN connection lost...! Forced Shutdown\n", stderr);
 						exit(1);
@@ -417,20 +423,20 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 			fprintf(stderr, "Hey!, stablishing new route!\n");
 			fflush(stderr);
 
-			if (tcp_message_srecv(socket, &routesize, sizeof(routesize), 1)) {
-				ret = 1;
+			if (tcp_message_srecv(socket, &routesize, sizeof(routesize), 1) != sizeof(routesize)) {
+				ret = -1;
 			}
 
 			if (!ret) {
 				newroute = malloc(routesize);
 			}
 
-			if (newroute) if (tcp_message_srecv(socket, newroute, routesize, 1)) {
-					ret = 1;
+			if (newroute) if (tcp_message_srecv(socket, newroute, routesize, 1) != routesize) {
+					ret = -1;
 				}
 
 			if (!ret) {
-				fprintf(stderr, "Toute : %s\n", newroute);
+				fprintf(stderr, "New Route : %s\n", newroute);
 			}
 
 			fflush(stderr);
@@ -441,9 +447,12 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 
 			if (ret) {
 				type = CTRL_ERROR;
+				ret = -1;
+				fprintf(stderr, "Faling changing route..!\n");
 
 			} else {
 				type = CTRL_OK;
+				fprintf(stderr, "Route succesfully changed!\n");
 			}
 
 			tcp_message_ssend(socket, &type, sizeof(type));
@@ -451,6 +460,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 		}
 
 	default:
+		fprintf(stderr, "Unsupported Einstein Message!\n");
 		ret = 1; //Error!
 		break;
 	}
@@ -805,7 +815,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	Connection conntmp = {
 		.type = *type,
 		.socket = {0}
-#ifdef _WORMLIB_DEBUG_
+#ifdef _WORMLIB_STATISTICS_
 		, .stats = {.totalIO = 0, .lastIO = 0, .lastCheck = hptl_get()}
 #endif
 	};
@@ -1207,21 +1217,26 @@ uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi)
 uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *wms)
 {
 	pid_t myPid = getpid();
-	char *tmpString = malloc(1024);
+	char *cString = malloc(1024);
+	char *soString = malloc(1024);
+	char *gccString = malloc(1024);
 	char *errorString;
 
-	if (!tmpString) {
+	if (!cString || !soString || !gccString) {
 #ifdef _DYM_ROUTE_DEBUG_
 		perror("ROUTEDEBUG: Error in Malloc");
 #endif
 		return 1;
 	}
 
-	sprintf(tmpString, "/tmp/%d.c", myPid);
-	FILE *f = fopen(tmpString, "w+");
+	sprintf(cString, "/tmp/%dT%lu.c", myPid, hptl_get());
+	sprintf(soString, "/tmp/%dT%lu.so", myPid, hptl_get());
+	FILE *f = fopen(cString, "w+");
 
 	if (!f) {
-		free(tmpString);
+		free(cString);
+		free(soString);
+		free(gccString);
 #ifdef _DYM_ROUTE_DEBUG_
 		perror("ROUTEDEBUG: Error creating tmp.c");
 #endif
@@ -1239,13 +1254,13 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	/*Compile the .c*/
 	if (!ret) {
-		sprintf(tmpString, "gcc -O3 -Wall /tmp/%d.c -o /tmp/%d.so -shared -Llib -lworm -lpthread -fPIC ", myPid, myPid);
+		sprintf(gccString, "gcc -O3 -Wall %s -o %s -shared -Llib -lworm -lpthread -fPIC ", cString, soString);
 
 #ifdef _DYM_ROUTE_DEBUG_
 		fprintf(stderr, "ROUTEDEBUG: Calling %s\n", tmpString);
 #endif
 
-		ret = system(tmpString);
+		ret = system(gccString);
 
 #ifdef _DYM_ROUTE_DEBUG_
 
@@ -1258,14 +1273,15 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	/*Link the .SO*/
 	if (!ret) {
-		sprintf(tmpString, "/tmp/%d.so", myPid);
-		void *tmplibHandle = dlopen(tmpString, RTLD_NOW);
+		void *tmplibHandle = dlopen(soString, RTLD_NOW);
 
 		if (!tmplibHandle) {
 #ifdef _DYM_ROUTE_DEBUG_
 			fprintf(stderr, "ROUTEDEBUG: %s\n", dlerror());
 #endif
-			free(tmpString);
+			free(cString);
+			free(soString);
+			free(gccString);
 			return 5;
 		}
 
@@ -1288,7 +1304,9 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 		}
 	}
 
-	free(tmpString);
+	free(cString);
+	free(soString);
+	free(gccString);
 	return ret;
 }
 
@@ -1657,7 +1675,7 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 				fprintf(f, "%s", _WH_DymRoute_CC_send);
 
 #ifdef _DYM_ROUTE_DEBUG_
-				fprintf(stderr, "ROUTEDEBUG: %d in Hash switch %lu\n", nextNode, myHash);
+				fprintf(stderr, "ROUTEDEBUG: %d in Hash switch %d\n", nextNode, myHash);
 #endif
 				fprintf(f, "%s", _WH_DymRoute_CC_Hashbreak);
 				myHash++;
