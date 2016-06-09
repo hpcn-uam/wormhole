@@ -1297,6 +1297,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 			_WH_DymRoute_libHandle = tmplibHandle;
 
+			hptl_waitns(10 * 1000 * 1000L);
 			dlclose(libtofree);
 
 		} else {
@@ -1777,6 +1778,7 @@ void WH_DymRoute_invalidate()
 		tmppointer = _WH_DymRoute_libHandle;
 		_WH_DymRoute_libHandle = NULL;
 
+		hptl_waitns(10 * 1000 * 1000L);
 		dlclose(tmppointer);
 	}
 }

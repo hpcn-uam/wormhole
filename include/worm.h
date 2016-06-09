@@ -8,7 +8,7 @@ extern "C" {
 #include "common.h"
 
 // Usable defines:
-#define _WORMLIB_DEBUG_
+//#define _WORMLIB_DEBUG_
 //#define _DYM_ROUTE_DEBUG_
 //#define _WORMLIB_STATISTICS_
 
