@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 			}
 		}
 
-		WH_flushIO();
+		//WH_flushIO();
 
 		gettimeofday(&end, 0);
 		fprintf(stderr, "%lf gbps. Pico: %lf gpbs\n",
