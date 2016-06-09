@@ -135,6 +135,7 @@ void Connection::run()
 		if (!keepRunning) {
 			break;
 		}
+
 		mutex_unlock();
 	}
 
@@ -186,8 +187,10 @@ int Connection::setupWorm()
 
 	const void *connDescription = static_cast<const void *>(this->connections.at(wormId)->ws.connectionDescription);
 
-	if (tcp_message_send(currentWormSocket, connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
-		throw std::runtime_error("Error sending message");
+	if (this->connections.at(wormId)->ws.connectionDescriptionLength > 0) {
+		if (tcp_message_send(currentWormSocket, connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
+			throw std::runtime_error("Error sending message");
+		}
 	}
 
 	cerr << "Completed setup of worm " << wormId << endl;
@@ -457,9 +460,11 @@ void Connection::pollWorms()
 
 }
 
-void Connection::mutex_lock() {
+void Connection::mutex_lock()
+{
 	mtx.lock();
 }
-void Connection::mutex_unlock() {
+void Connection::mutex_unlock()
+{
 	mtx.unlock();
 }
