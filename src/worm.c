@@ -165,11 +165,13 @@ uint8_t WH_init(void)
 	// Receive connectionDescription
 	WH_mySetup.connectionDescription = calloc(WH_mySetup.connectionDescriptionLength + 1, sizeof(char));
 
-	if (tcp_message_srecv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) != WH_mySetup.connectionDescriptionLength) {
+	if (WH_mySetup.connectionDescriptionLength > 0) {
+		if (tcp_message_srecv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) != WH_mySetup.connectionDescriptionLength) {
 #ifdef _WORMLIB_DEBUG_
-		perror("[WH]: Error recv connectionDescription from Einstein");
+			perror("[WH]: Error recv connectionDescription from Einstein");
 #endif
-		return 1;
+			return 1;
+		}
 	}
 
 	//TypeSetup
@@ -420,9 +422,6 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 			uint32_t routesize;
 			uint8_t *newroute = NULL;
 
-			fprintf(stderr, "Hey!, stablishing new route!\n");
-			fflush(stderr);
-
 			if (tcp_message_srecv(socket, &routesize, sizeof(routesize), 1) != sizeof(routesize)) {
 				ret = -1;
 			}
@@ -436,7 +435,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 				}
 
 			if (!ret) {
-				fprintf(stderr, "New Route : %s\n", newroute);
+				fprintf(stderr, "[WH] Setting up new Route: %s\n", newroute);
 			}
 
 			fflush(stderr);
