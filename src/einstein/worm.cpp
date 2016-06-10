@@ -65,7 +65,10 @@ string Worm::expandCDescription(string cd)
 
 uint64_t Worm::ping()
 {
-	if (this->socket == 0 || this->socket == -1) { return 0; }
+	if (this->socket == 0 || this->socket == -1) {
+		return 0;
+	}
+
 	hptl_t begin = hptl_get();
 
 	ctrlMsgType msg = PING;
@@ -80,7 +83,9 @@ uint64_t Worm::ping()
 
 uint64_t Worm::chroute(string newRoute)
 {
-	if (this->socket == 0 || this->socket == -1) { return 1; }
+	if (this->socket == 0 || this->socket == -1) {
+		return 1;
+	}
 
 	newRoute = Worm::expandCDescription(newRoute);
 

@@ -70,7 +70,7 @@ void Connection::createWorm(shared_ptr<Worm> wc, const string ip)
 	// TODO: Conectarse al remoto y crear worm
 
 	mutex_lock();
-	
+
 	this->connections.insert(make_pair(wc->ws.id, wc));
 	this->numWormSockets = this->connections.size();
 	void *ret = realloc(static_cast<void *>(wormSockets), this->numWormSockets * sizeof(int));
@@ -133,12 +133,13 @@ void Connection::run()
 
 		mutex_lock();
 		pollWorms();
+		mutex_unlock();
 
 		if (!keepRunning) {
 			break;
 		}
 
-		mutex_unlock();
+		usleep(10);
 	}
 
 	//throw std::runtime_error("Forcing to delete Einstein"); //TODO: Is necesary?
@@ -147,8 +148,8 @@ void Connection::run()
 int Connection::setupWorm()
 {
 	struct timeval ts;
-	ts.tv_sec  =   3; //TODO parametrizar esta variable
-	ts.tv_usec =   0;
+	ts.tv_sec  =   0; //TODO parametrizar esta variable
+	ts.tv_usec =   100;
 
 	int currentWormSocket = tcp_accept(this->listeningSocket, &ts);
 
@@ -195,7 +196,7 @@ int Connection::setupWorm()
 	}
 
 	mutex_lock();
-	
+
 	connectWorm(wormId, currentWormSocket);
 
 	mutex_unlock();
@@ -271,14 +272,16 @@ void Connection::deployWorm(Worm &wc)
 	wc.deployed = true;
 }
 
-void Connection::setupWormThread() {
+void Connection::setupWormThread()
+{
 	this->setupThread = thread(
-							   [this] {
-								   while (keepRunning) {
-									   // TODO: Relanzar worm si pasa mucho tiempo sin responder
-									   this->setupWorm();
-								   }
-							   });
+	[this] {
+		while (keepRunning) {
+			// TODO: Relanzar worm si pasa mucho tiempo sin responder
+			this->setupWorm();
+			usleep(10);
+		}
+	});
 }
 
 void Connection::pollWorms()
@@ -317,7 +320,7 @@ void Connection::pollWorms()
 
 	if (this->numFilledPolls > 0) {
 		int st;
-		st = poll(this->fdinfo, this->numFilledPolls, 10);
+		st = poll(this->fdinfo, this->numFilledPolls, 1);
 
 		if (st == -1) {
 			if (keepRunning) {
@@ -394,31 +397,31 @@ void Connection::pollWorms()
 						break;
 
 					case HALT: { // TODO better implementation
-						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-							if (it->second->socket == this->wormSockets[i]) {
-								it->second->halting = true;
-								cerr << "El worm " << it->first << " ha finalizado su tarea." << endl;
-								break;
+							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+								if (it->second->socket == this->wormSockets[i]) {
+									it->second->halting = true;
+									cerr << "El worm " << it->first << " ha finalizado su tarea." << endl;
+									break;
+								}
 							}
-						}
 
-						uint8_t flag = 1;
+							uint8_t flag = 1;
 
-						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-							if (!it->second->halting) {
-								flag = 0;
-								break;
+							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+								if (!it->second->halting) {
+									flag = 0;
+									break;
+								}
 							}
-						}
 
-						if (flag) {
-							cerr << "Cerrando Einstein debido a que todas las tareas han sido completadas" << endl;
-							this->deleteAllWorms();
-							exit(0); //TODO cambiar por un cierre mas ordenado, como por ejemplo, modificando la variable de salida utilizada para el cntl+c
-						}
+							if (flag) {
+								cerr << "Cerrando Einstein debido a que todas las tareas han sido completadas" << endl;
+								this->deleteAllWorms();
+								exit(0); //TODO cambiar por un cierre mas ordenado, como por ejemplo, modificando la variable de salida utilizada para el cntl+c
+							}
 
-						break;
-					}
+							break;
+						}
 
 					case DOWNLINK:
 

@@ -155,9 +155,11 @@ void Einstein::readConfig(const string configFileName)
 	fclose(configFile);
 }
 
-void Einstein::mutex_lock() {
+void Einstein::mutex_lock()
+{
 	ec.mutex_lock();
 }
-void Einstein::mutex_unlock() {
+void Einstein::mutex_unlock()
+{
 	ec.mutex_unlock();
 }
