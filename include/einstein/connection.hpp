@@ -17,6 +17,7 @@
 #include <memory>
 #include <stdexcept>
 #include <mutex>
+#include <thread>
 
 using namespace std;
 
@@ -28,7 +29,7 @@ class Connection
 	friend class EinsShell;
 	friend class ShellCommand;
 
-	map <uint16_t, shared_ptr<Worm>> connections;
+	std::map <uint16_t, std::shared_ptr<Worm>> connections;
 	string listenIpStr;
 	uint32_t listenIp;
 	uint16_t listenPort;
@@ -50,6 +51,7 @@ class Connection
 	bool autoDeployWorms = true;
 
 	mutex mtx;
+	thread setupThread;
 
  public:
 	Connection(const string listenIp, const uint16_t listenPort);
@@ -78,6 +80,7 @@ class Connection
 	void listen();
 	void threadRun();
 	int setupWorm();
+	void setupWormThread();
 	void deployWorm(Worm &wc);
 
 	static void signal_callback_handler(int signum);

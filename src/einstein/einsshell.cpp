@@ -139,9 +139,6 @@ int EinsShell::startShell()
 
 void EinsShell::waitForEinstein()
 {
-	while (this->eins->ec.connections.size() > (unsigned)this->eins->ec.startedWorms) {
-		hptl_waitns(50 * 1000 * 1000UL);
-	}
 }
 
 int EinsShell::executeCmd(string cmd)

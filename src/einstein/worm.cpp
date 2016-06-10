@@ -65,6 +65,7 @@ string Worm::expandCDescription(string cd)
 
 uint64_t Worm::ping()
 {
+	if (this->socket == 0 || this->socket == -1) { return 0; }
 	hptl_t begin = hptl_get();
 
 	ctrlMsgType msg = PING;
@@ -79,6 +80,8 @@ uint64_t Worm::ping()
 
 uint64_t Worm::chroute(string newRoute)
 {
+	if (this->socket == 0 || this->socket == -1) { return 1; }
+
 	newRoute = Worm::expandCDescription(newRoute);
 
 	ctrlMsgType msg = CHANGEROUTE;
@@ -91,11 +94,5 @@ uint64_t Worm::chroute(string newRoute)
 	this->ws.connectionDescription = (uint8_t *)realloc(this->ws.connectionDescription, length);
 	memcpy(this->ws.connectionDescription, newRoute.c_str(), length);
 
-	/*if (tcp_message_recv(this->socket, &msg, sizeof(msg), 0) == 0 || msg != CTRL_OK) {
-		return 1;
-
-	} else {
-		return 0;
-	}*/
 	return 0;
 }
