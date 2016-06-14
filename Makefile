@@ -88,8 +88,11 @@ bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/
 	cd $(TMPDIR); tar -czf nlp.tgz nlp
 	mv $(TMPDIR)/nlp.tgz bin/nlp.tgz
 	rm -rf $(TMPDIR)/nlp
-	
-bin/httpDissector.tgz: lib/libworm.so src/examples/runscripts/httpDissector.sh
+
+dependencies/repos/httpDissector/httpDissector_wormhole: lib/libworm.so
+	cd dependencies ; $(MAKE) $(MFLAGS) httpDissector
+
+bin/httpDissector.tgz: lib/libworm.so src/examples/runscripts/httpDissector.sh dependencies/repos/httpDissector/httpDissector_wormhole
 	mkdir -p $(TMPDIR)httpDissector/lib
 	cp dependencies/repos/httpDissector/httpDissector_wormhole $(TMPDIR)httpDissector/httpDissector
 	cp lib/libworm.so $(TMPDIR)httpDissector/lib
@@ -125,15 +128,15 @@ $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.jav
 .java.class:
 	cd $(JAVAPATH); $(JC) $(JFLAGS) $*.java
 
-$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class | dependencies/compiled/nlp
+$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class dependencies/compiled/nlp
 	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH)  $*.java
 
-$(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class: $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.java | dependencies/compiled/nlp
+$(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class: $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.java  dependencies/compiled/nlp
 	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH) -sourcepath "dependencies/repos/CoreNLP/src/" $*.java
 	cd $(JAVAPATH) ; jar uf ../../../dependencies/compiled/nlp/stanford-corenlp-3.6.0.jar edu/stanford/nlp/sentiment/SentimentPipeline*class
 
 
-dependencies/compiled/nlp:
+dependencies/compiled/nlp: dependencies/compiled
 	mkdir -p dependencies/compiled
 	cd dependencies/compiled ; wget http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip
 	cd dependencies/compiled ; unzip stanford-corenlp-full-2015-12-09.zip
@@ -145,7 +148,7 @@ dependencies/compiled/nlp:
 Dependencies: obj bin SSL
 
 dependencies/compiled forceCompileDependencies:
-	cd dependencies; $(MAKE) -j9
+	cd dependencies; $(MAKE) $(MFLAGS)
 
 bin/einstein: src/einstein/main.cpp lib/libworm.so  
 	$(CXX) $(CXXFLAGS) -o $@ $< -Llib -lworm $(LDFLAGS)
@@ -166,7 +169,7 @@ bin:
 javaLibs: lib/libjavaworm.so lib/libjavaworm.jar Jexamples
 
 buildTools:
-	$(MAKE) -C tools
+	$(MAKE) $(MFLAGS) -C tools
 
 obj/%.o: src/%.cpp $(CPPINCLUDES) | Dependencies
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -196,7 +199,9 @@ clean:
 	rm -rf obj lib bin
 	cd $(JAVAPATH); rm -rf $(CLASSFILES)
 	./tools/cleanorigs.bash
-	cd dependencies; $(MAKE) clean
+	cd dependencies; $(MAKE) $(MFLAGS) clean
+	git submodule foreach git clean -fdX
+	git clean -fdx
 
 #Custom Data .o
 obj/structures.h.o: $(INCLUDES)

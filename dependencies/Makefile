@@ -18,7 +18,7 @@ unexport CFLAGS
 unexport CXXFLAGS
 unexport LDFLAGS
 
-all: LibreSSL GRADLE HPTLib httpDissector
+all: LibreSSL GRADLE HPTLib
 
 #Common
 compiled:
@@ -43,22 +43,24 @@ repos/hptimelib/lib/hptl.a: | initRepositories
 
 compiled/gradle:
 	cd compiled ; rm -rf gradle
-	cd compiled ; wget https://services.gradle.org/distributions/gradle-2.13-bin.zip
-	cd compiled ; unzip *.zip
-	cd compiled ; rm *.zip
+	cd compiled ; wget https://services.gradle.org/distributions/gradle-2.14-bin.zip
+	cd compiled ; unzip gradle*.zip
+	cd compiled ; rm gradle*.zip
 	cd compiled ; mv gradle* gradle
 
-httpDissector: repos/httpDissector/httpDissector_wormhole
+httpDissector: repos/httpDissector/httpDissector_wormhole ../lib/libworm.so
 
-repos/httpDissector/httpDissector_wormhole: repos/httpDissector/httpDissector.c
+repos/httpDissector/httpDissector_wormhole: repos/httpDissector/httpDissector.c ../lib/libworm.so
 	cd repos/httpDissector ; make httpDissector_wormhole
+
+repos/httpDissector/httpDissector.c: initRepositories
 
 export LIBSSLCFLAGS='-O3 -fPIC'
 compiled/libressl: repos/libressl/Makefile | compiled
 	mkdir -p compiled/libressl
 
 compiled/libressl/usr: compiled/libressl
-	cd repos/libressl; make install DESTDIR=$(CURRDIR)/compiled/libressl
+	cd repos/libressl; $(MAKE) $(MFLAGS) install DESTDIR=$(CURRDIR)/compiled/libressl
 
 repos/libressl/openbsd: initRepositories | repos/libressl-dep/
 	rm -f repos/libressl/openbsd
@@ -78,5 +80,5 @@ clean:
 	git submodule foreach git reset --hard
 	git submodule foreach git clean -f -d
 	rm -rf compiled
-	cd repos/libressl ; make clean #clean libressl
+	cd repos/libressl ; $(MAKE) $(MFLAGS) clean #clean libressl
 	cd repos/libressl ; rm -rf openbsd configure Makefile

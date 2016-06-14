@@ -5,32 +5,43 @@ docs:
 
 compilation_basic:
     script:
-        - make bin/einstein
+        - make einstein
+
+compilation_simple:
+    script:
+        - make simple
+
+compilation_simple_parallel:
+    script:
+        - make simple -j8
 
 compilation_full:
     script:
-        - make
+        - make -j16
 
 test_commonh_test_async:
     script:
-        - make bin/testSendAsync bin/testRecvAsync
+        - make bin/testSendAsync bin/testRecvAsync -j8
         - cd bin
         - ./testRecvAsync &
         - ./testSendAsync || (killall -9 testRecvAsync ; false)
+        - killall -9 testRecvAsync ; true
         
 test_commonh_test_SSL:
     script:
-        - make bin/testSendSSL bin/testRecvSSL
+        - make bin/testSendSSL bin/testRecvSSL -j8
         - cd bin
         - ./testRecvSSL &
         - ./testSendSSL || (killall -9 testRecvSSL ; false)
+        - killall -9 testRecvSSL ; true
         
 test_commonh_test_AsyncSSL:
     script:
-        - make bin/testSendAsyncSSL bin/testRecvAsyncSSL
+        - make bin/testSendAsyncSSL bin/testRecvAsyncSSL -j8
         - cd bin
         - ./testRecvAsyncSSL &
         - ./testSendAsyncSSL || (killall -9 testRecvAsyncSSL ; false)
+        - killall -9 testRecvAsyncSSL ; true
 
 before_script:
     - killall -9 testSendAsync testRecvAsync testRecvSSL testSendSSL testRecvAsyncSSL testSendAsyncSSL || true
