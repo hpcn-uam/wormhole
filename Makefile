@@ -4,7 +4,6 @@ export VPATH = $(JAVAPATH)
 .SUFFIXES: .java .class
 .PRECIOUS: certs/prv/%.csr certs/prv/%.key.pem
 .SECONDARY: certs/prv/%.csr certs/prv/%.key.pem
-.NOTPARALLEL: all
 
 #Common
 export TMPDIR=/tmp/
@@ -42,7 +41,7 @@ export INCLUDES := $(wildcard include/*.h)
 export CPPINCLUDES := $(wildcard include/*.h include/*.hpp) $(EINSTEINHEADERS)
 export SRCS := $(wildcard src/*.c src/*.cpp src/examples/*.c src/examples/*.cpp)
 
-all: Dependencies langLibs einstein Examples # doc/html
+all: langLibs einstein Examples # doc/html
 
 help Help:
 	echo "For a simple compilation try: make simple"
@@ -100,7 +99,7 @@ bin/httpDissector.tgz: lib/libworm.so src/examples/runscripts/httpDissector.sh
 	rm -rf $(TMPDIR)httpDissector
 
 #Examples
-bin/%: src/examples/%.c lib/libworm.so
+bin/%: src/examples/%.c lib/libworm.so | Dependencies
 	$(CC) $(CFLAGS) -o $@ $< -Llib -lworm $(LDFLAGS) $(SSLLDFLAGS)
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o $(EINSTEINOBJ)
@@ -143,7 +142,7 @@ dependencies/compiled/nlp:
 	cd dependencies/repos/CoreNLP ; ../../compiled/gradle/bin/gradle assembleDist || true
 
 #Common
-Dependencies: obj lib bin SSL
+Dependencies: obj bin SSL
 
 dependencies/compiled forceCompileDependencies:
 	cd dependencies; $(MAKE) -j9
