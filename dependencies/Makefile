@@ -18,7 +18,7 @@ unexport CFLAGS
 unexport CXXFLAGS
 unexport LDFLAGS
 
-all: LibreSSL GRADLE HPTLib
+all: LibreSSL GRADLE HPTLib httpDissector
 
 #Common
 compiled:

@@ -42,122 +42,69 @@ export INCLUDES := $(wildcard include/*.h)
 export CPPINCLUDES := $(wildcard include/*.h include/*.hpp) $(EINSTEINHEADERS)
 export SRCS := $(wildcard src/*.c src/*.cpp src/examples/*.c src/examples/*.cpp)
 
-all: Dependencies libs langLibs bin/einstein Examples # doc/html
+all: Dependencies langLibs einstein Examples # doc/html
+
+help Help:
+	echo "For a simple compilation try: make simple"
+
+simple: einstein Examples
+
+einstein: bin/einstein
 
 Docs: doc/html
 
 langLibs: javaLibs
 
 Examples: bin/pcapReader.tgz bin/httpDissector.tgz bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/randomEmitter.tgz bin/bandwithMetter.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
-Jexamples: bin/testJBW.tgz bin/javaTest.tgz
+Jexamples: bin/JtestBW.tgz bin/Jtest.tgz
 
 #Tars
-bin/testWorm.tgz: bin/testWorm lib/libworm.so src/run.sh
-	mkdir -p $(TMPDIR)/testWorm/lib
-	cp bin/testWorm $(TMPDIR)/testWorm
-	cp lib/libworm.so $(TMPDIR)/testWorm/lib
-	cp src/run.sh $(TMPDIR)/testWorm
-	cd $(TMPDIR);	tar -czf testWorm.tgz testWorm
-	mv $(TMPDIR)/testWorm.tgz bin/testWorm.tgz
-	rm -rf $(TMPDIR)/testWorm
+bin/%.tgz: bin/% lib/libworm.so | src/examples/runscripts/%.sh
+	mkdir -p $(TMPDIR)/$(basename $(@F))/lib
+	cp $< $(TMPDIR)/$(basename $(@F))
+	cp -r certs $(TMPDIR)/$(basename $(@F))
+	cp lib/libworm.so $(TMPDIR)/$(basename $(@F))/lib
+	cp -L $| $(TMPDIR)/$(basename $(@F))
+	cd $(TMPDIR);	tar -czf $(@F) $(basename $(@F))
+	mv $(TMPDIR)/$(@F) $@
+	rm -rf $(TMPDIR)/$(basename $(@F))
 
-bin/testLisp.tgz: bin/testLisp lib/libworm.so src/examples/lisprun.sh
-	mkdir -p $(TMPDIR)/testLisp/lib
-	cp bin/testLisp $(TMPDIR)/testLisp
-	cp lib/libworm.so $(TMPDIR)/testLisp/lib
-	cp src/examples/lisprun.sh $(TMPDIR)/testLisp/run.sh
-	cd $(TMPDIR);	tar -czf testLisp.tgz testLisp
-	mv $(TMPDIR)/testLisp.tgz bin/testLisp.tgz
-	rm -rf $(TMPDIR)/testLisp
-	
-bin/randomEmitter.tgz: bin/randomEmitter lib/libworm.so src/examples/rnderun.sh | SSL
-	mkdir -p $(TMPDIR)/randomEmitter/lib
-	cp bin/randomEmitter $(TMPDIR)/randomEmitter
-	cp -r certs $(TMPDIR)/randomEmitter
-	cp lib/libworm.so $(TMPDIR)/randomEmitter/lib
-	cp src/examples/rnderun.sh $(TMPDIR)/randomEmitter/run.sh
-	cd $(TMPDIR);	tar -czf randomEmitter.tgz randomEmitter
-	mv $(TMPDIR)/randomEmitter.tgz bin/randomEmitter.tgz
-	rm -rf $(TMPDIR)/randomEmitter
-
-bin/bandwithMetter.tgz: bin/bandwithMetter lib/libworm.so src/examples/bmrun.sh | SSL
-	mkdir -p $(TMPDIR)/bandwithMetter/lib
-	cp bin/bandwithMetter $(TMPDIR)/bandwithMetter
-	cp -r certs $(TMPDIR)/bandwithMetter
-	cp lib/libworm.so $(TMPDIR)/bandwithMetter/lib
-	cp src/examples/bmrun.sh $(TMPDIR)/bandwithMetter/run.sh
-	cd $(TMPDIR);	tar -czf bandwithMetter.tgz bandwithMetter
-	mv $(TMPDIR)/bandwithMetter.tgz bin/bandwithMetter.tgz
-	rm -rf $(TMPDIR)/bandwithMetter
-	
-bin/testJBW.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/jbwrun.sh
-	mkdir -p $(TMPDIR)/testJBW/lib
-	cp lib/libjavaworm.* $(TMPDIR)/testJBW/lib #only for java
-	cp lib/libworm.so $(TMPDIR)/testJBW/lib
-	cp src/examples/jbwrun.sh $(TMPDIR)/testJBW/run.sh
-	cd $(TMPDIR);	tar -czf testJBW.tgz testJBW
-	mv $(TMPDIR)/testJBW.tgz bin/testJBW.tgz
-	rm -rf $(TMPDIR)/testJBW
-	
-bin/javaTest.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/javarun.sh
-	mkdir -p $(TMPDIR)/javaTest/lib
-	cp lib/libjavaworm.* $(TMPDIR)/javaTest/lib #only for java
-	cp lib/libworm.so $(TMPDIR)/javaTest/lib
-	cp src/examples/javarun.sh $(TMPDIR)/javaTest/run.sh
-	cd $(TMPDIR); tar -czf javaTest.tgz javaTest
-	mv $(TMPDIR)/javaTest.tgz bin/javaTest.tgz
-	rm -rf $(TMPDIR)/javaTest
-	
-bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/javarun.sh dependencies/compiled/data/data.txt src/langApis/Java/edu/stanford/nlp/sentiment/SentimentPipeline.class
+bin/J%.tgz: lib/libworm.so lib/libjavaworm.jar | src/examples/runscripts/J%.sh
+	mkdir -p $(TMPDIR)/$(basename $(@F))/lib
+	cp lib/libjavaworm.* $(TMPDIR)/$(basename $(@F))/lib #only for java
+	cp -r certs $(TMPDIR)/$(basename $(@F))
+	cp lib/libworm.so $(TMPDIR)/$(basename $(@F))/lib
+	cp -L $| $(TMPDIR)/$(basename $(@F))
+	cd $(TMPDIR);	tar -czf $(@F) $(basename $(@F))
+	mv $(TMPDIR)/$(@F) $@
+	rm -rf $(TMPDIR)/$(basename $(@F))
+		
+bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/runscripts/javarun.sh dependencies/compiled/data/data.txt src/langApis/Java/edu/stanford/nlp/sentiment/SentimentPipeline.class
 	mkdir -p $(TMPDIR)/nlp/lib
 	cp lib/libjavaworm.* $(TMPDIR)/nlp/lib #only for java
 	cp lib/libworm.so $(TMPDIR)/nlp/lib
-	cp src/examples/javarun.sh $(TMPDIR)/nlp/run.sh
+	cp src/examples/runscripts/javarun.sh $(TMPDIR)/nlp/run.sh
 	cp -r dependencies/compiled/nlp/* $(TMPDIR)/nlp/lib/.
 	cp -r dependencies/compiled/data/data.txt $(TMPDIR)/nlp/
 	cd $(TMPDIR); tar -czf nlp.tgz nlp
 	mv $(TMPDIR)/nlp.tgz bin/nlp.tgz
 	rm -rf $(TMPDIR)/nlp
 	
-bin/pcapReader.tgz: bin/pcapReader lib/libworm.so src/examples/pcapReader.sh
-	mkdir -p $(TMPDIR)pcapReader/lib
-	cp bin/pcapReader $(TMPDIR)pcapReader
-	cp lib/libworm.so $(TMPDIR)pcapReader/lib
-	cp src/examples/pcapReader.sh $(TMPDIR)pcapReader/run.sh
-	cd $(TMPDIR);	tar -czf pcapReader.tgz pcapReader
-	mv $(TMPDIR)pcapReader.tgz bin/pcapReader.tgz
-	rm -rf $(TMPDIR)pcapReader
-	
-bin/httpDissector.tgz: lib/libworm.so src/examples/httpDissector.sh
-	cd dependencies ; make httpDissector
+bin/httpDissector.tgz: lib/libworm.so src/examples/runscripts/httpDissector.sh
 	mkdir -p $(TMPDIR)httpDissector/lib
 	cp dependencies/repos/httpDissector/httpDissector_wormhole $(TMPDIR)httpDissector/httpDissector
 	cp lib/libworm.so $(TMPDIR)httpDissector/lib
-	cp src/examples/httpDissector.sh $(TMPDIR)httpDissector/run.sh
+	cp src/examples/runscripts/httpDissector.sh $(TMPDIR)httpDissector/run.sh
 	cd $(TMPDIR);	tar -czf httpDissector.tgz httpDissector
 	mv $(TMPDIR)httpDissector.tgz bin/httpDissector.tgz
 	rm -rf $(TMPDIR)httpDissector
 
 #Examples
-bin/testWorm: src/examples/testWorm.c
-	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
-
-bin/testLisp: src/examples/testLisp.c
-	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
-
-bin/testBW: src/examples/testBW.c
-	$(CC) $(CFLAGS) -o $@ $^ -Llib -lworm $(LDFLAGS)
-
-bin/testSendAsync: src/examples/testSendAsync.c obj/common.o
-	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS)
-
-bin/testRecvAsync: src/examples/testRecvAsync.c obj/common.o
-	$(CC) $(CFLAGS) -o $@ $^  $(LDFLAGS) $(SSLLDFLAGS)
-
 bin/%: src/examples/%.c lib/libworm.so
 	$(CC) $(CFLAGS) -o $@ $< -Llib -lworm $(LDFLAGS) $(SSLLDFLAGS)
 
 lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o $(EINSTEINOBJ)
+	mkdir -p lib
 	$(CC) $(CFLAGS) -shared -o $@ $^  $(LIBWORMLDFLAGS)
 
 #JAVALibs
@@ -205,14 +152,10 @@ bin/einstein: src/einstein/main.cpp lib/libworm.so
 	$(CXX) $(CXXFLAGS) -o $@ $< -Llib -lworm $(LDFLAGS)
 
 obj obj/einstein:
-	mkdir -p obj
 	mkdir -p obj/einstein
 
 certs/prv:
 	mkdir -p certs/prv
-
-lib:
-	mkdir -p lib
 
 doc/html: $(INCLUDES) $(SRCS) $(JAVAFILES)
 	doxygen > /dev/null
@@ -220,8 +163,6 @@ doc/html: $(INCLUDES) $(SRCS) $(JAVAFILES)
 bin:
 	mkdir -p bin
 	ln -s ../certs/ bin/.
-
-libs: lib lib/libworm.so
 
 javaLibs: lib/libjavaworm.so lib/libjavaworm.jar Jexamples
 
