@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <common.h>
-#include "../async_inline.c"
+#include "../netlib_inline.c"
 #include <assert.h>
 #include <sys/time.h>
 #include <stdlib.h>

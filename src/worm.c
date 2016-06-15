@@ -4,7 +4,7 @@
 #include <sched.h>
 //#undef _GNU_SOURCE
 
-#include "async_inline.c"
+#include "netlib_inline.c"
 /*
 *Global variables
 */

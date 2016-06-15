@@ -105,7 +105,7 @@ bin/httpDissector.tgz: lib/libworm.so src/examples/runscripts/httpDissector.sh d
 bin/%: src/examples/%.c lib/libworm.so | Dependencies
 	$(CC) $(CFLAGS) -o $@ $< -Llib -lworm $(LDFLAGS) $(SSLLDFLAGS)
 
-lib/libworm.so: obj/worm.o obj/common.o obj/structures.h.o $(EINSTEINOBJ)
+lib/libworm.so: obj/worm.o obj/common.o obj/netlib.o obj/structures.h.o $(EINSTEINOBJ)
 	mkdir -p lib
 	$(CC) $(CFLAGS) -shared -o $@ $^  $(LIBWORMLDFLAGS)
 
@@ -128,10 +128,10 @@ $(JAVAPATH)es_hpcn_wormhole_Einstein.h: $(JAVAPATH)es/hpcn/wormhole/Einstein.jav
 .java.class:
 	cd $(JAVAPATH); $(JC) $(JFLAGS) $*.java
 
-$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class dependencies/compiled/nlp
+$(JAVAPATH)es/hpcn/wormhole/test/Sentiment.class: $(JAVAPATH)es/hpcn/wormhole/test/Sentiment.java $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class | dependencies/compiled/nlp
 	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH)  $*.java
 
-$(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class: $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.java  dependencies/compiled/nlp
+$(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.class: $(JAVAPATH)edu/stanford/nlp/sentiment/SentimentPipeline.java | dependencies/compiled/nlp
 	$(JC) $(JFLAGS) -cp "dependencies/compiled/nlp/*" -sourcepath $(JAVAPATH) -sourcepath "dependencies/repos/CoreNLP/src/" $*.java
 	cd $(JAVAPATH) ; jar uf ../../../dependencies/compiled/nlp/stanford-corenlp-3.6.0.jar edu/stanford/nlp/sentiment/SentimentPipeline*class
 

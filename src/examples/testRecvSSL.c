@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <stdlib.h>
-#include "../async_inline.c"
+#include "../netlib_inline.c"
 
 
 

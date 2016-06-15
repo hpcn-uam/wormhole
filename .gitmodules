@@ -19,3 +19,6 @@
 [submodule "dependencies/repos/linenoise"]
 	path = dependencies/repos/linenoise
 	url = https://github.com/antirez/linenoise
+[submodule "dependencies/repos/netlib/wormhole"]
+	path = dependencies/repos/netlib
+	url = git@repit.ii.uam.es:hilo/wormhole.git
