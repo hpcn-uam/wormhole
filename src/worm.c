@@ -266,6 +266,73 @@ uint8_t WH_halt(void)
 	return 0;
 }
 
+/** WH_printmsg
+ * Sends a message to Einstein and print it.
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_printmsg(char *msg)
+{
+	uint32_t len = 0;
+	enum ctrlMsgType type = PRINTMSG;
+
+	if (msg != NULL) {
+		len = strlen(msg);
+	}
+
+	if (tcp_message_ssend(WH_einsConn.socket, &type, sizeof(type))) {
+		return 1;
+	}
+
+	if (tcp_message_ssend(WH_einsConn.socket, &len, sizeof(len))) {
+		return 1;
+	}
+
+	if (len) {
+		if (tcp_message_ssend(WH_einsConn.socket, msg, len)) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+/** WH_abort
+ * Sends a message to Einstein, print it and halt all worms.
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_abort(char *msg)
+{
+	uint32_t len = 0;
+	enum ctrlMsgType type = ABORT;
+
+	fprintf(stderr, "Aborting worm");
+
+	if (msg != NULL) {
+		len = strlen(msg);
+	}
+
+	if (tcp_message_ssend(WH_einsConn.socket, &type, sizeof(type))) {
+		return 1;
+	}
+
+	if (tcp_message_ssend(WH_einsConn.socket, &len, sizeof(len))) {
+		return 1;
+	}
+
+	if (len) {
+		fprintf(stderr, " cause: %s\n", msg);
+
+		if (tcp_message_ssend(WH_einsConn.socket, msg, len)) {
+			return 1;
+		}
+	}
+
+	fprintf(stderr, "\n");
+
+	abort();
+	return 1;
+}
+
 /** WH_flushIO
  * Flushes all the IO queues.
  * @return 0 if OK, something else if error.

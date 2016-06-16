@@ -457,6 +457,53 @@ void Connection::pollWorms()
 
 						break;
 
+					case PRINTMSG: {
+							uint32_t msgsize = 0;
+							tcp_message_recv(this->fdinfo[i].fd, &msgsize, sizeof(uint32_t), 1);
+
+							if (msgsize) {
+								char *tmpstr = (char *)malloc(msgsize + 1);
+								tcp_message_recv(this->fdinfo[i].fd, tmpstr, msgsize, 1);
+								tmpstr[msgsize] = 0;
+
+								// TODO better implementation
+								for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+									if (it->second->socket == this->wormSockets[i]) {
+										cerr << "MSG from worm.id " << it->first << ":" << tmpstr << endl;
+										break;
+									}
+								}
+
+								free(tmpstr);
+							}
+
+							break;
+						}
+
+					case ABORT: {
+							uint32_t msgsize = 0;
+							tcp_message_recv(this->fdinfo[i].fd, &msgsize, sizeof(uint32_t), 1);
+
+							if (msgsize) {
+								char *tmpstr = (char *)malloc(msgsize + 1);
+								tcp_message_recv(this->fdinfo[i].fd, tmpstr, msgsize, 1);
+								tmpstr[msgsize] = 0;
+
+								// TODO better implementation
+								for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+									if (it->second->socket == this->wormSockets[i]) {
+										cerr << "ABORT from worm.id " << it->first << ":" << tmpstr << endl;
+										break;
+									}
+								}
+
+								free(tmpstr);
+							}
+
+							this->keepRunning = false;
+							break;
+						}
+
 					default:
 						// Send error
 						enum ctrlMsgType errorMsg = CTRL_ERROR;

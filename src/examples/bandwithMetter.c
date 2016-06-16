@@ -40,28 +40,32 @@ int main(int argc, char **argv)
 			msgSize = atoi(optarg);
 
 			if (msgSize < 1) {
-				fprintf(stderr, "Error! size is too small\n");
-				return 1;
+				return WH_abort("Error! size is too small");
 			}
 
 			break;
 
-		case 'h':
-			fprintf(stderr, "Use: ./%s [-s <msg size>] [-t <type (a=array, else uint8)>]\n", argv[0]);
-			return 0;
-
-		case '?':
-			if (optopt == 's' || optopt == 't') {
-				fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-
-			} else {
-				fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+		case 'h': {
+				char tmpmsg[4096];
+				sprintf(tmpmsg, "Use: ./%s [-s <msg size>] [-t <type (a=array, else uint8)>]\n", argv[0]);
+				return WH_abort(tmpmsg);
 			}
 
-			return 1;
+		case '?': {
+				char tmpmsg[4096];
+
+				if (optopt == 's' || optopt == 't') {
+					sprintf(tmpmsg, "Option -%c requires an argument.\n", optopt);
+
+				} else {
+					sprintf(tmpmsg, "Unknown option `-%c'.\n", optopt);
+				}
+
+				return WH_abort(tmpmsg);
+			}
 
 		default:
-			abort();
+			return WH_abort(NULL);
 		}
 	}
 

@@ -66,6 +66,20 @@ extern "C" {
 	 */
 	uint8_t WH_halt(void);
 
+	/** WH_printmsg
+	 * Sends a message to Einstein and print it.
+	 * The msg can be NULL
+	 * @return 0 if OK, something else if error.
+	 */
+	uint8_t WH_printmsg(char *msg);
+
+	/** WH_abort
+	 * Sends a message to Einstein, print it and halt all worms.
+	 * The msg can be NULL
+	 * @return 0 if OK, something else if error.
+	 */
+	uint8_t WH_abort(char *msg);
+
 	/** WH_recv
 	 * TODO
 	 * Params:

@@ -88,36 +88,31 @@ int main(int argc, char **argv)
 			return 1;
 
 		default:
-			WH_halt();
-			abort();
+			return WH_abort("Not expected param");
 		}
 	}
 
 	if (!fname) {
-		fprintf(stderr, "Not file provided!\n");
-		return WH_halt();
+		return WH_abort("Not file provided!");
 	}
 
 	int fd = open(argv[1], O_RDONLY);
 
 	if (fd == -1) {
-		fprintf(stderr, "File cant be opened\n");
-		return WH_halt();
+		return WH_abort("File cant be opened");
 	}
 
 	struct stat sb;
 
 	if (fstat(fd, &sb) == -1) {
-		fprintf(stderr, "fstat failed\n");
-		return WH_halt();
+		return WH_abort("fstat failed");
 	}
 
 	file_start = mmap(NULL, sb.st_size, PROT_READ,
 					  MAP_PRIVATE | MAP_HUGETLB | MAP_POPULATE, fd, 0);
 
 	if (file_start == MAP_FAILED) {
-		fprintf(stderr, "mmap failed\n");
-		return WH_halt();
+		return WH_abort("mmap failed");
 	}
 
 	file_end = file_start + sb.st_size;
