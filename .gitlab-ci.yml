@@ -18,6 +18,13 @@ compilation_simple_parallel:
 compilation_full:
     script:
         - make -j16
+        - make doc
+    artifacts:
+        paths:
+        - lib
+        - doc
+        - bin
+        - certs
 
 test_commonh_test_async:
     script:
