@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	unsigned msgSize = 1024 * 4;
 	ConnectionDataType type = {.type = UINT8, .ext.arrayType = UINT8};
 
-	while ((c = getopt(argc, argv, "st:h")) != -1)
+	while ((c = getopt(argc, argv, "st:h")) != -1) {
 		switch (c) {
 		case 't': //type
 			if (optarg[0] == 'a') {
@@ -63,6 +63,7 @@ int main(int argc, char **argv)
 		default:
 			abort();
 		}
+	}
 
 	WH_setup_types(1, &type);
 
