@@ -18,7 +18,7 @@ compilation_simple_parallel:
 compilation_full:
     script:
         - make -j16
-        - make doc
+        - make Docs
     artifacts:
         paths:
         - lib

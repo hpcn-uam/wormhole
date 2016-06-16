@@ -26,6 +26,9 @@ int main(int argc, char **argv)
 	unsigned msgSize = 1024 * 4;
 	ConnectionDataType type = {.type = UINT8, .ext.arrayType = UINT8};
 
+	int st = WH_init();
+	assert(st == 0);
+
 	while ((c = getopt(argc, argv, "st:h")) != -1) {
 		switch (c) {
 		case 't': //type
@@ -70,9 +73,6 @@ int main(int argc, char **argv)
 	}
 
 	WH_setup_types(1, &type);
-
-	int st = WH_init();
-	assert(st == 0);
 
 	struct timeval start, end;
 	struct timeval startPeak, endPeak;

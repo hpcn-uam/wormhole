@@ -328,6 +328,7 @@ uint8_t WH_abort(char *msg)
 	}
 
 	fprintf(stderr, "\n");
+	fflush(stderr);
 
 	abort();
 	return 1;

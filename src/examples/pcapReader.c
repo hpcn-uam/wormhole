@@ -67,28 +67,32 @@ int main(int argc, char **argv)
 			loop = atoi(optarg);
 
 			if (loop < 0) {
-				fprintf(stderr, "Error! loop is too small\n");
-				return 1;
+				return WH_abort("Error! loop is too small\n");
 			}
 
 			break;
 
-		case 'h':
-			fprintf(stderr, "Use: ./%s -f <file name> [-l <times to loop the file)>]\n", argv[0]);
-			return 0;
-
-		case '?':
-			if (optopt == 'f' || optopt == 'l') {
-				fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-
-			} else {
-				fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+		case 'h': {
+				char tmpmsg[4096];
+				sprintf(tmpmsg, "Use: ./%s -f <file name> [-l <times to loop the file)>]\n", argv[0]);
+				return WH_abort(tmpmsg);
 			}
 
-			return 1;
+		case '?': {
+				char tmpmsg[4096];
+
+				if (optopt == 's' || optopt == 't') {
+					sprintf(tmpmsg, "Option -%c requires an argument.\n", optopt);
+
+				} else {
+					sprintf(tmpmsg, "Unknown option `-%c'.\n", optopt);
+				}
+
+				return WH_abort(tmpmsg);
+			}
 
 		default:
-			return WH_abort("Not expected param");
+			return WH_abort(NULL);
 		}
 	}
 

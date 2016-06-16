@@ -35,8 +35,6 @@ class Connection
 	uint16_t listenPort;
 	int listeningSocket;
 
-	vector<string> runParams;
-
 	// This map represents the worms alredy deployed.
 	// The key represents the host, the vector, the programs alredy deployed on it.
 	map <string, set<string>> deployedWorms;

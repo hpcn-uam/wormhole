@@ -59,24 +59,24 @@ Jexamples: bin/JtestBW.tgz bin/Jtest.tgz
 
 #Tars
 bin/%.tgz: bin/% lib/libworm.so | src/examples/runscripts/%.sh
-	mkdir -p $(TMPDIR)/$(basename $(@F))/lib
-	cp $< $(TMPDIR)/$(basename $(@F))
-	cp -r certs $(TMPDIR)/$(basename $(@F))
-	cp lib/libworm.so $(TMPDIR)/$(basename $(@F))/lib
-	cp -L $| $(TMPDIR)/$(basename $(@F))
+	mkdir -p $(TMPDIR)$(basename $(@F))/lib
+	cp $< $(TMPDIR)$(basename $(@F))
+	cp -r certs $(TMPDIR)$(basename $(@F))
+	cp lib/libworm.so $(TMPDIR)$(basename $(@F))/lib
+	cp -L $| $(TMPDIR)$(basename $(@F))/run.sh
 	cd $(TMPDIR);	tar -czf $(@F) $(basename $(@F))
 	mv $(TMPDIR)/$(@F) $@
-	rm -rf $(TMPDIR)/$(basename $(@F))
+	rm -rf $(TMPDIR)$(basename $(@F))
 
 bin/J%.tgz: lib/libworm.so lib/libjavaworm.jar | src/examples/runscripts/J%.sh
-	mkdir -p $(TMPDIR)/$(basename $(@F))/lib
-	cp lib/libjavaworm.* $(TMPDIR)/$(basename $(@F))/lib #only for java
-	cp -r certs $(TMPDIR)/$(basename $(@F))
-	cp lib/libworm.so $(TMPDIR)/$(basename $(@F))/lib
-	cp -L $| $(TMPDIR)/$(basename $(@F))
+	mkdir -p $(TMPDIR)$(basename $(@F))/lib
+	cp lib/libjavaworm.* $(TMPDIR)$(basename $(@F))/lib #only for java
+	cp -r certs $(TMPDIR)$(basename $(@F))
+	cp lib/libworm.so $(TMPDIR)$(basename $(@F))/lib
+	cp -L $| $(TMPDIR)$(basename $(@F))/run.sh
 	cd $(TMPDIR);	tar -czf $(@F) $(basename $(@F))
 	mv $(TMPDIR)/$(@F) $@
-	rm -rf $(TMPDIR)/$(basename $(@F))
+	rm -rf $(TMPDIR)$(basename $(@F))
 		
 bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/runscripts/javarun.sh dependencies/compiled/data/data.txt src/langApis/Java/edu/stanford/nlp/sentiment/SentimentPipeline.class
 	mkdir -p $(TMPDIR)/nlp/lib

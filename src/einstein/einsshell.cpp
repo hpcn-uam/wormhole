@@ -106,7 +106,7 @@ int EinsShell::startShell()
 {
 	int ret = 0;
 
-	while (this->continueShell) {
+	while (this->continueShell && this->eins->ec.keepRunning) {
 		char *tmp = linenoise(this->prompt.c_str());
 
 		if (tmp != NULL && tmp[0] != 0) {
@@ -139,7 +139,7 @@ int EinsShell::startShell()
 
 void EinsShell::waitForEinstein()
 {
-	while (eins->ec.numFilledPolls < eins->ec.numWormSockets) {
+	while (eins->ec.numFilledPolls < eins->ec.numWormSockets && eins->ec.keepRunning) {
 		hptl_waitns(10 * 1000 * 1000UL);
 	}
 }

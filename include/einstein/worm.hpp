@@ -33,6 +33,8 @@ struct Worm {
 	bool halting;
 	bool deployed;
 
+	vector<string> runParams;
+
 	Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName);
 	~Worm();
 

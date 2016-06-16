@@ -475,6 +475,15 @@ void Connection::pollWorms()
 								}
 
 								free(tmpstr);
+
+							} else {
+								// TODO better implementation
+								for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+									if (it->second->socket == this->wormSockets[i]) {
+										cerr << "EMPTY MSG from worm.id " << it->first << endl;
+										break;
+									}
+								}
 							}
 
 							break;
@@ -492,12 +501,21 @@ void Connection::pollWorms()
 								// TODO better implementation
 								for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
 									if (it->second->socket == this->wormSockets[i]) {
-										cerr << "ABORT from worm.id " << it->first << ":" << tmpstr << endl;
+										cerr << "ABORT from worm.id " << it->first << ". Cause:" << tmpstr << endl;
 										break;
 									}
 								}
 
 								free(tmpstr);
+
+							} else {
+								// TODO better implementation
+								for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+									if (it->second->socket == this->wormSockets[i]) {
+										cerr << "ABORT from worm.id " << it->first << endl;
+										break;
+									}
+								}
 							}
 
 							this->keepRunning = false;
