@@ -32,7 +32,7 @@ test_commonh_test_async:
         - cd bin
         - ./testRecvAsync &
         - ./testSendAsync || (killall -9 testRecvAsync ; false)
-        - killall -9 testRecvAsync ; true
+        - killall -9 testRecvAsync || true
         
 test_commonh_test_SSL:
     script:
@@ -40,7 +40,7 @@ test_commonh_test_SSL:
         - cd bin
         - ./testRecvSSL &
         - ./testSendSSL || (killall -9 testRecvSSL ; false)
-        - killall -9 testRecvSSL ; true
+        - killall -9 testRecvSSL || true
         
 test_commonh_test_AsyncSSL:
     script:
@@ -48,7 +48,7 @@ test_commonh_test_AsyncSSL:
         - cd bin
         - ./testRecvAsyncSSL &
         - ./testSendAsyncSSL || (killall -9 testRecvAsyncSSL ; false)
-        - killall -9 testRecvAsyncSSL ; true
+        - killall -9 testRecvAsyncSSL || true
 
 before_script:
     - killall -9 testSendAsync testRecvAsync testRecvSSL testSendSSL testRecvAsyncSSL testSendAsyncSSL || true
