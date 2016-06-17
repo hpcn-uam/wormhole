@@ -3,6 +3,9 @@
 using namespace einstein;
 
 Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName)
+	: Worm(id, listenPort, core, ip, connectionDescription, host, programName, vector<string>()) {}
+
+Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName, vector<string> runParams)
 {
 	connectionDescription = Worm::expandCDescription(connectionDescription);
 	memset(&this->ws, 0, sizeof(this->ws));
@@ -19,6 +22,8 @@ Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string con
 	this->programName = programName;
 	this->halting = false;
 	this->deployed = false;
+
+	this->runParams = runParams;
 }
 
 Worm::~Worm()
@@ -40,13 +45,24 @@ Worm::~Worm()
 
 ostream &einstein::operator<<(ostream &os, Worm const &obj)
 {
-	return os
-		   <<  "ID: " << obj.ws.id
-		   << " ADDR: " <<  obj.host << ":" << obj.ws.listenPort
-		   << (obj.ws.isSSLNode ? " [SSL]" : "")
-		   << " | " << obj.programName << " " << endl
-		   << "\t Route: " << obj.ws.connectionDescription
-		   ;
+	os
+			<<  "ID: " << obj.ws.id
+			<< " ADDR: " <<  obj.host << ":" << obj.ws.listenPort
+			<< (obj.ws.isSSLNode ? " [SSL]" : "")
+			<< " | " << obj.programName << " " << endl
+			<< "\t Route: " << obj.ws.connectionDescription
+			;
+
+	if (obj.runParams.size() > 0) {
+		os << endl;
+		os << "\t Params:";
+
+	for (auto param : obj.runParams) {
+			os << " " << param;
+		}
+	}
+
+	return os;
 }
 
 string Worm::expandCDescription(string cd)

@@ -6,10 +6,7 @@ Einstein::Einstein(const string configFileName, string listenIp, uint16_t listen
 	: Einstein(configFileName, listenIp, listenPort, true) {}
 
 Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
-	: Einstein(configFileName, listenIp, listenPort, autoDeployWorms, vector<string>()) {}
-
-Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms, vector<string> runParams)
-	: ec(listenIp, listenPort, autoDeployWorms, runParams)
+	: ec(listenIp, listenPort, autoDeployWorms)
 {
 
 	this->readConfig(configFileName);
@@ -113,7 +110,7 @@ void Einstein::readConfig(const string configFileName)
 				throw std::runtime_error("Missing worm routing");
 			}
 
-			cerr << "Description: |" << Worm::expandCDescription(string(connectionDescription)) << "|" << endl;
+			cerr << "\tDescription: |" << Worm::expandCDescription(string(connectionDescription)) << "|" << endl;
 
 			//check if ipaddr or name
 			struct sockaddr_in sa;
@@ -137,13 +134,41 @@ void Einstein::readConfig(const string configFileName)
 				ip = string(host);
 			}
 
-			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, ip, string(connectionDescription), string(host), string(programName)));
+			vector<string> runParams;
+
+			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, ip, string(connectionDescription), string(host), string(programName), runParams));
 
 			/*Check for advanced options*/
 
 			/*SSL*/
 			if (string(configLine).find("SSL") != string::npos) {
 				wc->ws.isSSLNode = 1;
+			}
+
+			/*PARAMS*/
+			string sconfline = string(configLine);
+
+			while (sconfline.find("PARAM=") != string::npos) {
+				auto pos = sconfline.find("PARAM=");
+				sconfline = sconfline.substr(pos + 6);
+				pos = sconfline.find_first_of(" \n\r\t");
+
+				if (pos != string::npos) {
+					wc->runParams.push_back(sconfline.substr(0, pos));
+
+				} else {
+					wc->runParams.push_back(sconfline);
+				}
+			}
+
+			if (wc->runParams.size() > 0) {
+				cerr << "\tParams:";
+
+			for (auto param: wc->runParams) {
+					cerr << " " << param;
+				}
+
+				cerr << endl;
 			}
 
 			this->ec.createWorm(std::move(wc), ip);

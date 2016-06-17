@@ -34,7 +34,6 @@ class Einstein
  public:
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort);
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms);
-	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms, vector<string> runParams);
 	~Einstein();
 
 	/*

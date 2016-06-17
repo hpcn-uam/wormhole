@@ -17,7 +17,7 @@ Also, the master Einstein instance "heart-beat" the other instances telling any 
 To run a topology, we have to start Einstein in the following way:
 
 ```
-Einstein <Configuration_File> <Listen_IP>
+einstein <Configuration_File> <Listen_IP>
 ```
 
 A Topology is defined by a group of worm and their interconnections.

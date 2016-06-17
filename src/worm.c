@@ -1324,7 +1324,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 		sprintf(gccString, "gcc -O3 -Wall %s -o %s -shared -Llib -lworm -lpthread -fPIC ", cString, soString);
 
 #ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEDEBUG: Calling %s\n", tmpString);
+		fprintf(stderr, "ROUTEDEBUG: Calling %s\n", gccString);
 #endif
 
 		ret = system(gccString);
@@ -1417,6 +1417,11 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL]\n", dw->id);
 #endif
+
+	if (!WH_setupConnectionType((DestinationWorm *)dw, mi->type)) { //Refresh worm data
+		return WH_DymRoute_send(data, mi, dw);    //Try again if it is possible
+	}
+
 	//fprintf(stderr, "Sending %d bytes to %d\n", mi->size, cn->ip);
 	return 1;
 }

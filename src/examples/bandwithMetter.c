@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 	int st = WH_init();
 	assert(st == 0);
 
-	while ((c = getopt(argc, argv, "st:h")) != -1) {
+	while ((c = getopt(argc, argv, "t:s:h")) != -1) {
 		switch (c) {
 		case 't': //type
 			if (optarg[0] == 'a') {
@@ -39,14 +39,18 @@ int main(int argc, char **argv)
 
 			break;
 
-		case 's': //size
-			msgSize = atoi(optarg);
+		case 's': { //size
+				int intreaded = atoi(optarg);
 
-			if (msgSize < 1) {
-				return WH_abort("Error! size is too small");
+				if (intreaded < 1) {
+					return WH_abort("Error! size is too small\n");
+
+				} else {
+					msgSize = (unsigned)intreaded;
+				}
+
+				break;
 			}
-
-			break;
 
 		case 'h': {
 				char tmpmsg[4096];
@@ -106,7 +110,6 @@ int main(int argc, char **argv)
 			if (i == PEAK_FRACTION_UP / RRNODES) {
 				gettimeofday(&endPeak, 0);
 			}
-
 		}
 
 		gettimeofday(&end, 0);

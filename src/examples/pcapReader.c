@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 	MessageInfo mi;
 	mi.type = &type;
 
-	while ((c = getopt(argc, argv, "st:h")) != -1) {
+	while ((c = getopt(argc, argv, "f:l:h")) != -1) {
 		switch (c) {
 		case 'f': //type
 			fname = strdup(optarg);

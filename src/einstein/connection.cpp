@@ -8,17 +8,12 @@ Connection::Connection(string listenIp, uint16_t listenPort)
 	: Connection(listenIp, listenPort, true) {}
 
 Connection::Connection(const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
-	: Connection(listenIp, listenPort, autoDeployWorms, vector<string>()) {}
-
-Connection::Connection(const string listenIp, const uint16_t listenPort, bool autoDeployWorms, vector<string> runParams)
 {
 	// Start socket to receive connections from worms
 	this->listenIpStr = listenIp;
 	this->listenIp = inet_addr(listenIp.c_str());
 	this->listenPort = listenPort;
 	this->listeningSocket = tcp_listen_on_port(listenPort);
-
-	this->runParams = runParams;
 
 	if (this->listeningSocket == -1) {
 		throw std::runtime_error("Error listening to socket");
@@ -257,9 +252,9 @@ void Connection::deployWorm(Worm &wc)
 				 "cd " + wc.programName + ";"
 				 "nohup sh run.sh ";
 
-	if (this->runParams.size() > 0) {
-		for (unsigned i = 0; i < runParams.size(); i++) {
-			executable += "\"" + runParams[i] + "\" ";
+	if (wc.runParams.size() > 0) {
+		for (unsigned i = 0; i < wc.runParams.size(); i++) {
+			executable += "\"" + wc.runParams[i] + "\" ";
 		}
 	}
 
@@ -358,6 +353,7 @@ void Connection::pollWorms()
 
 						if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t), 1) != sizeof(uint16_t)) {
 							// Closed socket
+							close(this->wormSockets[i]);
 							this->wormSockets[i] = -1;
 							continue;
 						}
@@ -372,12 +368,14 @@ void Connection::pollWorms()
 
 							if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&okMsg), sizeof(enum ctrlMsgType)) != 0) {
 								// Closed socket
+								close(this->wormSockets[i]);
 								this->wormSockets[i] = -1;
 								continue;
 							}
 
 							if (tcp_message_send(this->fdinfo[i].fd, wormSetup, sizeof(WormSetup)) != 0) {
 								// Closed socket
+								close(this->wormSockets[i]);
 								this->wormSockets[i] = -1;
 								continue;
 							}
@@ -389,6 +387,7 @@ void Connection::pollWorms()
 
 							if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
 								// Closed socket
+								close(this->wormSockets[i]);
 								this->wormSockets[i] = -1;
 								continue;
 							}
@@ -528,12 +527,14 @@ void Connection::pollWorms()
 
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
 							// Closed socket
+							close(this->wormSockets[i]);
 							this->wormSockets[i] = -1;
 							continue;
 						}
 					}
 
 				} else if (this->fdinfo[i].revents & POLLHUP || this->fdinfo[i].revents & POLLRDNORM || this->fdinfo[i].revents & POLLNVAL) {
+					close(this->wormSockets[i]);
 					this->wormSockets[i] = -1;
 				}
 			}

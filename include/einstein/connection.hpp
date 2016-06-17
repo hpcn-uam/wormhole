@@ -54,7 +54,6 @@ class Connection
  public:
 	Connection(const string listenIp, const uint16_t listenPort);
 	Connection(const string listenIp, const uint16_t listenPort, bool autoDeployWorms);
-	Connection(const string listenIp, const uint16_t listenPort, bool autoDeployWorms, vector<string> runParams);
 	~Connection();
 
 	// Connects to IP and launches a worm with configuration ws

@@ -14,18 +14,7 @@ int main(int argc, char **argv)
 
 	hptl_init(NULL);
 
-	if (argc == 4) {
-		try {
-			vector<string> runParams;
-			runParams.push_back(argv[3]);
-			eins = make_shared<Einstein>(argv[1], argv[2], 5000, true, runParams);
-
-		} catch (exception &e) {
-			std::cerr << "Exception: " << e.what() << '\n';
-			return 1;
-		}
-
-	} else if (argc == 3) {
+	if (argc == 3) {
 		try {
 			eins = make_shared<Einstein>(argv[1], argv[2], 5000, true);
 
@@ -36,7 +25,7 @@ int main(int argc, char **argv)
 
 	} else {
 		std::cerr << "No pararms provided" << endl;
-		std::cerr << "Try: " << argv[0] << "<CONFIG FILE> <IP> [More Params]" << endl;
+		std::cerr << "Try: " << argv[0] << "<CONFIG FILE> <IP>" << endl;
 		return 1;
 	}
 
