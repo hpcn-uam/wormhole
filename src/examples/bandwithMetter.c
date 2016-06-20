@@ -88,12 +88,16 @@ int main(int argc, char **argv)
 	mi.category = 1;
 
 	uint8_t *buffer = calloc(msgSize, 1);
+	uint64_t roadBytes;
+	uint64_t roadBytes_peak;
 
 	for (;;) {
 		gettimeofday(&start, 0);
+		roadBytes = 0;
+		roadBytes_peak = 0;
 
 		for (int i = 0; i < NUM_BIG_MESSAGES / RRNODES; i++) {
-			WH_recv((void *)buffer, &mi);
+			roadBytes += WH_recv((void *)buffer, &mi);
 
 #ifdef CHECKMSG
 
@@ -105,17 +109,19 @@ int main(int argc, char **argv)
 
 			if (i == PEAK_FRACTION_DOWN / RRNODES) {
 				gettimeofday(&startPeak, 0);
+				roadBytes_peak = roadBytes;
 			}
 
 			if (i == PEAK_FRACTION_UP / RRNODES) {
 				gettimeofday(&endPeak, 0);
+				roadBytes_peak = roadBytes - roadBytes_peak;
 			}
 		}
 
 		gettimeofday(&end, 0);
 		fprintf(stderr, "%lf gbps. Pico: %lf gpbs\n",
-				((((double)NUM_BIG_MESSAGES / RRNODES) * msgSize * 8) / 1000) / (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
-				(((double)(PEAK_FRACTION_UP / RRNODES - PEAK_FRACTION_DOWN / RRNODES) * msgSize * 8) / 1000) / (((double)endPeak.tv_sec - startPeak.tv_sec) * 1000000 + (endPeak.tv_usec - startPeak.tv_usec)));
+				((((double)roadBytes)      * 8) / 1000) / (((double)end.tv_sec     - start.tv_sec)     * 1000000 + (end.tv_usec     - start.tv_usec)),
+				((((double)roadBytes_peak) * 8) / 1000) / (((double)endPeak.tv_sec - startPeak.tv_sec) * 1000000 + (endPeak.tv_usec - startPeak.tv_usec)));
 	}
 
 	return WH_halt();

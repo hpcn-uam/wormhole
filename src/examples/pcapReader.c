@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 		return WH_abort("Not file provided!");
 	}
 
-	int fd = open(argv[1], O_RDONLY);
+	int fd = open(fname, O_RDONLY);
 
 	if (fd == -1) {
 		return WH_abort("File cant be opened");
@@ -112,12 +112,19 @@ int main(int argc, char **argv)
 		return WH_abort("fstat failed");
 	}
 
+	fprintf(stderr, "Preloading file...");
+	fflush(stderr);
+
 	file_start = mmap(NULL, sb.st_size, PROT_READ,
-					  MAP_PRIVATE | MAP_HUGETLB | MAP_POPULATE, fd, 0);
+					  MAP_PRIVATE | MAP_POPULATE, fd, 0);
 
 	if (file_start == MAP_FAILED) {
+		perror("mmap failed");
 		return WH_abort("mmap failed");
 	}
+
+	fprintf(stderr, "Done!\n");
+	fflush(stderr);
 
 	file_end = file_start + sb.st_size;
 	file_start += sizeof(pcap_hdr_tJZ);
@@ -126,8 +133,11 @@ int main(int argc, char **argv)
 	uint8_t *data;
 	int flag = 1;
 
+	struct timeval start, end;
+
 	while (loop--) {
 		file_cur = file_start;
+		gettimeofday(&start, 0);
 
 		while (flag) {
 			header = (pcaprec_hdr_tJZ *)file_cur;
@@ -141,12 +151,16 @@ int main(int argc, char **argv)
 				flag = 0;
 			}
 
-			file_cur += header->incl_len;
+			file_cur += header->incl_len + sizeof(pcaprec_hdr_tJZ);
 
 			if (file_cur >= file_end) { //file ended
 				break;
 			}
 		}
+
+		gettimeofday(&end, 0);
+		fprintf(stderr, "Pcap sent @ %lf Gbps\n",
+				((((double)sb.st_size - sizeof(pcap_hdr_tJZ))      * 8) / 1000) / (((double)end.tv_sec     - start.tv_sec)     * 1000000 + (end.tv_usec     - start.tv_usec)));
 	}
 
 	return WH_halt();
