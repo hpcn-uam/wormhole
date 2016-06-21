@@ -456,6 +456,34 @@ void Connection::pollWorms()
 
 						break;
 
+					case PING: {
+							// TODO better implementation
+							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+								if (it->second->socket == this->wormSockets[i]) {
+									cerr << "PING MSG from worm.id = " << it->first << endl;
+									break;
+								}
+							}
+
+							enum ctrlMsgType msg = PONG;
+							tcp_message_send(this->wormSockets[i], &msg, sizeof(msg));
+
+							break;
+						}
+
+					case PONG:
+
+						// TODO better implementation
+						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+							if (it->second->socket == this->wormSockets[i]) {
+								cerr << "PONG MSG from worm.id = " << it->first << endl;
+								break;
+							}
+						}
+
+						break;
+
+
 					case PRINTMSG: {
 							uint32_t msgsize = 0;
 							tcp_message_recv(this->fdinfo[i].fd, &msgsize, sizeof(uint32_t), 1);

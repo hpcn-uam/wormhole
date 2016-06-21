@@ -92,6 +92,10 @@ uint64_t Worm::ping()
 
 	hptl_t end = hptl_get();
 
+	if (msg != PONG) {
+		cerr << "[Unknown Response code " << (int)msg << "]";
+	}
+
 	return hptl_ntimestamp(end - begin) / 1000;
 }
 
