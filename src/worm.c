@@ -527,7 +527,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 		}
 
 	default:
-		fprintf(stderr, "Unsupported Einstein Message!\n");
+		fprintf(stderr, "Unsupported Einstein Message (%d)!\n", (int)type);
 		ret = 1; //Error!
 		break;
 	}
