@@ -553,6 +553,14 @@ void Connection::pollWorms()
 						// Send error
 						enum ctrlMsgType errorMsg = CTRL_ERROR;
 
+						// TODO better implementation
+						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+							if (it->second->socket == this->wormSockets[i]) {
+								cerr << "NON IMPLEMENTED MSG (" << ctrlMsgType2str(ctrlMsg) << ") from worm.id " << it->first << endl;
+								break;
+							}
+						}
+
 						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
 							// Closed socket
 							close(this->wormSockets[i]);

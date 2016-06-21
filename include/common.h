@@ -35,6 +35,8 @@ extern "C" {
 		HELLOEINSTEIN, STARTSSL, SETUP, QUERYID, RESPONSEID, PING, PONG, CHANGEROUTE, DOWNLINK, OVERLOAD, UNDERLOAD, CTRL_OK, CTRL_ERROR, HALT, ABORT, PRINTMSG
 	};
 
+	char *ctrlMsgType2str(enum ctrlMsgType msg);
+
 	typedef struct { //__attribute__(packet)??
 		uint16_t id;
 		uint16_t listenPort;
