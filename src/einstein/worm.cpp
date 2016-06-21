@@ -89,7 +89,10 @@ int64_t Worm::ping()
 	ctrlMsgType msg = PING;
 	tcp_message_send(this->socket, &msg, sizeof(msg));
 	msg = TIMEOUT;
-	tcp_message_recv(this->socket, &msg, sizeof(msg), 0);
+
+	do {
+		tcp_message_recv(this->socket, &msg, sizeof(msg), 0);
+	} while (errno == EAGAIN);
 
 	hptl_t end = hptl_get();
 
