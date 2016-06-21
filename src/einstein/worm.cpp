@@ -14,10 +14,9 @@ Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string con
 	this->ws.listenPort = listenPort;
 	this->ws.IP = inet_addr(ip.c_str());
 	this->ws.connectionDescriptionLength = connectionDescription.size();
-	this->ws.connectionDescription = static_cast<uint8_t *>(malloc(connectionDescription.size()));
+	this->ws.connectionDescription = (uint8_t *) strdup(connectionDescription.c_str());
 	this->ws.core = core;
 	this->ws.isSSLNode = 0; //false
-	memcpy(this->ws.connectionDescription, connectionDescription.c_str(), connectionDescription.size());
 	this->host = host;
 	this->programName = programName;
 	this->halting = false;
