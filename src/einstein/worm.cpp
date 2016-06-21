@@ -91,6 +91,7 @@ int64_t Worm::ping()
 	msg = TIMEOUT;
 
 	do {
+		errno = 0;
 		tcp_message_recv(this->socket, &msg, sizeof(msg), 0);
 	} while (errno == EAGAIN);
 
