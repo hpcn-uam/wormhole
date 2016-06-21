@@ -51,6 +51,9 @@ char *ctrlMsgType2str(enum ctrlMsgType msg)
 	case PRINTMSG:
 		return "PRINTMSG";
 
+	case TIMEOUT:
+		return "TIMEOUT";
+
 	default:
 		return "UNKNOWN MSG";
 	}

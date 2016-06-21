@@ -88,12 +88,13 @@ uint64_t Worm::ping()
 
 	ctrlMsgType msg = PING;
 	tcp_message_send(this->socket, &msg, sizeof(msg));
+	msg = TIMEOUT;
 	tcp_message_recv(this->socket, &msg, sizeof(msg), 0);
 
 	hptl_t end = hptl_get();
 
 	if (msg != PONG) {
-		cerr << "[Unknown Response code " << ctrlMsgType2str(msg) << "]";
+		cerr << "[Response: " << ctrlMsgType2str(msg) << "]";
 	}
 
 	return hptl_ntimestamp(end - begin) / 1000;
