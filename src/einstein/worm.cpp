@@ -78,7 +78,7 @@ string Worm::expandCDescription(string cd)
 	return ret;
 }
 
-uint64_t Worm::ping()
+int64_t Worm::ping()
 {
 	if (this->socket == 0 || this->socket == -1) {
 		return 0;
@@ -92,6 +92,10 @@ uint64_t Worm::ping()
 	tcp_message_recv(this->socket, &msg, sizeof(msg), 0);
 
 	hptl_t end = hptl_get();
+
+	if (msg == TIMEOUT) {
+		return -(hptl_ntimestamp(end - begin) / 1000);
+	}
 
 	if (msg != PONG) {
 		cerr << "[Response: " << ctrlMsgType2str(msg) << "]";

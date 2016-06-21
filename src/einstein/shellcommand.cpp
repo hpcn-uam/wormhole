@@ -215,8 +215,12 @@ int ShellCommand::cmdPing(string cmd)
 		UNUSED(param);
 
 		cout << "Pinging Worm ID=" << elem->ws.id << "..." << flush;
-		uint64_t us = elem->ping();
-		cout << "Pong! " << us / 1000 << "," << us - (us / 1000) * 1000 << " us" << endl;
+		int64_t us = elem->ping();
+
+		if (us > 0)
+			cout << "Pong! " << us / 1000 << "," << us - (us / 1000) * 1000 << " us" << endl;
+		else
+		{ cout << "Timeout! " << us / -1000 << "," << 0 - (us - (us / 1000) * 1000) << " us" << endl; }
 		return 0;
 	});
 }

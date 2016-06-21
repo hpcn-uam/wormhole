@@ -41,7 +41,7 @@ struct Worm {
 
 	static string expandCDescription(string cd);
 
-	uint64_t ping(); //returns the ms passed from the ping
+	int64_t ping(); //returns the ms passed from the ping. If negative, timeout reached
 	uint64_t chroute(string newRoute); //returns 0 if changed, and 1 if not
 };
 
