@@ -651,7 +651,7 @@ inline void WH_TH_setupworm(SyncSocket *socket)
 	* Poll data from some socket
 	* Return some connection with data, NULL if error/timeout.
 	*/
-Connection *WH_connectionPoll(DestinationWorms *wms)
+Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
 {
 	static uint32_t wormIndex = 0;
 	static uint32_t connIndex = 0;
@@ -680,7 +680,7 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 	uint32_t startingConnIndex = connIndex;
 
 	do {
-		if (can_be_read(&(wms->worms[wormIndex].conns[connIndex]->socket))) {
+		if (WH_considerSocket(&(wms->worms[wormIndex].conns[connIndex]->socket), mi)) {
 			WH_errno = WH_ERRNO_CLEAR;
 			return wms->worms[wormIndex].conns[connIndex];
 
@@ -710,6 +710,29 @@ Connection *WH_connectionPoll(DestinationWorms *wms)
 
 	return NULL;
 
+}
+
+/** WH_considerSocket
+ * Check if the socket would complete the request
+ * @return 1 if yes, 0 if no
+ */
+int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
+{
+	if (!can_be_read(sock)) {
+		return 0;
+	}
+
+	uint32_t availableBytes = tcp_async_availableBytes(sock);
+
+	if (availableBytes < 8) {
+		return 0;
+	}
+
+	if (mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type)*tcp_async_peakInt(sock)) {
+		return 0;
+	}
+
+	return 1;
 }
 
 /* Name WH_connectWorm
@@ -1122,7 +1145,7 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 	Connection *c = NULL;
 
 	do {
-		c = WH_connectionPoll(&WH_myRcvWorms);
+		c = WH_connectionPoll(&WH_myRcvWorms, mi);
 
 		/*if (!c) {
 			pollCnt++;

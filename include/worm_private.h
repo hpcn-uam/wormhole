@@ -114,7 +114,13 @@ extern "C" {
 	 * Poll data from some socket
 	 * @return some connection with data, NULL if error/timeout.
 	 */
-	Connection *WH_connectionPoll(DestinationWorms *wms);
+	Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi);
+
+	/** WH_considerSocket
+	 * Check if the socket would complete the request
+	 * @return 1 if yes, 0 if no
+	 */
+	int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi);
 
 	/** WH_typesize
 	 * @return the size of the tipe provided
@@ -186,7 +192,6 @@ extern "C" {
 	 * Invalidate the current routing system, and frees the necesary data
 	 */
 	void WH_DymRoute_invalidate();
-
 
 	/*
 	 =========================
