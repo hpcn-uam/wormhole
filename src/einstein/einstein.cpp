@@ -139,14 +139,15 @@ void Einstein::readConfig(const string configFileName)
 			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, ip, string(connectionDescription), string(host), string(programName), runParams));
 
 			/*Check for advanced options*/
+			string sconfline = string(configLine);
+			sconfline = sconfline.substr(0, sconfline.find('#'));
 
 			/*SSL*/
-			if (string(configLine).find("SSL") != string::npos) {
+			if (sconfline.find("SSL") != string::npos) {
 				wc->ws.isSSLNode = 1;
 			}
 
 			/*PARAMS*/
-			string sconfline = string(configLine);
 
 			while (sconfline.find("PARAM=") != string::npos) {
 				auto pos = sconfline.find("PARAM=");
