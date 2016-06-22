@@ -728,6 +728,10 @@ int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
 		return 0;
 	}
 
+	if (availableBytes >= OPTIMAL_BUFFER_SIZE) { // for very big messages
+		return 1;
+	}
+
 	if (mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type)*tcp_async_peakInt(sock)) {
 		return 0;
 	}
