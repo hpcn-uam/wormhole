@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 			header = (pcaprec_hdr_tJZ *)file_cur;
 			data = file_cur + sizeof(pcaprec_hdr_tJZ);
 
-			mi.hash = data[14 + 19];
+			mi.hash = data[14 + 15] + data[14 + 19]; //IP flow
 			mi.size = header->incl_len;
 
 			if (WH_send(file_cur, &mi)) {
