@@ -2,27 +2,37 @@
 
 using namespace einstein;
 
-Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName)
-	: Worm(id, listenPort, core, ip, connectionDescription, host, programName, vector<string>()) {}
+Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string connectionDescription, string host, string programName)
+	: Worm(id, listenPort, core, connectionDescription, host, programName, vector<string>()) {}
 
-Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string ip, string connectionDescription, string host, string programName, vector<string> runParams)
+Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string connectionDescription, string host, string programName, vector<string> runParams)
 {
 	connectionDescription = Worm::expandCDescription(connectionDescription);
 	memset(&this->ws, 0, sizeof(this->ws));
 
 	this->ws.id = id;
 	this->ws.listenPort = listenPort;
-	this->ws.IP = inet_addr(ip.c_str());
 	this->ws.connectionDescriptionLength = connectionDescription.size();
 	this->ws.connectionDescription = (uint8_t *) strdup(connectionDescription.c_str());
 	this->ws.core = core;
+
+	//flags
 	this->ws.isSSLNode = 0; //false
+	this->ws.isIPv6 = 0;
+	this->ws.einsteinSSL = 0;
+
+	//version
+	this->ws.einsteinVersion = EINSTEINVERSION;
+	this->ws.wormVersion = WORMVERSION;
+
 	this->host = host;
 	this->programName = programName;
 	this->halting = false;
 	this->deployed = false;
 
 	this->runParams = runParams;
+
+	this->setIP(this->host);
 }
 
 Worm::~Worm()
@@ -39,6 +49,56 @@ Worm::~Worm()
 
 	} else {
 		cerr << "Worm with id = " << this->ws.id << " has not alredy been deployed, do not sending HALT..." << endl;
+	}
+}
+
+void Worm::setIP(string iphostname)
+{
+	//check if ipaddr or name
+	int result4 = 0, result6 = 0;
+
+	result4 = inet_pton(AF_INET, iphostname.c_str(), &(this->ws.IP));
+
+	if (result4 == -1 || result4 == 0) { //try IPv6
+		result6 = inet_pton(AF_INET6, iphostname.c_str(), &(this->ws.IP));
+	}
+
+	if ((result4 == -1 || result4 == 0) && (result6 == -1 || result6 == 0)) {
+		struct addrinfo *result;
+		struct addrinfo *res;
+		int error;
+
+		error = getaddrinfo(iphostname.c_str(), NULL, NULL, &result);
+
+		if (error) { //error
+			throw std::runtime_error("Host '" + string(host) + "' does not exists");
+		}
+
+		int flag = 0;
+
+		for (res = result; res != NULL; res = res->ai_next) {
+			if (res->ai_addr != NULL) {
+				flag = 1;
+				memcpy(&(this->ws.IP), res->ai_addr, res->ai_addrlen);
+
+				if (res->ai_family == AF_INET6) {
+					this->ws.isIPv6 = 1;
+				}
+
+				break;
+			}
+		}
+
+		if (result) {
+			freeaddrinfo(result);
+		}
+
+		if (!flag) {
+			throw std::runtime_error("Host '" + string(host) + "' does not have a valid IP address");
+		}
+
+	} else if (result4 == -1 || result4 == 0) {
+		this->ws.isIPv6 = 1;
 	}
 }
 

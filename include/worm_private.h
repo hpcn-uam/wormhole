@@ -16,9 +16,9 @@ extern "C" {
 	};
 
 	typedef struct {
-		uint16_t Port;
-		uint32_t IP; //TODO fix para ipv6
 		SyncSocket *socket;
+		char *ip;
+		uint16_t Port;
 	} Worm2EinsConn;
 
 	typedef struct {
@@ -30,12 +30,12 @@ extern "C" {
 	} Connection;
 
 	typedef struct {
-		uint16_t id;
-		uint16_t port;
-		uint32_t ip; //TODO fix para ipv6
 		size_t numberOfTypes;
 		ConnectionDataType *supportedTypes;
 		Connection **conns;
+		uint16_t id;
+		uint16_t port;
+		char ip [INET6_ADDRSTRLEN];
 	} DestinationWorm;
 
 	typedef struct {

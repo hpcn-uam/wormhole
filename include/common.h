@@ -12,13 +12,13 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <time.h>
 #include <strings.h>
 #include <errno.h>
+#include <poll.h>
 
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
@@ -26,6 +26,13 @@
 
 #include <hptl.h>
 #include <netlib.h>
+
+#define WORMVERSION 0
+#define EINSTEINVERSION 0
+
+#ifndef uint128_t
+typedef unsigned __int128 uint128_t;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,16 +45,27 @@ extern "C" {
 	char *ctrlMsgType2str(enum ctrlMsgType msg);
 
 	typedef struct { //__attribute__(packet)??
-		uint16_t id;
+		uint128_t IP;
 		uint16_t listenPort;
-		uint32_t IP; //TODO fix para ipv6
-		uint8_t isSSLNode;
-		uint8_t reservedFlag4; //Prevents valgrind unitialized errors. Is not used at all
-		uint8_t reservedFlag2; //Prevents valgrind unitialized errors. Is not used at all
-		uint8_t reservedFlag3; //Prevents valgrind unitialized errors. Is not used at all
-		uint32_t connectionDescriptionLength;
+		//128+16
+		uint16_t id;
+		//128+32
+		uint8_t isSSLNode : 1;
+		uint8_t einsteinSSL : 1;
+		uint8_t isIPv6 : 1; //if false, ipv4
+		uint8_t reservedBitFlag0 : 1; //Prevents valgrind unitialized errors. It is also used for memory alignament. It do not stores anyting (yet)
+		uint8_t reservedBitFlag1 : 1; //Prevents valgrind unitialized errors. It is also used for memory alignament. It do not stores anyting (yet)
+		uint8_t reservedBitFlag2 : 1; //Prevents valgrind unitialized errors. It is also used for memory alignament. It do not stores anyting (yet)
+		uint8_t reservedBitFlag3 : 1; //Prevents valgrind unitialized errors. It is also used for memory alignament. It do not stores anyting (yet)
+		uint8_t reservedBitFlag4 : 1; //Prevents valgrind unitialized errors. It is also used for memory alignament. It do not stores anyting (yet)
+		uint8_t reservedFlag1; 		  //Prevents valgrind unitialized errors. It is also used for memory alignament. It do not stores anyting (yet)
+		uint8_t einsteinVersion;
+		uint8_t wormVersion;
+		//128+64
+		int64_t core; //affinity
+		//128+128
 		uint8_t *connectionDescription; // (LISP connection description)
-		int64_t core;
+		uint32_t connectionDescriptionLength;
 	} WormSetup;
 
 	typedef struct {

@@ -4,9 +4,6 @@
 #include <common.h>
 #include <einstein/connection.hpp>
 
-#include <poll.h>
-#include <signal.h>
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

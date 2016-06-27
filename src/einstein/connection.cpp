@@ -59,11 +59,9 @@ Connection::~Connection()
 	}
 }
 
-void Connection::createWorm(shared_ptr<Worm> wc, const string ip)
+void Connection::createWorm(shared_ptr<Worm> wc)
 {
-	UNUSED(ip); //TODO remove!
 	// TODO: Conectarse al remoto y crear worm
-
 	mutex_lock();
 
 	this->connections.insert(make_pair(wc->ws.id, wc));
@@ -237,7 +235,8 @@ void Connection::deployWorm(Worm &wc)
 	string executable = "";
 
 	if (copyData) {
-		executable = "rsync -au --progress " + wc.programName + ".tgz " + wc.host + ":~";
+		cerr << "Copying program \"" << wc.programName << "\" to worm " << wc.ws.id << endl;
+		executable = "rsync -au " + wc.programName + ".tgz '[" + wc.host + "]':~";
 
 		if (system(executable.c_str())) {
 			cerr << "error executing comand: \"" << executable << "\"" << endl;

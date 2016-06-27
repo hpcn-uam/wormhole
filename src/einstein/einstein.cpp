@@ -53,9 +53,9 @@ void Einstein::readConfig(const string configFileName)
 	char host[512]; //TODO FIX POSIBLE OVERFLOW
 	char connectionDescription[4096]; //TODO FIX POSIBLE OVERFLOW
 
-	bool createAnotherWorm = false;
-
 	while (!feof(configFile)) {
+		bool createAnotherWorm = false;
+
 		if (fgets(configLine, 4096, configFile) == 0) {
 			break;
 		}
@@ -112,31 +112,9 @@ void Einstein::readConfig(const string configFileName)
 
 			cerr << "\tDescription: |" << Worm::expandCDescription(string(connectionDescription)) << "|" << endl;
 
-			//check if ipaddr or name
-			struct sockaddr_in sa;
-			int result = inet_pton(AF_INET, host, &(sa.sin_addr));
-			string ip;
-
-			if (result == -1 || result == 0) {
-				struct hostent *tmp = gethostbyname(host);
-
-				if (tmp == NULL) {
-					throw std::runtime_error("Host '" + string(host) + "' does not exists");
-				}
-
-				if (tmp->h_addr_list[0] == NULL) {
-					throw std::runtime_error("Host '" + string(host) + "' does not have a valid IP");
-				}
-
-				ip = string(inet_ntoa(*((struct in_addr *)tmp->h_addr_list[0])));
-
-			} else {
-				ip = string(host);
-			}
-
 			vector<string> runParams;
 
-			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, ip, string(connectionDescription), string(host), string(programName), runParams));
+			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, string(connectionDescription), string(host), string(programName), runParams));
 
 			/*Check for advanced options*/
 			string sconfline = string(configLine);
@@ -172,7 +150,7 @@ void Einstein::readConfig(const string configFileName)
 				cerr << endl;
 			}
 
-			this->ec.createWorm(std::move(wc), ip);
+			this->ec.createWorm(std::move(wc));
 		} while (createAnotherWorm);
 	}
 

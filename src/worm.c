@@ -12,10 +12,10 @@ Worm2EinsConn WH_einsConn;
 uint16_t WH_myId;
 WormSetup WH_mySetup;
 
-DestinationWorms WH_myDstWorms = {0};
-DestinationWorms WH_myRcvWorms = {0};
+DestinationWorms WH_myDstWorms = {0, 0};
+DestinationWorms WH_myRcvWorms = {0, 0};
 
-WormConfig WH_myConfig = {0};
+WormConfig WH_myConfig = {0, 0};
 
 pthread_t WH_wormThread;
 
@@ -76,7 +76,7 @@ uint8_t WH_init(void)
 	WH_myId = atoi(getenv("WORM_ID"));
 
 	WH_einsConn.Port = atoi(getenv("EINSTEIN_PORT"));
-	WH_einsConn.IP = inet_addr(getenv("EINSTEIN_IP"));
+	WH_einsConn.ip = strdup(getenv("EINSTEIN_IP"));
 
 	int EinsteinSocket = tcp_connect_to(getenv("EINSTEIN_IP"), WH_einsConn.Port);
 
@@ -617,7 +617,7 @@ inline void WH_TH_setupworm(SyncSocket *socket)
 	DestinationWorm *tmpDestWormPtr
 		= WH_addWorm(&WH_myRcvWorms, tmpDestWorm.id, 0);
 
-	tmpDestWormPtr->ip = tmpDestWorm.ip;
+	strncpy(tmpDestWormPtr->ip, tmpDestWorm.ip, INET6_ADDRSTRLEN);
 	tmpDestWormPtr->port = tmpDestWorm.port;
 	tmpDestWormPtr->supportedTypes = realloc(tmpDestWormPtr->supportedTypes,
 									 (tmpDestWormPtr->numberOfTypes + 1) * sizeof(ConnectionDataType));
@@ -745,19 +745,16 @@ int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
  */
 uint8_t WH_connectWorm(DestinationWorm *c)
 {
-	struct in_addr ip_addr;
-	ip_addr.s_addr = c->ip;
-
 	int socket = 0;
 
 	//fprintf(stderr, "[DEBUG:%d ; %s:%d]\n", __LINE__, inet_ntoa(ip_addr), c->port);
 
 	do {
 		// Force keep-trying
-		socket = tcp_connect_to(inet_ntoa(ip_addr), c->port);
+		socket = tcp_connect_to(c->ip, c->port);
 
 		if (socket < 0) {
-			fprintf(stderr, "%s:%d\t", inet_ntoa(ip_addr), c->port);
+			fprintf(stderr, "%s:%d\t", c->ip, c->port);
 			perror("Error estableciendo conexion volatil con WORM");
 			fflush(stderr);
 		}
@@ -767,7 +764,7 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 	enum wormMsgType type = HELLO; //Con Worm Info
 
 	WormSetup wormSetup;
-	WormConfig wormConfig = {0};
+	WormConfig wormConfig = {0, 0};
 
 	if (tcp_message_send(socket, &type, sizeof(type))) {
 		perror("Error solicitando información del Worm [1]");
@@ -831,12 +828,9 @@ uint8_t WH_connectWorm(DestinationWorm *c)
  */
 uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *const type)
 {
-	struct in_addr ip_addr;
-	ip_addr.s_addr = dw->ip;
-
 	WH_connectWorm(dw);
 
-	int tmpsock = tcp_connect_to(inet_ntoa(ip_addr), dw->port);
+	int tmpsock = tcp_connect_to(dw->ip, dw->port);
 
 	if (tmpsock < 0) {
 		return 1;
@@ -895,7 +889,14 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	DestinationWorm dwtmp;
 	dwtmp.id = WH_mySetup.id;
-	dwtmp.ip = WH_mySetup.IP;
+
+	if (WH_mySetup.isIPv6) {
+		strdup(inet_ntop(AF_INET6, &WH_mySetup.IP, dwtmp.ip, INET6_ADDRSTRLEN));
+
+	} else {
+		strdup(inet_ntop(AF_INET, &WH_mySetup.IP, dwtmp.ip, INET_ADDRSTRLEN));
+	}
+
 	dwtmp.port = WH_mySetup.listenPort;
 	dwtmp.numberOfTypes = 1;
 	dwtmp.supportedTypes = NULL;
@@ -908,11 +909,12 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	Connection conntmp = {
 		.type = *type,
-		.socket = {0}
+		//.socket = {0} //error in some compilers (Clang)
 #ifdef _WORMLIB_STATISTICS_
 		, .stats = {.totalIO = 0, .lastIO = 0, .lastCheck = hptl_get()}
 #endif
 	};
+	bzero(&conntmp.socket, sizeof(conntmp.socket)); //replaces socket={0}
 
 	if (tcp_message_ssend(socket, &conntmp, sizeof(conntmp))) { //DstWorm
 		fprintf(stderr, "Error configurando Worm externo %d\n", dw->id);
@@ -1078,6 +1080,7 @@ const char *_WH_DymRoute_CC_includes = "\n"
 									   "#include <stdint.h>\n"
 									   "#include <stdio.h>\n"
 									   "#include <pthread.h>\n"
+									   "#include <arpa/inet.h>\n" //TODO remove someday
 									   "#include <openssl/ssl.h>\n"; //TODO remove include
 const char *_WH_DymRoute_CC_FuncStart = "\n\n"
 										"uint8_t WH_DymRoute_precompiled_route (const void *const data, const MessageInfo *const mi, DestinationWorms *const cns)\n{\n"
@@ -1940,7 +1943,13 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
 		}
 
 		worm->port = wSetup.listenPort;
-		worm->ip = wSetup.IP;
+
+		if (wSetup.isIPv6) {
+			strdup(inet_ntop(AF_INET6, &wSetup.IP, worm->ip, INET6_ADDRSTRLEN));
+
+		} else {
+			strdup(inet_ntop(AF_INET, &wSetup.IP, worm->ip, INET_ADDRSTRLEN));
+		}
 	}
 
 	//TODO: Obtener información de los tipos disponibles.

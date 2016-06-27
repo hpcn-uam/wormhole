@@ -57,7 +57,7 @@ class Connection
 	~Connection();
 
 	// Connects to IP and launches a worm with configuration ws
-	void createWorm(shared_ptr<Worm> wc, const string ip);
+	void createWorm(shared_ptr<Worm> wc);
 
 	void pingWorm(const uint16_t id);
 	void pingWorms();

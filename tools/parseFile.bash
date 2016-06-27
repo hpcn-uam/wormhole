@@ -10,7 +10,7 @@ do
 	cat $f | while read in
 	do
 
-		if [[ $in == *"WH_DymRoute_send"*";"* ]] #Functions
+		if [[ $in == *"WH_DymRoute_send"*";"* || $in == *"typedef"*";"* ]] #Functions and inline typedefs
 		then
 			echo "${in}"
 		fi
