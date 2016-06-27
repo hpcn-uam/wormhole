@@ -205,5 +205,6 @@ clean:
 
 #Custom Data .o
 obj/structures.h.o: $(INCLUDES)
+	mkdir -p obj
 	./tools/parseFile.bash > obj/structures.h
 	objcopy --input binary --output elf64-x86-64 --binary-architecture i386 obj/structures.h $@
