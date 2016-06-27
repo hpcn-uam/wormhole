@@ -103,7 +103,12 @@ void Connection::deleteAllWorms()
 	cerr << "Deleting all worms" << endl;
 
 	while (!this->connections.empty()) {
-		this->deleteWorm(this->connections.rbegin()->first);
+		try {
+			this->deleteWorm(this->connections.rbegin()->first);
+
+		} catch (exception e) {
+			cerr << "Error halting worm " << this->connections.rbegin()->second->ws.id << ": " << e.what();
+		}
 	}
 
 	cerr << "Done" << endl;
