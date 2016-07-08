@@ -13,11 +13,13 @@ Connection::Connection(const string listenIp, const uint16_t listenPort, bool au
 	this->listenIpStr = listenIp;
 	this->listenIp = inet_addr(listenIp.c_str());
 	this->listenPort = listenPort;
-	this->listeningSocket = tcp_listen_on_port(listenPort);
+	this->listeningSocket = unique_ptr<SSocket> (new SSocket());
 
-	if (this->listeningSocket == -1) {
+	if (this->listeningSocket == nullptr) {
 		throw std::runtime_error("Error listening to socket");
 	}
+
+	this->listeningSocket->listen(listenPort);
 
 	this->wormSockets = 0;
 	this->fdinfo = 0;
@@ -42,7 +44,6 @@ Connection::~Connection()
 	}
 
 	this->deleteAllWorms();
-	close(this->listeningSocket);
 
 	if (this->wormSockets != 0) {
 		for (size_t i = 0; i < this->connections.size(); i++) {
@@ -149,9 +150,9 @@ int Connection::setupWorm()
 	ts.tv_sec  =   0; //TODO parametrizar esta variable
 	ts.tv_usec =   100;
 
-	int currentWormSocket = tcp_accept(this->listeningSocket, &ts);
+	unique_ptr<SSocket> currentWormSocket = unique_ptr<SSocket>(this->listeningSocket->accept(&ts));
 
-	if (currentWormSocket == -1) {
+	if (currentWormSocket == nullptr) {
 		//throw std::runtime_error("Error accepting connection");
 		return 1;
 	}
@@ -160,7 +161,7 @@ int Connection::setupWorm()
 	size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
 	uint8_t hellomsg[hellomsgSize];
 
-	if (tcp_message_recv(currentWormSocket, hellomsg, hellomsgSize, 1) != (ssize_t)hellomsgSize) {
+	if (currentWormSocket->recv(hellomsg, hellomsgSize, 1) != (ssize_t)hellomsgSize) {
 		throw std::runtime_error("Error receiving message");
 	}
 
@@ -177,25 +178,25 @@ int Connection::setupWorm()
 
 	*msgType = SETUP;
 
-	if (tcp_message_send(currentWormSocket, msgType, sizeof(enum ctrlMsgType)) != 0) {
+	if (currentWormSocket->send(msgType, sizeof(enum ctrlMsgType)) != 0) {
 		throw std::runtime_error("Error sending SETUP message");
 	}
 
-	if (tcp_message_send(currentWormSocket, wormSetup, sizeof(WormSetup)) != 0) {
+	if (currentWormSocket->send(wormSetup, sizeof(WormSetup)) != 0) {
 		throw std::runtime_error("Error sending message");
 	}
 
 	const void *connDescription = static_cast<const void *>(this->connections.at(wormId)->ws.connectionDescription);
 
 	if (this->connections.at(wormId)->ws.connectionDescriptionLength > 0) {
-		if (tcp_message_send(currentWormSocket, connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
+		if (currentWormSocket->send(connDescription, this->connections.at(wormId)->ws.connectionDescriptionLength) != 0) {
 			throw std::runtime_error("Error sending message");
 		}
 	}
 
 	mutex_lock();
 
-	connectWorm(wormId, currentWormSocket);
+	connectWorm(wormId, move(currentWormSocket));
 
 	mutex_unlock();
 
@@ -203,13 +204,14 @@ int Connection::setupWorm()
 	return 0;
 }
 
-void Connection::connectWorm(const uint16_t id, const int socket)
+void Connection::connectWorm(const uint16_t id, unique_ptr<SSocket> socket)
 {
-	this->connections.at(id)->socket = socket;
+	int fd = socket->getFd();
+	this->connections.at(id)->socket = move(socket);
 
 	// Add socket to the list used for polling
 	int socketIndex = distance(this->connections.begin() , this->connections.find(id));
-	wormSockets[socketIndex] = socket;
+	wormSockets[socketIndex] = fd;
 
 	// TODO: Insert socket descriptor in property wormSockets
 }

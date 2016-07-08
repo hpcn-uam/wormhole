@@ -43,7 +43,7 @@ Worm::~Worm()
 		ctrlMsgType msg = HALT;
 		cerr << "Enviando HALT al Worm id = " << this->ws.id << endl;
 
-		if (tcp_message_send(this->socket, &msg, sizeof(msg)) != 0) {
+		if (this->socket->send(&msg, sizeof(msg)) != 0) {
 			throw std::runtime_error("Error sending HALT");
 		}
 
@@ -140,19 +140,19 @@ string Worm::expandCDescription(string cd)
 
 int64_t Worm::ping()
 {
-	if (this->socket == 0 || this->socket == -1) {
+	if (this->socket == nullptr) {
 		return 0;
 	}
 
 	hptl_t begin = hptl_get();
 
 	ctrlMsgType msg = PING;
-	tcp_message_send(this->socket, &msg, sizeof(msg));
+	this->socket->send(&msg, sizeof(msg));
 	msg = TIMEOUT;
 
 	do {
 		errno = 0;
-		tcp_message_recv(this->socket, &msg, sizeof(msg), 0);
+		this->socket->recv(&msg, sizeof(msg), 0);
 	} while (errno == EAGAIN);
 
 	hptl_t end = hptl_get();
@@ -171,7 +171,7 @@ int64_t Worm::ping()
 
 uint64_t Worm::chroute(string newRoute)
 {
-	if (this->socket == 0 || this->socket == -1) {
+	if (this->socket == nullptr) {
 		return 1;
 	}
 
@@ -179,9 +179,9 @@ uint64_t Worm::chroute(string newRoute)
 
 	ctrlMsgType msg = CHANGEROUTE;
 	uint32_t length = newRoute.length() + 1;
-	tcp_message_send(this->socket, &msg, sizeof(msg));
-	tcp_message_send(this->socket, &length, sizeof(length));
-	tcp_message_send(this->socket, newRoute.c_str(), length);
+	this->socket->send(&msg, sizeof(msg));
+	this->socket->send(&length, sizeof(length));
+	this->socket->send(newRoute.c_str(), length);
 
 	this->ws.connectionDescriptionLength = length;
 	this->ws.connectionDescription = (uint8_t *)realloc(this->ws.connectionDescription, length);

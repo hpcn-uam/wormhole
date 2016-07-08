@@ -2,6 +2,7 @@
 #define __EINSTEIN_WORM_H__
 
 #include <common.h>
+#include <netlib.hpp>
 
 #include <poll.h>
 #include <signal.h>
@@ -27,7 +28,7 @@ namespace einstein
 struct Worm {
  public:
 	WormSetup ws;
-	int socket;
+	unique_ptr<SSocket> socket;
 	string host;
 	string programName;
 	bool halting;

@@ -23,8 +23,8 @@ export LDFLAGS=-fPIC -ldl -lpthread -lstdc++
 export LIBWORMLDFLAGS=$(LDFLAGS) dependencies/repos/hptimelib/lib/hptl.a dependencies/repos/linenoise/linenoise.c $(SSLLDFLAGS)
 
 #Einstein
-export EINSTEINHEADERS  := $(wildcard src/einstein/*.hpp)
-export EINSTEINSRCS     := $(filter-out einstein/main.cpp,$(wildcard src/einstein/*.cpp))
+export EINSTEINHEADERS  := $(wildcard include/einstein/*.hpp)
+export EINSTEINSRCS     := $(filter-out src/einstein/main.cpp,$(wildcard src/einstein/*.cpp))
 export EINSTEINOBJ      := $(patsubst src/einstein/%,obj/einstein/%,$(EINSTEINSRCS:.cpp=.o))
 
 #Java
@@ -172,6 +172,9 @@ buildTools:
 	$(MAKE) $(MFLAGS) -C tools
 
 obj/%.o: src/%.cpp $(CPPINCLUDES) | Dependencies
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+obj/einstein/%.o: src/einstein/%.cpp $(CPPINCLUDES) | Dependencies
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 obj/%.o: src/%.c $(INCLUDES) | Dependencies

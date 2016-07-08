@@ -33,7 +33,7 @@ class Connection
 	string listenIpStr;
 	uint32_t listenIp;
 	uint16_t listenPort;
-	int listeningSocket;
+	unique_ptr<SSocket> listeningSocket;
 
 	// This map represents the worms alredy deployed.
 	// The key represents the host, the vector, the programs alredy deployed on it.
@@ -72,7 +72,7 @@ class Connection
 
  private:
 	// Add socket to worm
-	void connectWorm(const uint16_t id, const int socket);
+	void connectWorm(const uint16_t id, unique_ptr<SSocket> socket);
 	void pollWorms();
 	void listen();
 	void threadRun();
