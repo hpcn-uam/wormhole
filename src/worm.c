@@ -888,6 +888,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	}
 
 	DestinationWorm dwtmp;
+	bzero(&dwtmp, sizeof(dwtmp));
 	dwtmp.id = WH_mySetup.id;
 
 	if (WH_mySetup.isIPv6) {
@@ -899,8 +900,6 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	dwtmp.port = WH_mySetup.listenPort;
 	dwtmp.numberOfTypes = 1;
-	dwtmp.supportedTypes = NULL;
-	dwtmp.conns = NULL;
 
 	if (tcp_message_ssend(socket, &dwtmp, sizeof(dwtmp))) { //DstWorm
 		fprintf(stderr, "Error configurando Worm externo %d\n", dw->id);
