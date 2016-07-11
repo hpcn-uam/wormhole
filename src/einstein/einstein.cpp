@@ -54,7 +54,7 @@ void Einstein::readConfig(const string configFileName)
 	char connectionDescription[4096]; //TODO FIX POSIBLE OVERFLOW
 
 	while (!feof(configFile)) {
-		bool createAnotherWorm = false;
+		bool createAnotherWorm;
 
 		if (fgets(configLine, 4096, configFile) == 0) {
 			break;
@@ -76,8 +76,10 @@ void Einstein::readConfig(const string configFileName)
 
 		connectionDescription[strlen(connectionDescription) - 1] = 0;
 
+		createAnotherWorm = false;
+
 		do {
-			int firstId, lastId;
+			int firstId = 0, lastId = 0;
 
 			if (string(id_string).find("-") != string::npos) {
 				firstId = atoi(strtok(id_string, "-"));
@@ -104,7 +106,13 @@ void Einstein::readConfig(const string configFileName)
 				id = atoi(id_string);
 			}
 
-			cerr << "[" << id << "] " << host << " " << programName << endl;
+			cerr << "[" << id << "] " << host << " " << programName;
+
+			if (core > 0) {
+				cerr << " Core mask: " << hex << core;
+			}
+
+			cerr << endl;
 
 			if (connectionDescription[0] != '\t') {
 				throw std::runtime_error("Missing worm routing");
