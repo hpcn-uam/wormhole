@@ -6,6 +6,7 @@ OUTFILE=$(echo $$)
 #gdbserver 0.0.0.0:2345 ./testBW/testBW &> /tmp/bw.$OUTFILE.out
 
 #valgrind  --vgdb=yes --vgdb-error=0 
+ulimit -c unlimited
 ./randomEmitter "$@" &> /tmp/rnde.$OUTFILE.out
 
 #sleep 60

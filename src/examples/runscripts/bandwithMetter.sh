@@ -4,7 +4,7 @@ OUTFILE=$(echo $$)
 
 #valgrind ./testBW/testBW &> /tmp/lisp.$OUTFILE.out
 #gdbserver 0.0.0.0:2345 ./testBW/testBW &> /tmp/bw.$OUTFILE.out
-
+ulimit -c unlimited
 #valgrind  --vgdb=yes --vgdb-error=0 
 ./bandwithMetter "$@" &>> /tmp/bm.$OUTFILE.out
 
