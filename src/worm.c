@@ -356,7 +356,7 @@ uint8_t WH_flushIO(void)
 							WH_myDstWorms.worms[i].conns[j]->type.ext.arrayType);
 #endif
 #endif
-					flush_send(&(WH_myDstWorms.worms[i].conns[j]->socket));
+					flush_send(&(WH_myDstWorms.worms[i].conns[j]->socket), 1);
 				}
 			}
 		}
