@@ -109,7 +109,7 @@ void Einstein::readConfig(const string configFileName)
 			cerr << "[" << id << "] " << host << " " << programName;
 
 			if (core > 0) {
-				cerr << " Core mask: " << hex << core;
+				cerr << " Core mask: 0x" << hex << core << dec;
 			}
 
 			cerr << endl;
