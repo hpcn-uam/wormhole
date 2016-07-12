@@ -655,61 +655,55 @@ Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
 {
 	static uint32_t wormIndex = 0;
 	static uint32_t connIndex = 0;
+
 	uint32_t closedWorms = 0;
 	uint32_t unclosedWorms = 0;
-
-	connIndex++;
-
-	// Search for an existent worm + connection
-	if (wormIndex >= wms->numberOfWorms) {
-		wormIndex = 0;
-		connIndex = 0;
-
-		if (wms->numberOfWorms == 0) {
-			WH_errno = WH_ERRNO_EMPTY;
-			return NULL;    // Check por si aun no se ha conectado a ningún nodo de entrada.
-		}
-	}
-
-	while (connIndex >= wms->worms[wormIndex].numberOfTypes) {
-		wormIndex = (wormIndex + 1) % wms->numberOfWorms;
-		connIndex = 0;
-	}
 
 	uint32_t startingWormIndex = wormIndex;
 	uint32_t startingConnIndex = connIndex;
 
-	do {
-		if (WH_considerSocket(&(wms->worms[wormIndex].conns[connIndex]->socket), mi)) {
-			WH_errno = WH_ERRNO_CLEAR;
-			return wms->worms[wormIndex].conns[connIndex];
+	for (; wormIndex < wms->numberOfWorms ; wormIndex = (wormIndex + 1) % wms->numberOfWorms, connIndex = 0) {
+		for (; connIndex < wms->worms[wormIndex].numberOfTypes ; connIndex++) {
+			Connection *conn;
+			conn = wms->worms[wormIndex].conns[connIndex];
 
-		} else if (wms->worms[wormIndex].conns[connIndex]->socket.closed) {
-			closedWorms++;
+			if (WH_considerSocket(&(conn->socket), mi)) {
+				connIndex++;
+				WH_errno = WH_ERRNO_CLEAR;
+				return conn;
 
-		} else {
-			unclosedWorms++;
+			} else if (conn->socket.closed) {
+				closedWorms++;
+
+			} else {
+				unclosedWorms++;
+			}
 		}
+	}
 
-		connIndex++;
+	if (startingWormIndex == 0 && startingConnIndex == 0) { //begin from the start
+		if (!unclosedWorms) { // there is no open worms
+			if (!closedWorms) { // there is no close worms
+				WH_errno = WH_ERRNO_EMPTY;
+				return NULL;
 
-		while (connIndex >= wms->worms[wormIndex].numberOfTypes) {
-			wormIndex = (wormIndex + 1) % wms->numberOfWorms;
-			connIndex = 0;
-
-			if (wormIndex == 0 && unclosedWorms > 0) {
-				unclosedWorms = 0;
-				closedWorms = 0;
-
-			} else if (wormIndex == 0 && unclosedWorms == 0 && closedWorms > 0) {
+			} else {
 				WH_errno = WH_ERRNO_CLOSED;
 				return NULL;
 			}
+
+		} else {
+			wormIndex = 0; //RST
+			connIndex = 0; //RST
+			WH_errno = WH_ERRNO_CLEAR; //TODO check when this call happens
+			return NULL;
 		}
-	} while (!(wormIndex == startingWormIndex && connIndex == startingConnIndex)); //arreglado bug
 
-	return NULL;
-
+	} else {
+		wormIndex = 0; //RST
+		connIndex = 0; //RST
+		return WH_connectionPoll(wms, mi);
+	}
 }
 
 /** WH_considerSocket
@@ -1152,20 +1146,6 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 
 	do {
 		c = WH_connectionPoll(&WH_myRcvWorms, mi);
-
-		/*if (!c) {
-			pollCnt++;
-
-			if (pollCnt > 100000) { //TODO poner un valor menos "aleatorio"
-				break;
-
-				//struct timespec ts;
-				//ts.tv_sec = 0;
-				//ts.tv_nsec = 1000;
-				//nanosleep(&ts, 0);
-				//WH_flushIO();
-			}
-		}*/
 	} while ((!c && (WH_errno == WH_ERRNO_CLEAR || WH_errno == WH_ERRNO_EMPTY))
 			 || ((c && mi->type) ? WH_connectionDataTypecmp(&c->type, mi->type) : 1));
 
