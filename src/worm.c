@@ -662,7 +662,7 @@ Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
 	uint32_t startingWormIndex = wormIndex;
 	uint32_t startingConnIndex = connIndex;
 
-	for (; wormIndex < wms->numberOfWorms ; wormIndex = (wormIndex + 1) % wms->numberOfWorms, connIndex = 0) {
+	for (; wormIndex < wms->numberOfWorms ; wormIndex++, connIndex = 0) {
 		for (; connIndex < wms->worms[wormIndex].numberOfTypes ; connIndex++) {
 			Connection *conn;
 			conn = wms->worms[wormIndex].conns[connIndex];
