@@ -343,24 +343,24 @@ uint8_t WH_flushIO(void)
 	uint8_t ret = 0;
 
 	// for each dstWorm
-	for (uint32_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
+	/*for (uint32_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
 		if (WH_myDstWorms.worms[i].conns) {
 			// for each Connection/type
 			for (uint32_t j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
 				if (WH_myDstWorms.worms[i].conns[j] != NULL) {
-#ifdef _WORMLIB_DEBUG_
-#ifdef _WORMLIB_DEBUG_FLUSH_
+	#ifdef _WORMLIB_DEBUG_
+	#ifdef _WORMLIB_DEBUG_FLUSH_
 					fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d [%d:%d]\n",
 							WH_myDstWorms.worms[i].id,
 							WH_myDstWorms.worms[i].conns[j]->type.type,
 							WH_myDstWorms.worms[i].conns[j]->type.ext.arrayType);
-#endif
-#endif
-					flush_send_sync(&(WH_myDstWorms.worms[i].conns[j]->socket));
+	#endif
+	#endif
+					//flush_send_sync(&(WH_myDstWorms.worms[i].conns[j]->socket));
 				}
 			}
 		}
-	}
+	}*/
 
 	//volatile int k=0;
 	//while(!k);
