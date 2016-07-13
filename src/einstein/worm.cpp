@@ -147,6 +147,9 @@ int64_t Worm::ping()
 	hptl_t begin = hptl_get();
 
 	ctrlMsgType msg = PING;
+
+	struct timeval ts = {.tv_sec = 2, .tv_usec = 0}; //timeout at 2 seconds
+	this->socket->setSocketTimeout(&ts);
 	this->socket->send(&msg, sizeof(msg));
 	msg = TIMEOUT;
 
