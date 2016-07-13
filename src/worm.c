@@ -722,7 +722,7 @@ int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
 		return 0;
 	}
 
-	if (availableBytes >= OPTIMAL_BUFFER_SIZE) { // for very big messages
+	if (availableBytes >= OPTIMAL_BUFFER_SIZE || tcp_async_numbuf(sock) == 2) { // for very big messages // Now also checks for void interblocks
 		return 1;
 	}
 

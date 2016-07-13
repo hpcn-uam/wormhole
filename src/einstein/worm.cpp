@@ -148,8 +148,12 @@ int64_t Worm::ping()
 
 	ctrlMsgType msg = PING;
 
-	struct timeval ts = {.tv_sec = 2, .tv_usec = 0}; //timeout at 2 seconds
-	this->socket->setSocketTimeout(&ts);
+	try {
+		struct timeval ts = {.tv_sec = 2, .tv_usec = 0}; //timeout at 2 seconds
+		this->socket->setSocketTimeout(&ts);
+
+	} catch (exception e) {}
+
 	this->socket->send(&msg, sizeof(msg));
 	msg = TIMEOUT;
 
