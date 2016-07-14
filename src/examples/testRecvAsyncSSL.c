@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include "../netlib_inline.c"
 
-#define NUM_SMALL_MESSAGES 50000000
-#define NUM_BIG_MESSAGES 500000
+#define NUM_SMALL_MESSAGES 100000000
+#define NUM_BIG_MESSAGES 1000000
 #define SIZE_BUFFER 1024*4
 
 int main(int argc, char **argv)
@@ -65,8 +65,8 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		if (i > NUM_BIG_MESSAGES - 1000) {
-			flush_recv(&sock);
+		if (*(int *)buffer != i) {
+			fprintf(stderr, "Paquete perdido %d\n", i);
 		}
 	}
 

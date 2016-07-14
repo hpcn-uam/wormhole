@@ -7,8 +7,8 @@
 #include <strings.h>
 #include <malloc.h>
 
-#define NUM_SMALL_MESSAGES 50000000
-#define NUM_BIG_MESSAGES 500000
+#define NUM_SMALL_MESSAGES 100000000
+#define NUM_BIG_MESSAGES 1000000
 #define SIZE_BUFFER 1024*4
 
 int main(int argc, char **argv)
