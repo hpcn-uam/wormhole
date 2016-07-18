@@ -145,7 +145,7 @@ int main(int argc, char **argv)
 			header = (pcaprec_hdr_tJZ *)file_cur;
 			data = file_cur + sizeof(pcaprec_hdr_tJZ);
 
-			mi.hash = data[14 + 15] + data[14 + 19]; //IP flow
+			mi.hash = data[14 + 15] ^ data[14 + 19] ^ data[14 + 14] ^ data[14 + 18]; //IP flow
 			mi.size = header->incl_len;
 
 			file_cur += header->incl_len + sizeof(pcaprec_hdr_tJZ);
