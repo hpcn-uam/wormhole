@@ -54,7 +54,7 @@ Docs: doc/html
 
 langLibs: javaLibs
 
-Examples: bin/pcapReader.tgz bin/httpDissector.tgz bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/randomEmitter.tgz bin/bandwithMetter.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
+Examples: bin/pcapReader.tgz bin/pcapReaderBlk.tgz bin/httpDissector.tgz bin/testWorm bin/testLisp bin/testWorm.tgz bin/testLisp.tgz bin/randomEmitter.tgz bin/bandwithMetter.tgz bin/testSendAsync bin/testRecvAsync bin/testSendSSL bin/testRecvSSL bin/testSendAsyncSSL bin/testRecvAsyncSSL
 Jexamples: bin/JtestBW.tgz bin/Jtest.tgz
 
 #Tars
