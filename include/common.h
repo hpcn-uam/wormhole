@@ -72,6 +72,37 @@ extern "C" {
 		uint16_t id;
 	} PongStats;
 
+	/**
+	* Prefetch a cache line into all cache levels.
+	* @param p
+	*   Address to prefetch
+	*/
+	static inline void WH_prefetch0(volatile void *p)
+	{
+		asm volatile("prefetcht0 %[p]" : [p] "+m"(*(volatile char *)p));
+	}
+
+	/**
+	* Prefetch a cache line into all cache levels except the 0th cache level.
+	* @param p
+	*   Address to prefetch
+	*/
+	static inline void WH_prefetch1(volatile void *p)
+	{
+		asm volatile("prefetcht1 %[p]" : [p] "+m"(*(volatile char *)p));
+	}
+
+	/**
+	* Prefetch a cache line into all cache levels except the 0th and 1th cache
+	* levels.
+	* @param p
+	*   Address to prefetch
+	*/
+	static inline void WH_prefetch2(volatile void *p)
+	{
+		asm volatile("prefetcht2 %[p]" : [p] "+m"(*(volatile char *)p));
+	}
+
 #ifdef __cplusplus
 }
 #endif

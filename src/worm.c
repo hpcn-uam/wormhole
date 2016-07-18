@@ -662,6 +662,8 @@ Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
 	uint32_t startingWormIndex = wormIndex;
 	uint32_t startingConnIndex = connIndex;
 
+WH_connectionPoll_loop:
+
 	for (; wormIndex < wms->numberOfWorms ; wormIndex++, connIndex = 0) {
 		for (; connIndex < wms->worms[wormIndex].numberOfTypes ; connIndex++) {
 			Connection *conn;
@@ -702,7 +704,10 @@ Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
 	} else {
 		wormIndex = 0; //RST
 		connIndex = 0; //RST
-		return WH_connectionPoll(wms, mi);
+		startingWormIndex = 0;
+		startingConnIndex = 0;
+		goto WH_connectionPoll_loop;
+		//return WH_connectionPoll(wms, mi);
 	}
 }
 
@@ -712,18 +717,14 @@ Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
  */
 int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
 {
-	if (!can_be_read(sock)) {
-		return 0;
+	if (tcp_async_numbuf(sock) == 2) {
+		return 1;
 	}
 
 	uint32_t availableBytes = tcp_async_availableBytes(sock);
 
 	if (availableBytes < 8) {
 		return 0;
-	}
-
-	if (availableBytes >= OPTIMAL_BUFFER_SIZE || tcp_async_numbuf(sock) == 2) { // for very big messages // Now also checks for void interblocks
-		return 1;
 	}
 
 	if (mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type)*tcp_async_peakInt(sock)) {

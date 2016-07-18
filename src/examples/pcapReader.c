@@ -140,18 +140,29 @@ int main(int argc, char **argv)
 		gettimeofday(&start, 0);
 
 		while (flag) {
+			WH_prefetch0(file_cur);
+
 			header = (pcaprec_hdr_tJZ *)file_cur;
 			data = file_cur + sizeof(pcaprec_hdr_tJZ);
 
 			mi.hash = data[14 + 15] + data[14 + 19]; //IP flow
 			mi.size = header->incl_len;
 
+			file_cur += header->incl_len + sizeof(pcaprec_hdr_tJZ);
+
+			if (file_cur < file_end) { //file ended
+				WH_prefetch1(file_cur);
+
+				if (file_cur < file_end - 128) {
+					WH_prefetch2(file_cur + 64);
+				}
+			}
+
 			if (WH_send(file_cur, &mi)) {
 				fprintf(stderr, "wh_send error\n");
 				flag = 0;
 			}
 
-			file_cur += header->incl_len + sizeof(pcaprec_hdr_tJZ);
 
 			if (file_cur >= file_end) { //file ended
 				break;
