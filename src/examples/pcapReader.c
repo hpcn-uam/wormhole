@@ -132,7 +132,6 @@ int main(int argc, char **argv)
 	pcaprec_hdr_tJZ *header;
 	uint8_t *data;
 	int flag = 1;
-	sleep(10);
 	fprintf(stderr, "Generating structs...");
 	fflush(stderr);
 
