@@ -1064,6 +1064,113 @@ uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const Connec
 
 
 /************************************************************
+	Bulking Routines
+*************************************************************/
+
+/** WH_send_blk
+ * Receives multiples messages.
+ * @return the number of bytes readed, 0 if ERROR or none.
+ */
+uint8_t WH_send_blk(const BulkList *const bl)
+{
+	size_t i;
+	uint8_t ret = 0;
+
+	if (bl->cpyalign) {
+		for (i = 0;
+			 i < bl->len;
+			 i += ((MessageInfo *)(bl->list.rawdata + i))->size + sizeof(MessageInfo)) {
+
+			ret += WH_send(
+				bl->list.rawdata + i + sizeof(MessageInfo),
+				bl->list.rawdata + i);
+		}
+
+	} else {
+		for (i = 0; i < bl->len; i++) {
+			ret += WH_send(bl->list.msgs[i].data, bl->list.msgs[i].info);
+		}
+	}
+
+	return ret;
+}
+
+/** WH_BL_create
+ * @param cpyalign if set to other than 0, then each data added to the list would be copied and memory aligned
+ * @return a new BulkList. Null if error.
+ */
+BulkList *WH_BL_create(int_fast8_t cpyalign)
+{
+	BulkList *ret = calloc(sizeof(BulkList), 1);
+
+	if (ret) { //if not null
+		ret->cpyalign = cpyalign;
+	}
+
+	return ret;
+}
+
+/** WH_BL_add
+ * Adds a message info and msg to the list.
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_BL_add(BulkList *bl, const void *const msg, const MessageInfo *const mi)
+{
+	uint8_t ret = 0;
+
+	if (bl->cpyalign) {
+
+		size_t oldlen = bl->len;
+		bl->len += mi->size + sizeof(MessageInfo);
+
+		bl->list.rawdata = realloc(bl->list.rawdata, bl->len);
+
+		if (bl->list.rawdata == NULL) {
+			fprintf(stderr, "[WH]: Can't realloc to %lu bytes", bl->len);
+			return 1;
+		}
+
+		memcpy(bl->list.rawdata + oldlen,						mi,	sizeof(MessageInfo));
+		memcpy(bl->list.rawdata + oldlen + sizeof(MessageInfo),	msg, mi->size);
+
+	} else {
+
+		bl->list.msgs = realloc(bl->list.msgs, bl->len * sizeof(BulkMsg *));
+
+		if (bl->list.msgs) {
+			return 1;
+		}
+
+		BulkMsg *smsg = &(bl->list.msgs[bl->len]);
+		smsg->data = (void *)msg;
+		smsg->info = (MessageInfo *)mi;
+
+		bl->len++;
+	}
+
+	return ret;
+}
+
+/** WH_BL_free
+ * Frees the list
+ */
+void WH_BL_free(BulkList *bl)
+{
+	if (bl) {
+		if (bl->len > 0 && (bl->list.rawdata || bl->list.msgs)) {
+			if (bl->cpyalign) {
+				free(bl->list.rawdata);
+
+			} else {
+				free(bl->list.msgs);
+			}
+		}
+
+		free(bl);
+	}
+}
+
+/************************************************************
 	Dynamic Routing Library
 *************************************************************/
 /***************************************/

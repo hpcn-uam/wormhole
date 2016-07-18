@@ -132,6 +132,40 @@ int main(int argc, char **argv)
 	pcaprec_hdr_tJZ *header;
 	uint8_t *data;
 	int flag = 1;
+	sleep(10);
+	fprintf(stderr, "Generating structs...");
+	fflush(stderr);
+
+	BulkList *bl = WH_BL_create(1);
+
+	if (!bl) {
+		WH_abort("Error creating BL");
+	}
+
+	file_cur = file_start;
+
+	while (flag) {
+		header = (pcaprec_hdr_tJZ *)file_cur;
+		data = file_cur + sizeof(pcaprec_hdr_tJZ);
+
+		mi.hash = data[14 + 15] ^ data[14 + 19] ^ data[14 + 14] ^ data[14 + 18]; //IP flow
+		mi.size = header->incl_len;
+
+		file_cur += header->incl_len + sizeof(pcaprec_hdr_tJZ);
+
+		if (WH_BL_add(bl, file_cur, &mi)) {
+			fprintf(stderr, "WH_BL_add error\n");
+			WH_abort("Error adding element to BL");
+			flag = 0;
+		}
+
+		if (file_cur >= file_end) { //file ended
+			break;
+		}
+	}
+
+	fprintf(stderr, "Done!\n");
+	fflush(stderr);
 
 	struct timeval start, end;
 
@@ -139,40 +173,18 @@ int main(int argc, char **argv)
 		file_cur = file_start;
 		gettimeofday(&start, 0);
 
-		while (flag) {
-			WH_prefetch0(file_cur);
+		int nerr = WH_send_blk(bl);
 
-			header = (pcaprec_hdr_tJZ *)file_cur;
-			data = file_cur + sizeof(pcaprec_hdr_tJZ);
-
-			mi.hash = data[14 + 15] ^ data[14 + 19] ^ data[14 + 14] ^ data[14 + 18]; //IP flow
-			mi.size = header->incl_len;
-
-			file_cur += header->incl_len + sizeof(pcaprec_hdr_tJZ);
-
-			if (file_cur < file_end) { //file ended
-				WH_prefetch1(file_cur);
-
-				if (file_cur < file_end - 128) {
-					WH_prefetch2(file_cur + 64);
-				}
-			}
-
-			if (WH_send(file_cur, &mi)) {
-				fprintf(stderr, "wh_send error\n");
-				flag = 0;
-			}
-
-
-			if (file_cur >= file_end) { //file ended
-				break;
-			}
+		if (nerr) {
+			fprintf(stderr, "There were %d errors @ WH_send_blkn", nerr);
 		}
+
 
 		gettimeofday(&end, 0);
 		fprintf(stderr, "Pcap sent @ %lf Gbps\n",
 				((((double)sb.st_size - sizeof(pcap_hdr_tJZ))      * 8) / 1000) / (((double)end.tv_sec     - start.tv_sec)     * 1000000 + (end.tv_usec     - start.tv_usec)));
 	}
 
+	WH_BL_free(bl);
 	return WH_halt();
 }

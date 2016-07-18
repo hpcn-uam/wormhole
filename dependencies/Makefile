@@ -51,6 +51,7 @@ compiled/gradle:
 httpDissector: repos/httpDissector/httpDissector_wormhole ../lib/libworm.so
 
 repos/httpDissector/httpDissector_wormhole: repos/httpDissector/httpDissector.c ../lib/libworm.so
+	cd repos/httpDissector ; make clean
 	cd repos/httpDissector ; make httpDissector_wormhole
 
 repos/httpDissector/httpDissector.c: initRepositories

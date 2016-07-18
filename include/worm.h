@@ -39,6 +39,20 @@ extern "C" {
 		ConnectionDataType *inputTypes;
 	} WormConfig;
 
+	typedef struct {
+		MessageInfo *info;
+		void *data;
+	} BulkMsg;
+
+	typedef struct {
+		union {
+			BulkMsg *msgs;
+			void *rawdata;
+		} list;
+		size_t len;
+		int_fast8_t cpyalign;
+	} BulkList;
+
 #ifdef _WORMLIB_STATISTICS_
 	typedef struct {
 		uint64_t totalIO;
@@ -94,18 +108,6 @@ extern "C" {
 	 */
 	uint8_t WH_send(const void *const data, const MessageInfo *const mi);
 
-	/** WH_recv_blk
-	 * Receives multiples messages.
-	 * @return the number of bytes readed, 0 if ERROR or none.
-	 */
-	uint32_t WH_recv_blk(void **data, MessageInfo **mi, uint16_t num);
-
-	/** WH_send_blk
-	 * Sends multiples messages.
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_send_blk(const void **const data, const MessageInfo **const mi, const uint16_t num);
-
 	/** WH_flushIO
 	 * Flushes all the IO queues.
 	 * @return 0 if OK, something else if error.
@@ -124,6 +126,37 @@ extern "C" {
 	 * @return the WORM-ID.
 	 */
 	uint16_t WH_get_id(void);
+
+	/**************** Bulk Utils ****************/
+
+	/** WH_recv_blk //TODO : not implemented
+	 * Receives multiples messages.
+	 * @return the number of bytes readed, 0 if ERROR or none.
+	 */
+	//uint32_t WH_recv_blk(BulkList *bl);
+
+	/** WH_send_blk
+	 * Sends multiples messages.
+	 * @return 0 if OK, something else if error.
+	 */
+	uint8_t WH_send_blk(const BulkList *const bl);
+
+	/** WH_BL_create
+	 * @param cpyalign if set to other than 0, then each data added to the list would be copied and memory aligned
+	 * @return a new BulkList. Null if error.
+	 */
+	BulkList *WH_BL_create(const int_fast8_t cpyalign);
+
+	/** WH_BL_add
+	 * Adds a message info and msg to the list.
+	 * @return 0 if OK, something else if error.
+	 */
+	uint8_t WH_BL_add(BulkList *bl, const void *const msg, const MessageInfo *const mi);
+
+	/** WH_BL_free
+	 * Frees the list
+	 */
+	void WH_BL_free(BulkList *bl);
 
 
 #ifdef __cplusplus

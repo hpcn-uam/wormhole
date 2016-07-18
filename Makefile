@@ -77,7 +77,7 @@ bin/J%.tgz: lib/libworm.so lib/libjavaworm.jar | src/examples/runscripts/J%.sh
 	cd $(TMPDIR);	tar -czf $(@F) $(basename $(@F))
 	mv $(TMPDIR)/$(@F) $@
 	rm -rf $(TMPDIR)$(basename $(@F))
-		
+
 bin/nlp.tgz: lib/libworm.so lib/libjavaworm.so lib/libjavaworm.jar src/examples/runscripts/javarun.sh dependencies/compiled/data/data.txt src/langApis/Java/edu/stanford/nlp/sentiment/SentimentPipeline.class
 	mkdir -p $(TMPDIR)/nlp/lib
 	cp lib/libjavaworm.* $(TMPDIR)/nlp/lib #only for java

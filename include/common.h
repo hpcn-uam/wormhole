@@ -72,6 +72,7 @@ extern "C" {
 		uint16_t id;
 	} PongStats;
 
+#ifdef WH_PREFETCHING //default: nope
 	/**
 	* Prefetch a cache line into all cache levels.
 	* @param p
@@ -102,6 +103,7 @@ extern "C" {
 	{
 		asm volatile("prefetcht2 %[p]" : [p] "+m"(*(volatile char *)p));
 	}
+#endif
 
 #ifdef __cplusplus
 }
