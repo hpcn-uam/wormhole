@@ -1076,6 +1076,16 @@ uint8_t WH_send_blk(const BulkList *const bl)
 	size_t i;
 	uint8_t ret = 0;
 
+	for (i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
+		size_t j;
+
+		for (j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
+			if (WH_myDstWorms.worms[i].conns[j] != NULL) {
+				tcp_async_startTransaction(&(WH_myDstWorms.worms[i].conns[j]->socket));
+			}
+		}
+	}
+
 	if (bl->cpyalign) {
 		for (i = 0;
 			 i < bl->len;
@@ -1089,6 +1099,16 @@ uint8_t WH_send_blk(const BulkList *const bl)
 	} else {
 		for (i = 0; i < bl->len; i++) {
 			ret += WH_send(bl->list.msgs[i].data, bl->list.msgs[i].info);
+		}
+	}
+
+	for (i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
+		size_t j;
+
+		for (j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
+			if (WH_myDstWorms.worms[i].conns[j] != NULL) {
+				tcp_async_stopTransaction(&(WH_myDstWorms.worms[i].conns[j]->socket));
+			}
 		}
 	}
 
