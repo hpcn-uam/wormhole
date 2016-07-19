@@ -1204,7 +1204,7 @@ const char *_WH_DymRoute_CC_includes = "\n"
 									   "#include <arpa/inet.h>\n" //TODO remove someday
 									   "#include <openssl/ssl.h>\n"; //TODO remove include
 const char *_WH_DymRoute_CC_FuncStart = "\n\n"
-										"uint8_t WH_DymRoute_precompiled_route (const void *const data, const MessageInfo *const mi, DestinationWorms *const cns)\n{\n"
+										"uint8_t WH_DymRoute_precompiled_route (const void *const data, const MessageInfo *const mi, const DestinationWorms *const cns)\n{\n"
 										"int ret = 0;\n"
 										"DestinationWorm *dw;\n";
 const char *_WH_DymRoute_CC_FuncEnd = "\n"
@@ -1247,7 +1247,7 @@ void *_WH_DymRoute_libHandle = NULL;
  * Enrute a message
  * Return the number of msgs sent
  */
-uint8_t (*WH_DymRoute_precompiled_route)(const void *const data, const MessageInfo *const mi, DestinationWorms *const cns) = 0;
+uint8_t (*WH_DymRoute_precompiled_route)(const void *const data, const MessageInfo *const mi, const DestinationWorms *const cns) = 0;
 
 /* Name WH_send
  * TODO
@@ -1501,7 +1501,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 			_WH_DymRoute_libHandle = tmplibHandle;
 
-			hptl_waitns(10 * 1000 * 1000L);
+			hptl_waitns(50 * 1000 * 1000L);
 			dlclose(libtofree);
 
 		} else {
