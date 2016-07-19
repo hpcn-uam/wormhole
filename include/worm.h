@@ -28,10 +28,10 @@ extern "C" {
 	} ConnectionDataType;
 
 	typedef struct {
-		uint32_t size;
-		uint32_t hash;
-		uint16_t category;
+		uint_fast32_t size;
+		uint_fast32_t hash;
 		ConnectionDataType const *type;
+		uint_fast16_t category;
 	} MessageInfo;
 
 	typedef struct {

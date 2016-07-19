@@ -727,7 +727,7 @@ int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
 		return 0;
 	}
 
-	if (mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type)*tcp_async_peakInt(sock)) {
+	if (mi->type && mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type)*tcp_async_peakInt(sock)) {
 		return 0;
 	}
 
@@ -1458,7 +1458,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	/*Compile the .c*/
 	if (!ret) {
-		sprintf(gccString, "gcc -O3 -Wall %s -o %s -shared -Llib -lworm -lpthread -fPIC ", cString, soString);
+		sprintf(gccString, "gcc -O3 -Wall %s -o %s -shared -Llib -lworm -lpthread -fPIC -pipe ", cString, soString);
 
 #ifdef _DYM_ROUTE_DEBUG_
 		fprintf(stderr, "ROUTEDEBUG: Calling %s\n", gccString);
