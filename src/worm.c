@@ -1275,7 +1275,7 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 	do {
 		c = WH_connectionPoll(&WH_myRcvWorms, mi);
 	} while ((!c && (WH_errno == WH_ERRNO_CLEAR || WH_errno == WH_ERRNO_EMPTY))
-			 || ((c && mi->type) ? WH_connectionDataTypecmp(&c->type, mi->type) : 1));
+			 || ((c && mi->type) ? WH_connectionDataTypecmp(&c->type, mi->type) : 0));
 
 	if (c == NULL) { //no msg found
 		WH_errno = WH_ERRNO_CLEAR;
