@@ -1533,6 +1533,11 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 #endif
 					return 1;
 				}
+			} else if (unlikely(dw->conns[i]->socket.closed)) //check if the socket has been closed
+			{
+				destroy_asyncSocket(&(dw->conns[i]->socket));
+				free(dw->conns[i]);
+				dw->conns[i] = NULL;
 			}
 
 			if (mi->type->type == ARRAY) {
@@ -2116,6 +2121,7 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 			destroy_asyncSocket(&(worm->conns[i]->socket));
 //fprintf(stderr, "[WH] free conns[%lu]\n",i);
 			free(worm->conns[i]);
+			worm->conns[i] = NULL;
 		}
 	}
 
