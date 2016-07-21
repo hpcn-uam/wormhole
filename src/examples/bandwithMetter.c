@@ -93,16 +93,25 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		gettimeofday(&start, 0);
+		int recvret = 0;
 		roadBytes = 0;
 		roadBytes_peak = 0;
 
 		for (int i = 0; i < NUM_BIG_MESSAGES / RRNODES; i++) {
-			roadBytes += WH_recv((void *)buffer, &mi);
+			recvret += WH_recv((void *)buffer, &mi);
+			roadBytes += recvret;
 
 #ifdef CHECKMSG
 
+			if (recvret <= 0) {
+				i--;
+				fprintf(stderr, "Recv error. Esperado %d\n", i);
+				continue;
+			}
+
 			if (*(int *)buffer != i) {
 				fprintf(stderr, "Recv %d esperado %d\n", *(int *)buffer, i);
+				i = *(int *)buffer;
 			}
 
 #endif
