@@ -104,8 +104,7 @@ int main(int argc, char **argv)
 #ifdef CHECKMSG
 
 			if (recvret <= 0) {
-				i--;
-				fprintf(stderr, "Recv error. Esperado %d\n", i);
+				fprintf(stderr, "Recv error. Esperado %d\n", i--);
 				continue;
 			}
 
