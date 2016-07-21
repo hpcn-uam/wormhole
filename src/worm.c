@@ -1538,6 +1538,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 				destroy_asyncSocket(&(dw->conns[i]->socket));
 				free(dw->conns[i]);
 				dw->conns[i] = NULL;
+				continue;
 			}
 
 			if (mi->type->type == ARRAY) {
