@@ -1290,7 +1290,7 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 		mi->type = &(c->type);
 	}
 
-	uint32_t tmp;
+	uint64_t tmp;
 	uint32_t ret = 0;
 
 	switch (c->type.type) {
@@ -1327,13 +1327,6 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 		break;
 
 	case STRING:
-		if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp)))
-			if (!tcp_message_recv_async(&(c->socket), &data, 1 * tmp)) {
-				ret = 1 * tmp;
-			}
-
-		break;
-
 	case ARRAY: {
 			if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp))) {
 #ifdef _DYM_ROUTE_DEBUG_

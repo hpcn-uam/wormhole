@@ -17,13 +17,15 @@
 
 #define NUMNODES 1
 #define RRNODES 1 //Min value=1
+#define BUFFSIZE 4096
 
-//#define CHECKMSG
+#define CHECKMSG
 
 int main(int argc, char **argv)
 {
 	int c;
-	unsigned msgSize = 1024 * 4;
+	uint32_t msgSize = BUFFSIZE;
+	int sizechanged = 0;
 	ConnectionDataType type = {.type = UINT8, .ext.arrayType = UINT8};
 
 	int st = WH_init();
@@ -47,6 +49,7 @@ int main(int argc, char **argv)
 
 				} else {
 					msgSize = (unsigned)intreaded;
+					sizechanged = 1;
 				}
 
 				break;
@@ -93,23 +96,23 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		gettimeofday(&start, 0);
-		int recvret = 0;
+		uint32_t recvret = 0;
 		roadBytes = 0;
 		roadBytes_peak = 0;
 
 		for (int i = 0; i < NUM_BIG_MESSAGES / RRNODES; i++) {
-			recvret += WH_recv((void *)buffer, &mi);
+			recvret = WH_recv((void *)buffer, &mi);
 			roadBytes += recvret;
 
 #ifdef CHECKMSG
 
-			if (recvret <= 0) {
-				fprintf(stderr, "Recv error. Esperado %d\n", i--);
+			if (recvret <= 0 || (sizechanged && msgSize != recvret)) {
+				fprintf(stderr, "Recv error (%u!=%u). Expecting %d\n", recvret, msgSize, i--);
 				continue;
 			}
 
 			if (*(int *)buffer != i) {
-				fprintf(stderr, "Recv %d esperado %d\n", *(int *)buffer, i);
+				fprintf(stderr, "Recv %d but expected %d\n", *(int *)buffer, i);
 				i = *(int *)buffer;
 			}
 

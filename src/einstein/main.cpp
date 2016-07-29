@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
 	} else {
 		std::cerr << "No pararms provided" << endl;
-		std::cerr << "Try: " << argv[0] << "<CONFIG FILE> <IP>" << endl;
+		std::cerr << "Try: " << argv[0] << " <CONFIG FILE> <IP>" << endl;
 		return 1;
 	}
 
