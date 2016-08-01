@@ -66,12 +66,12 @@ void Einstein::readConfig(const string configFileName)
 			break;
 
 		} else if (st < 4) {
-			cerr << "Only " << st << "fields were found" << endl;
+			cerr << "Only " << st << " fields were found" << endl;
 			throw std::runtime_error("Bad config file");
 		}
 
-		if (fgets(connectionDescription, 4096, configFile) == 0) {
-			throw std::runtime_error("Missing worm routing");
+		if (fgets(connectionDescription, 4096, configFile) == NULL) {
+			connectionDescription[0] = '\0';
 		}
 
 		connectionDescription[strlen(connectionDescription) - 1] = 0;
@@ -114,15 +114,18 @@ void Einstein::readConfig(const string configFileName)
 
 			cerr << endl;
 
+			string conndesc = string(connectionDescription);
+
 			if (connectionDescription[0] != '\t') {
-				throw std::runtime_error("Missing worm routing");
+				fseek(configFile, -1 - conndesc.length(), SEEK_CUR);
+				conndesc = "";
 			}
 
-			cerr << "\tDescription: |" << Worm::expandCDescription(string(connectionDescription)) << "|" << endl;
+			cerr << "\tDescription: |" << Worm::expandCDescription(conndesc) << "|" << endl;
 
 			vector<string> runParams;
 
-			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, string(connectionDescription), string(host), string(programName), runParams));
+			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, conndesc, string(host), string(programName), runParams));
 
 			/*Check for advanced options*/
 			string sconfline = string(configLine);

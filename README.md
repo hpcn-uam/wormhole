@@ -21,7 +21,7 @@ einstein <Configuration_File> <Listen_IP>
 ```
 
 A Topology is defined by a group of worm and their interconnections.
-Each worm, is also defined by 2 different lines: a General configuration line and a Output Topology.
+Each worm, is also defined by 2 different lines: a General configuration line and a Output Topology. If no output topology is given, the default topology `(IGNORE)` would be set.
 The first line (general conf.) is composed by the following item:
 - `ID`                  [**Mandatory**] : The Worm ID. It is accepted to provide a range (like 1-5), so 5 worms(1,2,3,4,5) would be deployed **WITH THE SAME** configuration, but diferent ID.
 - `Program_Name`        [**Mandatory**] : [The program name](#how-worms-are-deployed)
@@ -29,7 +29,7 @@ The first line (general conf.) is composed by the following item:
 - `Affinity_hex_mask`   [**Mandatory**] : The core-affinity of the worm. -1 means that there is no affinity
 - `SSL`                 [**Optional**]  : If SSL is present in a Worm definition, that worm would encript thougt TLS1.2 the communications **with any other worm** (input and output). Also, SSL would check if is an authorized worm.
 
-The second line has a tab. in the begining. Then a S-Expression defines how the routing would be. There are 4 possible operators:
+If present, the second line must has a tab. in the begining. Then a S-Expression defines how the routing would be. There are 4 possible operators:
 - `DUP`    : This operator duplicates each message between each following item. If no operator is defined, DUP operator would be supposed. Example: `(DUP 1 2 3)`
 - `RR`     : This operator simply uses roundrobin algorithm. Example: `(RR 1 2 3)`
 - `CAT`    : This operator check the fild category, and send acordly to it. Example: `(CAT (1.(1 2)) (5.(6 7)))`
