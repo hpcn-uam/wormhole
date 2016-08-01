@@ -414,10 +414,12 @@ void *WH_thread(void *arg)
 
 			//Lectura desde Einstein
 			if (!WH_bussy) {
-				if (tcp_message_srecv(WH_einsConn.socket, &type, sizeof(type), 0) != sizeof(type)) {
-					if (errno == EPIPE || errno == ENOTCONN) {
+				ssize_t ret = tcp_message_srecv(WH_einsConn.socket, &type, sizeof(type), 0);
+
+				if (ret != sizeof(type)) {
+					if (ret == -1) {
 						//TODO: connection lost with Einstein, Reconnect!!
-						fputs("EINSTEIN connection lost...! Forced Shutdown\n", stderr);
+						fputs("EINSTEIN connection lost...! Forced Shutdown (1)\n", stderr);
 						exit(1);
 					}
 
@@ -426,7 +428,7 @@ void *WH_thread(void *arg)
 				} else {
 					if (WH_TH_checkCtrlMsgType(type, WH_einsConn.socket) > 0) {
 						//TODO: connection lost with Einstein, Reconnect!!
-						fputs("EINSTEIN connection lost...! Forced Shutdown\n", stderr);
+						fputs("EINSTEIN connection lost...! Forced Shutdown (2)\n", stderr);
 						exit(1);
 					}
 				}
