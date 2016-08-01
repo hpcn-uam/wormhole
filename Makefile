@@ -210,6 +210,7 @@ cleanAll:
 	cd dependencies; $(MAKE) $(MFLAGS) clean
 	git submodule foreach git clean -fdX
 	git clean -fdx
+	git submodule update --recursive
 
 #Custom Data .o
 obj/structures.h.o: $(INCLUDES)
