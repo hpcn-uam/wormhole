@@ -34,6 +34,7 @@ The second line has a tab. in the begining. Then a S-Expression defines how the 
 - `RR`     : This operator simply uses roundrobin algorithm. Example: `(RR 1 2 3)`
 - `CAT`    : This operator check the fild category, and send acordly to it. Example: `(CAT (1.(1 2)) (5.(6 7)))`
 - `HASH`   : This operator check the field hash, and perform a modulus of the numbrer of outputs in order to define the output. Example: `(HASH 1 2 3)`
+- `DROP`   : This operator drops every message.
 
 
 A configuration file looks like:
@@ -41,6 +42,9 @@ A configuration file looks like:
 <ID> <Program_Name> <Deploy_IP> <Affinity_hex_mask (-1 means no affinity)> [SSL]
 	(Cat (1.(DUP 1 2 3)) (2.(RR 1 2 (HASH 3 4))))
 ```
+
+## Known Issues and problems
+- A worm does not allowed loopback messages. It will be sometime fixed
 
 ###### How worms are deployed
 Each program name would be tried to be find in the current directory adding the extension `.tgz`. This file should content all the necesary data to deploy a worm application, that must have :

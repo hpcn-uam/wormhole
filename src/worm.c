@@ -2035,6 +2035,10 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
 		return worm;
 	}
 
+	if (wormId == WH_myId) { //It is a check to remove posible loopbacks; //TODO allow loopbacks
+		WH_abort("Loopback not allowed");
+	}
+
 	wms->worms = realloc(wms->worms, sizeof(DestinationWorm) * (wms->numberOfWorms + 1));
 
 	worm = calloc(sizeof(DestinationWorm), 1); //TODO REVISAR
