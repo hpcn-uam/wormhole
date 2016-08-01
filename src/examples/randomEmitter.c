@@ -18,7 +18,7 @@
 #define NUMNODES 1
 #define RRNODES 1 //Min value=1
 
-#define CHECKMSG
+//#define CHECKMSG
 
 int main(int argc, char **argv)
 {
