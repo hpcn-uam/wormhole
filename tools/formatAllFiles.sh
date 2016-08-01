@@ -7,5 +7,5 @@ JFILES=$(find $FOLDERS -name '*.java')
 
 . ./dependencies/formatOptions.sh
 
-./$STYLEDIRECTORY/a.out --mode=c    $COMMONFLAGS $CFILES
-./$STYLEDIRECTORY/a.out --mode=java $COMMONFLAGS $JFILES
+./$STYLEEXECUTABLE --mode=c    $COMMONFLAGS $CFILES
+./$STYLEEXECUTABLE --mode=java $COMMONFLAGS $JFILES

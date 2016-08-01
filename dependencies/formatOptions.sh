@@ -11,7 +11,12 @@ export COMMONFLAGS="--style=linux -T -H -U -F -L -w -K -p -k3 -j"
 
 #ejecutable
 STYLEDIRECTORY=dependencies/repos/google-astyle/
-cd $STYLEDIRECTORY
-g++ *cpp
-cd -
+STYLEEXECUTABLE=dependencies/compiled/gstyler
 
+if [ ! -f $STYLEEXECUTABLE ]
+then
+	mkdir -p $(dirname $STYLEEXECUTABLE)
+	cd $STYLEDIRECTORY
+	g++ *cpp -O3 -o ../../compiled/gstyler
+	cd -
+fi
