@@ -25,8 +25,11 @@ int main(int argc, char **argv)
 {
 	int c;
 	uint32_t msgSize = BUFFSIZE;
-	int sizechanged = 0;
 	ConnectionDataType type = {.type = UINT8, .ext.arrayType = UINT8};
+
+#ifdef CHECKMSG
+	int sizechanged = 0;
+#endif
 
 	int st = WH_init();
 	assert(st == 0);
@@ -49,7 +52,9 @@ int main(int argc, char **argv)
 
 				} else {
 					msgSize = (unsigned)intreaded;
+#ifdef CHECKMSG
 					sizechanged = 1;
+#endif
 				}
 
 				break;
