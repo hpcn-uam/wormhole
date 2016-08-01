@@ -202,6 +202,11 @@ clean:
 	rm -rf obj lib bin
 	cd $(JAVAPATH); rm -rf $(CLASSFILES)
 	./tools/cleanorigs.bash
+
+cleanAll:
+	rm -rf obj lib bin
+	cd $(JAVAPATH); rm -rf $(CLASSFILES)
+	./tools/cleanorigs.bash
 	cd dependencies; $(MAKE) $(MFLAGS) clean
 	git submodule foreach git clean -fdX
 	git clean -fdx
