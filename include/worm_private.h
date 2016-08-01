@@ -141,16 +141,16 @@ extern "C" {
 	uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *cns);
 
 	/** WH_DymRoute_route_create
-	 * Starts the Dynamic Routing Library, and setups connection configuration.
+	 * Searchs for a Function, and calls the correct one.
 	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
-	/** WH_DymRoute_route_createFunc
-	 * Searchs for a Function, and calls the correct function.
+	/** WH_DymRoute_route_createFuncDUP
+	 * Adds a "c code" to duplicate messages.
 	 * @return 0 if OK, something else if error.
 	 */
-	uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
+	uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
 	/** WH_DymRoute_route_createFuncRR
 	 * Adds a "c code" for round robin.
@@ -169,6 +169,12 @@ extern "C" {
 	 * @return 0 if OK, something else if error.
 	 */
 	uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
+
+	/** WH_DymRoute_route_createFuncIgnore
+	 * Adds a "c code" for ignoring packets
+	 * @return 0 if OK, something else if error.
+	 */
+	uint8_t WH_DymRoute_route_createFuncIgnore(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms);
 
 	/** WH_DymRoute_route_countElems
 	 * Counts the following elements, for example (1 2), returns 2, but (1 (2 3)) also returns 2.

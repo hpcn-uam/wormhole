@@ -1242,6 +1242,9 @@ const char *_WH_DymRoute_CC_Hashend      =    "default:\n"
 		"ret++;"
 		"}\n";
 
+//Ignore special
+const char *_WH_DymRoute_CC_Ignoreunused =    "(void)dw;\n";
+
 void *_WH_DymRoute_libHandle = NULL;
 /***************************************/
 
@@ -1332,7 +1335,7 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 	case ARRAY: {
 			if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp))) {
 #ifdef _DYM_ROUTE_DEBUG_
-				fprintf(stderr, "ROUTEDEBUG: Array of %d elements\n", tmp);
+				fprintf(stderr, "ROUTEDEBUG: Array of %lu elements\n", tmp);
 #endif
 
 				switch (c->type.ext.arrayType) {
@@ -1538,13 +1541,13 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 
 			if (mi->type->type == ARRAY) {
 #ifdef _DYM_ROUTE_DEBUG_
-				fprintf(stderr, "[ARRAY %dB] ", mi->size);
+				fprintf(stderr, "[ARRAY %luB] ", mi->size);
 #endif
 				tcp_message_send_async(&(dw->conns[i]->socket), &(mi->size), sizeof(mi->size));
 			}
 
 #ifdef _DYM_ROUTE_DEBUG_
-			fprintf(stderr, "ROUTEDEBUG: sending data (%dB) to worm: %d\n", mi->size, dw->id);
+			fprintf(stderr, "ROUTEDEBUG: sending data (%luB) to worm: %d\n", mi->size, dw->id);
 #endif
 			return tcp_message_send_async(&(dw->conns[i]->socket),
 										  data,
@@ -1564,11 +1567,93 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 	return 1;
 }
 
-/* Name WH_DymRoute_route_create
- * Starts the Dynamic Routing Library, and setups connection configuration.
+/* Name WH_DymRoute_route_createFunc
+ * Searchs for a Function, and calls the correct one.
  * Return 0 if OK, something else if error.
  */
 uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+{
+	uint16_t i = 0;
+
+	while (routeDescription[i] != '\0') {
+		switch (routeDescription[i]) { //default function is DUP
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+		case 'd':
+		case 'D':
+			// DUP Function
+#ifdef _DYM_ROUTE_DEBUG_
+			fprintf(stderr, "ROUTEDEBUG: Calling DUP...\n");
+#endif
+			return WH_DymRoute_route_createFuncDUP(f, routeDescription + i, wms);
+
+		case 'r':
+		case 'R':
+			// Round Robin Function
+#ifdef _DYM_ROUTE_DEBUG_
+			fprintf(stderr, "ROUTEDEBUG: Calling RR...\n");
+#endif
+			return WH_DymRoute_route_createFuncRR(f, routeDescription + i, wms);
+
+		case 'c':
+		case 'C':
+			// Category Function
+#ifdef _DYM_ROUTE_DEBUG_
+			fprintf(stderr, "ROUTEDEBUG: Calling CAT...\n");
+#endif
+			return WH_DymRoute_route_createFuncCat(f, routeDescription + i, wms);
+
+		case 'h':
+		case 'H':
+			// Hash Function
+#ifdef _DYM_ROUTE_DEBUG_
+			fprintf(stderr, "ROUTEDEBUG: Calling HASH...\n");
+#endif
+			return WH_DymRoute_route_createFuncHash(f, routeDescription + i, wms);
+
+		case 'i':
+		case 'I':
+			// Ignore Function
+#ifdef _DYM_ROUTE_DEBUG_
+			fprintf(stderr, "ROUTEDEBUG: Calling IGNORE...\n");
+#endif
+			return WH_DymRoute_route_createFuncIgnore(f, routeDescription + i, wms);
+
+		case ' ':
+		case '\n':
+		case '\t':
+		case '\r':
+		case '(':
+		case ')':
+			i++;
+			break;
+
+		default:
+#ifdef _DYM_ROUTE_DEBUG_
+			fprintf(stderr, "ROUTEDEBUG: Unexpected routing function.");
+#endif
+			return -1;
+		}
+	}
+
+	return 91;
+}
+
+/* Name WH_DymRoute_route_createFuncDUP
+ * Adds a "c code" to duplicate messages.
+ * Return 0 if OK, something else if error.
+ * Used Constants:
+	//TODO
+ */
+uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
 	uint8_t ret = 0;
 	int16_t parentesys = 0;
@@ -1590,7 +1675,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 #ifdef _DYM_ROUTE_DEBUG_
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
-				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+				ret += WH_DymRoute_route_create(f, routeDescription + i, wms);
 			}
 
 		} else if (parentesys == 0 && (routeDescription[i] >= '0' && routeDescription[i] <= '9')) {
@@ -1620,64 +1705,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 		i++;
 	}
 
-
 	return ret;
-}
-
-/* Name WH_DymRoute_route_createFunc
- * Searchs for a Function, and calls the correct function.
- * Return 0 if OK, something else if error.
- */
-uint8_t WH_DymRoute_route_createFunc(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
-{
-	uint16_t i = 1;
-
-	if (routeDescription[0] != '(') {
-#ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEDEBUG: Route CreateFunc, unexpected call");
-#endif
-		return WH_DymRoute_route_create(f, routeDescription + i, wms);
-	}
-
-	switch (routeDescription[i]) {
-	case 'd':
-	case 'D':
-		// DUP Function
-#ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEDEBUG: Calling DUP...\n");
-#endif
-		return WH_DymRoute_route_create(f, routeDescription + i, wms);
-
-	case 'r':
-	case 'R':
-		// Round Robin Function
-#ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEDEBUG: Calling RR...\n");
-#endif
-		return WH_DymRoute_route_createFuncRR(f, routeDescription + i, wms);
-
-	case 'c':
-	case 'C':
-		// Category Function
-#ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEDEBUG: Calling CAT...\n");
-#endif
-		return WH_DymRoute_route_createFuncCat(f, routeDescription + i, wms);
-
-	case 'h':
-	case 'H':
-		// Category Function
-#ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEDEBUG: Calling HASH...\n");
-#endif
-		return WH_DymRoute_route_createFuncHash(f, routeDescription + i, wms);
-
-	default:
-#ifdef _DYM_ROUTE_DEBUG_
-		fprintf(stderr, "ROUTEDEBUG: Unexpected routing function.");
-#endif
-		return -1;
-	}
 }
 
 /* Name WH_DymRoute_route_createFuncRR
@@ -1720,7 +1748,7 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 #ifdef _DYM_ROUTE_DEBUG_
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
-				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+				ret += WH_DymRoute_route_create(f, routeDescription + i, wms);
 
 				rrCaseId++;
 				fprintf(f, "%s", _WH_DymRoute_CC_RRbreak);
@@ -1810,7 +1838,7 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
 #ifdef _DYM_ROUTE_DEBUG_
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
-				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+				ret += WH_DymRoute_route_create(f, routeDescription + i, wms);
 
 				fprintf(f, "%s", _WH_DymRoute_CC_Catbreak);
 			}
@@ -1861,7 +1889,7 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 				fprintf(stderr, "ROUTEDEBUG: Hash switching: %d\n", myHash);
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
-				ret += WH_DymRoute_route_createFunc(f, routeDescription + i, wms);
+				ret += WH_DymRoute_route_create(f, routeDescription + i, wms);
 
 				myHash++;
 				fprintf(f, _WH_DymRoute_CC_Hashbreak, myHash);
@@ -1902,6 +1930,43 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 	}
 
 	fprintf(f, "%s", _WH_DymRoute_CC_Hashend);
+	return ret;
+}
+
+/* Name WH_DymRoute_route_createFuncIgnore
+ * Adds a "c code" for ignoring packets
+ * Return 0 if OK, something else if error.
+ * Used Constants:
+ 		_WH_DymRoute_CC_Ignoreunused
+ */
+uint8_t WH_DymRoute_route_createFuncIgnore(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+{
+	uint8_t ret = 0;
+	int16_t parentesys = 0;
+	uint16_t i = 0;
+
+	UNUSED(wms);
+
+#ifdef _DYM_ROUTE_DEBUG_
+	fprintf(stderr, "ROUTEDEBUG: Ignoring messages until the end of this context\n");
+#endif
+	fprintf(f, "%s", _WH_DymRoute_CC_Ignoreunused);
+
+	while (routeDescription[i] != '\0') {
+		if (routeDescription[i] == ')') {
+			parentesys--;
+
+			if (parentesys < 0) {
+				break;
+			}
+
+		} else if (routeDescription[i] == '(') {
+			parentesys++;
+		}
+
+		i++;
+	}
+
 	return ret;
 }
 

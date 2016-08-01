@@ -34,7 +34,7 @@ The second line has a tab. in the begining. Then a S-Expression defines how the 
 - `RR`     : This operator simply uses roundrobin algorithm. Example: `(RR 1 2 3)`
 - `CAT`    : This operator check the fild category, and send acordly to it. Example: `(CAT (1.(1 2)) (5.(6 7)))`
 - `HASH`   : This operator check the field hash, and perform a modulus of the numbrer of outputs in order to define the output. Example: `(HASH 1 2 3)`
-- `DROP`   : This operator drops every message.
+- `IGNORE` : This operator ignores/drops every message. Everything that comes begind this command (but in the same context) will be ignored. 
 
 
 A configuration file looks like:
