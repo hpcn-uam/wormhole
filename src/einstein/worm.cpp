@@ -135,6 +135,10 @@ string Worm::expandCDescription(string cd)
 		ret.erase(remove(ret.begin(), ret.end(), removableChars[i]), ret.end());
 	}
 
+	if (ret.length() == 0) { //TODO do more checks
+		ret = "IGNORE";
+	}
+
 	return ret;
 }
 

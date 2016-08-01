@@ -1633,6 +1633,8 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 		case '\r':
 		case '(':
 		case ')':
+		case '"':
+		case'\'':
 			i++;
 			break;
 
