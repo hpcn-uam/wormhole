@@ -12,7 +12,7 @@ export TMPDIR=/tmp/
 export CC=gcc
 export CXX=g++
 export FLAGS=-fPIC -I include/ -I dependencies/repos/hptimelib/include -I dependencies/repos/linenoise -Wall -Wextra -g -lpthread -pthread -O3 -Werror -pipe
-export SSLCFLAGS= -I dependencies/compiled/libressl/usr/local/include
+export SSLCFLAGS=-I dependencies/compiled/libressl/usr/local/include
 export CFLAGS=$(FLAGS) $(SSLCFLAGS) -std=gnu11
 export CXXFLAGS=$(FLAGS) $(SSLCFLAGS) -std=gnu++11
 #export SSLLDFLAGS=-lssl -lcrypto

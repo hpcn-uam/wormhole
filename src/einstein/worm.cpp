@@ -156,15 +156,15 @@ int64_t Worm::ping()
 		struct timeval ts = {.tv_sec = 2, .tv_usec = 0}; //timeout at 2 seconds
 		this->socket->setSocketTimeout(&ts);
 
-	} catch (exception e) {}
+	} catch (exception e) {
+		cerr << "Warning, timeout failed, the ping will not stop until pong!" << endl;
+	}
 
 	this->socket->send(&msg, sizeof(msg));
 	msg = TIMEOUT;
 
-	do {
-		errno = 0;
-		this->socket->recv(&msg, sizeof(msg), 0);
-	} while (errno == EAGAIN);
+	errno = 0;
+	this->socket->recv(&msg, sizeof(msg), 0);
 
 	hptl_t end = hptl_get();
 
