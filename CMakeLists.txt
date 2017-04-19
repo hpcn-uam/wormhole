@@ -42,17 +42,17 @@ set(NO_REDEFINEFUNTIONS ON)
 #Netlib
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib" ${CMAKE_MODULE_PATH})
 
-set(NO_COMPILE_EXECUTABLES ON)
+set(NO_COMPILE_EXECUTABLES ON CACHE BOOL "FORCE TO RECURSIVELY unset this flag")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/src)
 add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib dependencies/repos/netlib/build)
-unset(NO_COMPILE_EXECUTABLES)
+unset(NO_COMPILE_EXECUTABLES CACHE)
 
 #HPTL
-set(NO_COMPILE_EXECUTABLES ON)
+set(NO_COMPILE_EXECUTABLES ON CACHE BOOL "FORCE TO RECURSIVELY unset this flag")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/hptimelib/include)
 add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/hptimelib dependencies/repos/hptimelib/build)
-unset(NO_COMPILE_EXECUTABLES)
+unset(NO_COMPILE_EXECUTABLES CACHE)
 
 #LibWorm
 add_library(libworm_obj OBJECT ${libworm_SRC} ${libworm_INCLUDE})
