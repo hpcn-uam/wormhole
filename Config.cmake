@@ -1,9 +1,9 @@
 ################################
-# NETLIB CONFIG
+# WORMHOLE CONFIG
 #################################
 
-option(NETLIB_DEBUG "Enable NETLIB debug text" ON)
-
+option(EINSTEIN_DEBUG "Enable Einstein debug text" ON)
+option(WORMS_DEBUG "Enable Einstein debug text" ON)
 
 #################################
 # CONFIG FILES
@@ -14,8 +14,8 @@ option(NETLIB_DEBUG "Enable NETLIB debug text" ON)
 #  "${PROJECT_BINARY_DIR}/include/config.hpp"
 #  )
 configure_file (
-  "${PROJECT_SOURCE_DIR}/include/netlib_config.h.in"
-  "${PROJECT_SOURCE_DIR}/include/netlib_config.h"
+  "${PROJECT_SOURCE_DIR}/include/wh_config.h.in"
+  "${PROJECT_SOURCE_DIR}/include/wh_config.h"
   )
 
 

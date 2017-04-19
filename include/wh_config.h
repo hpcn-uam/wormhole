@@ -6,11 +6,12 @@
 #define HBC_str(a) #a
 
 //The current version
-#define wh_VERSION_trash @wh_VERSION@
+#define wh_VERSION_trash 0.4-5-g8b982b7
+
 #define wh_VERSION HBC_xstr(wh_VERSION_trash)
 
 //Is debug on?
-#cmakedefine EINSTEIN_DEBUG
-#cmakedefine WORMS_DEBUG
+#define EINSTEIN_DEBUG
+#define WORMS_DEBUG
 
 #endif

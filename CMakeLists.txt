@@ -3,7 +3,7 @@ project (WormHole)
 # The version number.
 execute_process(
     COMMAND git describe --always --tags
-    OUTPUT_VARIABLE netlib_VERSION)
+    OUTPUT_VARIABLE wh_VERSION)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -14,98 +14,69 @@ set (CMAKE_C_STANDARD 11)
 set (CMAKE_CXX_STANDARD 11)
 
 include_directories("include")
+include_directories("include/libworm")
 add_definitions(-O3 -g -pipe -flto -ffat-lto-objects) # -Wall -Wextra -Werror eliminado por problema con libressl
 
 set(WARNINGFLAGS "-Wall -Wextra -Werror")
 
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto -O3 -g -pipe")
-SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto -O3 -g -pipe")
-
-#Function to make output a bit more quiet
-function(message)
-    if (NOT MESSAGE_QUIET)
-        _message(${ARGN})
-    endif()
-endfunction()
-
-#Function to remove imported executables
-function(add_executable)
-    if (NOT NO_COMPILE_EXECUTABLES)
-        _add_executable(${ARGN})
-    else()
-        _add_executable(${ARGN})
-        set_target_properties(${ARGV0} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
-    endif()
-endfunction()
-
-#Function to remove custom targets
-function(add_custom_target)
-    if (NOT NO_ADD_CUSTOM)
-        _add_custom_target(${ARGN})
-    else()
-    endif()
-endfunction()
-
-function(INSTALL)
-    if (NOT NO_COMPILE_EXECUTABLES)
-        _INSTALL(${ARGN})
-    else()
-    endif()
-endfunction()
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto -ldl -O3 -g -pipe")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto -ldl -O3 -g -pipe")
 
 #Import all .hpp
-file(GLOB lib_INCLUDE
-    "include/*.h"
-    "include/*.hpp"
+file(GLOB libworm_INCLUDE
+    "include/libworm/*.h"
+    "include/libworm/*.hpp"
 )
 
 #Import all .cpp
-file(GLOB lib_SRC
-    "src/*.c"
-    "src/*.cpp"
+file(GLOB libworm_SRC
+    "src/libworm/*.c"
+    "src/libworm/*.cpp"
 )
 
 include(Config.cmake)
 
 # Dependencies
+set(NO_REDEFINEFUNTIONS ON)
 
-#Libressl
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/libressl" ${CMAKE_MODULE_PATH})
-execute_process(COMMAND sh autogen.sh WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/libressl")
+#Netlib
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib" ${CMAKE_MODULE_PATH})
 
 set(NO_COMPILE_EXECUTABLES ON)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/libressl)
-add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/libressl dependencies/libressl/build)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/src)
+add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib dependencies/repos/netlib/build)
 unset(NO_COMPILE_EXECUTABLES)
 
+#HPTL
+set(NO_COMPILE_EXECUTABLES ON)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/hptimelib/include)
+add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/hptimelib dependencies/repos/hptimelib/build)
+unset(NO_COMPILE_EXECUTABLES)
 
-#The library objects
-
-# this is the "object library" target: compiles the sources only once
-add_library(netlib_obj OBJECT ${lib_SRC} ${lib_INCLUDE})
+#LibWorm
+add_library(libworm_obj OBJECT ${libworm_SRC} ${libworm_INCLUDE})
 # shared libraries need PIC
-set_property(TARGET ${hptl_obj} PROPERTY POSITION_INDEPENDENT_CODE 1)
+set_property(TARGET ${libworm_obj} PROPERTY POSITION_INDEPENDENT_CODE 1)
 # actual shared and static libraries built from the same object files
-add_library(netlib-shared SHARED $<TARGET_OBJECTS:netlib_obj>)
-add_library(netlib STATIC $<TARGET_OBJECTS:netlib_obj>)
+add_library(libworm-shared SHARED $<TARGET_OBJECTS:libworm_obj>)
+add_library(libworm STATIC $<TARGET_OBJECTS:libworm_obj>)
 
-#Renombrar netlib-shared
-set_target_properties(netlib-shared PROPERTIES
-        OUTPUT_NAME netlib
-        ARCHIVE_OUTPUT_NAME netlib)
+#Library wall messages
+set_target_properties(libworm_obj PROPERTIES COMPILE_FLAGS "${WARNINGFLAGS} -fPIC")
+
+#Renombrar libworms
+set_target_properties(libworm PROPERTIES
+        OUTPUT_NAME worm
+        ARCHIVE_OUTPUT_NAME worm)
+set_target_properties(libworm-shared PROPERTIES
+        OUTPUT_NAME worm
+        ARCHIVE_OUTPUT_NAME worm)
 
 
 #Library Dependencies
-target_link_libraries(netlib rt pthread ssl crypto)
-target_link_libraries(netlib-shared rt pthread ssl-shared crypto-shared)
+#target_link_libraries(libworm rt pthread ssl crypto)
+#target_link_libraries(libworm-shared rt pthread ssl-shared crypto-shared)
+target_link_libraries(libworm netlib hptl)
+target_link_libraries(libworm-shared netlib-shared hptl-shared)
 
-#Tests
-add_executable(cli src/examples/cli)
-add_executable(srv src/examples/srv)
-
-#Link library executables
-target_link_libraries(cli netlib)
-target_link_libraries(srv netlib)
-
-#Library wall messages
-set_target_properties(netlib_obj PROPERTIES COMPILE_FLAGS "${WARNINGFLAGS}")
