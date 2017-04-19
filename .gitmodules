@@ -4,15 +4,6 @@
 [submodule "dependencies/google-astyle"]
 	path = dependencies/repos/google-astyle
 	url = https://github.com/xuy/google-astyle
-[submodule "dependencies/portable"]
-	path = dependencies/repos/libressl
-	url = https://github.com/libressl-portable/portable
-[submodule "dependencies/openbsd"]
-	path = dependencies/repos/libressl-dep
-	url = https://github.com/libressl-portable/openbsd.git
-[submodule "dependencies/repos/CoreNLP"]
-	path = dependencies/repos/CoreNLP
-	url = https://github.com/stanfordnlp/CoreNLP
 [submodule "dependencies/repos/httpDissector"]
 	path = dependencies/repos/httpDissector
 	url = git@repit.ii.uam.es:naudit/httpDissector.git
