@@ -88,6 +88,30 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/hptimelib/inc
 add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/hptimelib dependencies/repos/hptimelib/build)
 unset(NO_COMPILE_EXECUTABLES CACHE)
 
+#LibWorm: Binary-Headers
+add_custom_command(
+    OUTPUT structures.o
+    COMMAND mkdir -p "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/"
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/tools/parseFile.bash ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/parseFile.bash
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/include
+    COMMAND cd "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/" && ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/parseFile.bash > ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.h
+    COMMAND objcopy --input binary --output elf64-x86-64 --binary-architecture i386 ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.h structures.o
+    DEPENDS ${libworm_INCLUDE}
+    VERBATIM
+)
+add_library(libworm-structures STATIC structures.o ${libworm_INCLUDE})
+SET_SOURCE_FILES_PROPERTIES(
+  structures.o
+  PROPERTIES
+  EXTERNAL_OBJECT true
+  GENERATED true
+)
+SET_TARGET_PROPERTIES(
+  libworm-structures
+  PROPERTIES
+  LINKER_LANGUAGE C 
+)
+
 #LibWorm
 add_library(libworm_obj OBJECT ${libworm_SRC} ${libworm_INCLUDE})
 # shared libraries need PIC
@@ -107,10 +131,16 @@ set_target_properties(libworm-shared PROPERTIES
         OUTPUT_NAME worm
         ARCHIVE_OUTPUT_NAME worm)
 
-
 #Library Dependencies
 #target_link_libraries(libworm rt pthread ssl crypto)
 #target_link_libraries(libworm-shared rt pthread ssl-shared crypto-shared)
-target_link_libraries(libworm netlib hptl)
-target_link_libraries(libworm-shared netlib-shared hptl-shared)
+target_link_libraries(libworm        libworm-structures netlib          hptl)
+target_link_libraries(libworm-shared libworm-structures netlib-shared   hptl-shared)
 
+# Aplicactions & Examples
+unset(files CACHE)
+file(GLOB files "mk/*.mk")
+foreach(file ${files})
+    MESSAGE( STATUS "Including file: " ${file})
+    include(${file})
+endforeach()

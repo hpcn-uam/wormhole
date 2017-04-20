@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILES=$(ls include/*.h)
+FILES=$(ls include/*.h include/libworm/*.h)
 
 
 for f in $FILES

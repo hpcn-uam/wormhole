@@ -3,28 +3,15 @@ docs:
         - make Docs
         - cp -r doc/html /var/www/docs/wormhole
 
-compilation_basic:
+compilation:
     script:
-        - make einstein
-
-compilation_simple:
-    script:
-        - make simple
-
-compilation_simple_parallel:
-    script:
-        - make simple -j8
-
-compilation_full:
-    script:
-        - make -j16
-        - make Docs
+        - make -j
     artifacts:
         paths:
-        - lib
+        - build/lib
         - doc
-        - bin
-        - certs
+        - build/bin
+        #- certs
 
 test_commonh_test_async:
     script:

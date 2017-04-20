@@ -1,0 +1,6 @@
+unset(files CACHE)
+file(GLOB files "mk/apps/*.mk")
+foreach(file ${files})
+    MESSAGE( STATUS "Including file: " ${file})
+    include(${file})
+endforeach()
