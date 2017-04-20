@@ -13,30 +13,6 @@ compilation:
         - build/bin
         #- certs
 
-test_commonh_test_async:
-    script:
-        - make bin/testSendAsync bin/testRecvAsync -j8
-        - cd bin
-        - ./testRecvAsync &
-        - ./testSendAsync || (killall -9 testRecvAsync ; false)
-        - killall -9 testRecvAsync || true
-        
-test_commonh_test_SSL:
-    script:
-        - make bin/testSendSSL bin/testRecvSSL -j8
-        - cd bin
-        - ./testRecvSSL &
-        - ./testSendSSL || (killall -9 testRecvSSL ; false)
-        - killall -9 testRecvSSL || true
-        
-test_commonh_test_AsyncSSL:
-    script:
-        - make bin/testSendAsyncSSL bin/testRecvAsyncSSL -j8
-        - cd bin
-        - ./testRecvAsyncSSL &
-        - ./testSendAsyncSSL || (killall -9 testRecvAsyncSSL ; false)
-        - killall -9 testRecvAsyncSSL || true
-
 before_script:
     - killall -9 testSendAsync testRecvAsync testRecvSSL testSendSSL testRecvAsyncSSL testSendAsyncSSL || true
     - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
