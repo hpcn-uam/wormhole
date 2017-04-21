@@ -36,7 +36,7 @@ if (WH_EXAMPLES)
             COMMAND ${CMAKE_COMMAND} -E remove ${tmp_dir}/certs/prv/ca.key.pem
 
             COMMAND tar -czf "${ex_out_dir}/${appName}.tgz" -C "${tmp_dir}/.." "${appName}"
-            DEPENDS ${appName} libworm ${app_runscript} ${app_libs}
+            DEPENDS ${appName} libworm certificates ${app_runscript} ${app_libs}
             VERBATIM
         )
         # Target to create the tar
