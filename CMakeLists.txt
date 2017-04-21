@@ -116,6 +116,8 @@ SET_TARGET_PROPERTIES(
 )
 
 #LibWorm
+set(libworm_libdeps "dl pthread")
+
 add_library(libworm_obj OBJECT ${libworm_SRC} ${libworm_INCLUDE})
 # shared libraries need PIC
 set_property(TARGET ${libworm_obj} PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -137,8 +139,8 @@ set_target_properties(libworm-shared PROPERTIES
 #Library Dependencies
 #target_link_libraries(libworm rt pthread ssl crypto)
 #target_link_libraries(libworm-shared rt pthread ssl-shared crypto-shared)
-target_link_libraries(libworm        worm-structures netlib          hptl)
-target_link_libraries(libworm-shared worm-structures netlib-shared   hptl-shared)
+target_link_libraries(libworm        worm-structures netlib          hptl           ${libworm_libdeps})
+target_link_libraries(libworm-shared worm-structures netlib-shared   hptl-shared    ${libworm_libdeps})
 
 # Aplicactions & Examples
 unset(files CACHE)
