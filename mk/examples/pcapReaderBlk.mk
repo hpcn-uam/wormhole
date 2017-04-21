@@ -1,4 +1,4 @@
-set(app_name "testBW")
+set(app_name "pcapReaderBlk")
 
 # Sources
 file(GLOB app_src
