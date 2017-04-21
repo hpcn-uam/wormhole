@@ -1196,8 +1196,8 @@ void WH_BL_free(BulkList *bl)
 	Dynamic Routing Library
 *************************************************************/
 /***************************************/
-extern uint8_t _binary_obj_structures_h_start;
-extern uint8_t _binary_obj_structures_h_end;
+extern uint8_t _binary_structures_h_start;
+extern uint8_t _binary_structures_h_end;
 
 const char *_WH_DymRoute_CC_includes = "\n"
 									   "#include <stdint.h>\n"
@@ -1447,7 +1447,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 	/*Write headers to the file*/
 	fwrite(_WH_DymRoute_CC_includes, strlen(_WH_DymRoute_CC_includes), 1, f);
-	fwrite(&_binary_obj_structures_h_start, &_binary_obj_structures_h_end - &_binary_obj_structures_h_start, 1, f);
+	fwrite(&_binary_structures_h_start, &_binary_structures_h_end - &_binary_structures_h_start, 1, f);
 	fwrite(_WH_DymRoute_CC_FuncStart, strlen(_WH_DymRoute_CC_FuncStart), 1, f);
 
 	int ret = WH_DymRoute_route_create(f, routeDescription, wms);

@@ -76,6 +76,9 @@ set(NO_REDEFINEFUNTIONS ON)
 #Netlib
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib" ${CMAKE_MODULE_PATH})
 
+set(DESTDIR "/")
+set(OPENSSLDIR "/etc/ssl")
+
 set(NO_COMPILE_EXECUTABLES ON CACHE BOOL "FORCE TO RECURSIVELY unset this flag")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/src)
@@ -90,24 +93,24 @@ unset(NO_COMPILE_EXECUTABLES CACHE)
 
 #LibWorm: Binary-Headers
 add_custom_command(
-    OUTPUT structures.o
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.o
     COMMAND mkdir -p "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/"
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/tools/parseFile.bash ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/parseFile.bash
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/include
     COMMAND cd "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/" && ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/parseFile.bash > ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.h
-    COMMAND objcopy --input binary --output elf64-x86-64 --binary-architecture i386 ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.h structures.o
+    COMMAND cd "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/" && objcopy --input binary --output elf64-x86-64 --binary-architecture i386 structures.h structures.o
     DEPENDS ${libworm_INCLUDE}
     VERBATIM
 )
-add_library(libworm-structures STATIC structures.o ${libworm_INCLUDE})
+add_library(worm-structures STATIC ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.o ${libworm_INCLUDE})
 SET_SOURCE_FILES_PROPERTIES(
-  structures.o
+  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.o
   PROPERTIES
   EXTERNAL_OBJECT true
   GENERATED true
 )
 SET_TARGET_PROPERTIES(
-  libworm-structures
+  worm-structures
   PROPERTIES
   LINKER_LANGUAGE C 
 )
@@ -134,8 +137,8 @@ set_target_properties(libworm-shared PROPERTIES
 #Library Dependencies
 #target_link_libraries(libworm rt pthread ssl crypto)
 #target_link_libraries(libworm-shared rt pthread ssl-shared crypto-shared)
-target_link_libraries(libworm        libworm-structures netlib          hptl)
-target_link_libraries(libworm-shared libworm-structures netlib-shared   hptl-shared)
+target_link_libraries(libworm        worm-structures netlib          hptl)
+target_link_libraries(libworm-shared worm-structures netlib-shared   hptl-shared)
 
 # Aplicactions & Examples
 unset(files CACHE)
