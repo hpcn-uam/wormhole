@@ -145,6 +145,7 @@ target_link_libraries(libworm-shared worm-structures netlib-shared   hptl-shared
 # Aplicactions & Examples
 unset(files CACHE)
 file(GLOB files "mk/*.mk")
+list(SORT files)
 foreach(file ${files})
     MESSAGE( STATUS "Including file: " ${file})
     include(${file})
