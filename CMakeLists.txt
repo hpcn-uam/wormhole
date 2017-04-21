@@ -116,7 +116,7 @@ SET_TARGET_PROPERTIES(
 )
 
 #LibWorm
-set(libworm_libdeps "dl pthread")
+set(libworm_libdeps dl pthread)
 
 add_library(libworm_obj OBJECT ${libworm_SRC} ${libworm_INCLUDE})
 # shared libraries need PIC
