@@ -97,9 +97,11 @@ add_custom_command(
     COMMAND mkdir -p "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/"
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/tools/parseFile.bash ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/parseFile.bash
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/include
+    #Include netlib
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/include ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/include/netlib    
     COMMAND cd "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/" && ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/parseFile.bash > ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.h
     COMMAND cd "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/" && objcopy --input binary --output elf64-x86-64 --binary-architecture i386 structures.h structures.o
-    DEPENDS ${libworm_INCLUDE}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/parseFile.bash ${libworm_INCLUDE}
     VERBATIM
 )
 add_library(worm-structures STATIC ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/structures.o/structures.o ${libworm_INCLUDE})
