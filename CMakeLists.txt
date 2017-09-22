@@ -3,6 +3,7 @@ project (WormHole)
 # The version number.
 execute_process(
     COMMAND git describe --always --tags
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
     OUTPUT_VARIABLE wh_VERSION)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -22,39 +23,8 @@ set(WARNINGFLAGS "-Wall -Wextra -Werror")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto -ldl -O3 -g -pipe")
 SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto -ldl -O3 -g -pipe")
 
-if (NOT NO_REDEFINEFUNTIONS)
-    #Function to make output a bit more quiet
-    function(message)
-        if (NOT MESSAGE_QUIET)
-            _message(${ARGN})
-        endif()
-    endfunction()
-
-    #Function to remove imported executables
-    function(add_executable)
-        if (NOT NO_COMPILE_EXECUTABLES)
-            _add_executable(${ARGN})
-        else()
-            _add_executable(${ARGN})
-            set_target_properties(${ARGV0} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
-        endif()
-    endfunction()
-
-    #Function to remove custom targets
-    function(add_custom_target)
-        if (NOT NO_ADD_CUSTOM)
-            _add_custom_target(${ARGN})
-        else()
-        endif()
-    endfunction()
-
-    function(INSTALL)
-        if (NOT NO_COMPILE_EXECUTABLES)
-            _INSTALL(${ARGN})
-        else()
-        endif()
-    endfunction()
-endif()
+#include cmakeLimiter
+include(dependencies/repos/cmakeLimiter/cmakeLimiter.cmake)
 
 #Import all .hpp
 file(GLOB libworm_INCLUDE
@@ -71,7 +41,10 @@ file(GLOB libworm_SRC
 include(Config.cmake)
 
 # Dependencies
-set(NO_REDEFINEFUNTIONS ON)
+
+#Disable compilation
+cmakelimiter_compile_executables(0)
+cmakelimiter_compile_libraries(0)
 
 #Netlib
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib" ${CMAKE_MODULE_PATH})
@@ -79,17 +52,17 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib" ${
 set(DESTDIR "/")
 set(OPENSSLDIR "/etc/ssl")
 
-set(NO_COMPILE_EXECUTABLES ON CACHE BOOL "FORCE TO RECURSIVELY unset this flag")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/src)
 add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib dependencies/repos/netlib/build)
-unset(NO_COMPILE_EXECUTABLES CACHE)
 
 #HPTL
-set(NO_COMPILE_EXECUTABLES ON CACHE BOOL "FORCE TO RECURSIVELY unset this flag")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/hptimelib/include)
 add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/hptimelib dependencies/repos/hptimelib/build)
-unset(NO_COMPILE_EXECUTABLES CACHE)
+
+#Re-enable compilation
+cmakelimiter_compile_libraries(1)
+cmakelimiter_compile_executables(1)
 
 #LibWorm: Binary-Headers
 add_custom_command(
@@ -146,7 +119,7 @@ target_link_libraries(libworm-shared worm-structures netlib-shared   hptl-shared
 
 # Aplicactions & Examples
 unset(files CACHE)
-file(GLOB files "mk/*.mk")
+file(GLOB files "mk/*.cmake")
 list(SORT files)
 foreach(file ${files})
     MESSAGE( STATUS "Including file: " ${file})

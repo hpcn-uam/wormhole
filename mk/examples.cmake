@@ -49,7 +49,7 @@ if (WH_EXAMPLES)
     endfunction(add_wormhole_application)
 
     unset(files CACHE)
-    file(GLOB files "mk/examples/*.mk")
+    file(GLOB files "mk/examples/*.cmake")
     foreach(file ${files})
         MESSAGE( STATUS "Including file: " ${file})
         include(${file})

@@ -13,3 +13,6 @@
 [submodule "dependencies/repos/netlib/wormhole"]
 	path = dependencies/repos/netlib
 	url = git@repit.ii.uam.es:hilo/netlib.git
+[submodule "dependencies/repos/cmake-includer"]
+	path = dependencies/repos/cmakeLimiter
+	url = https://github.com/cppserv/cmake-includer.git
