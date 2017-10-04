@@ -268,27 +268,23 @@ uint8_t WH_halt(void)
 
 /** WH_printmsg
  * Sends a message to Einstein and print it.
+ * The msg can be NULL if length is 0
  * @return 0 if OK, something else if error.
  */
-uint8_t WH_printmsg(char *msg)
+uint8_t WH_printmsg(const char *restrict msg, const uint32_t length)
 {
-	uint32_t len = 0;
 	enum ctrlMsgType type = PRINTMSG;
-
-	if (msg != NULL) {
-		len = strlen(msg);
-	}
 
 	if (tcp_message_ssend(WH_einsConn.socket, &type, sizeof(type))) {
 		return 1;
 	}
 
-	if (tcp_message_ssend(WH_einsConn.socket, &len, sizeof(len))) {
+	if (tcp_message_ssend(WH_einsConn.socket, &length, sizeof(length))) {
 		return 1;
 	}
 
-	if (len) {
-		if (tcp_message_ssend(WH_einsConn.socket, msg, len)) {
+	if (length) {
+		if (tcp_message_ssend(WH_einsConn.socket, msg, length)) {
 			return 1;
 		}
 	}
@@ -296,33 +292,64 @@ uint8_t WH_printmsg(char *msg)
 	return 0;
 }
 
+/** WH_printf
+ * Sends a message to Einstein and print it.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_printf(const char *restrict format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	size_t needed = vsnprintf(NULL, 0, format, args);
+	char *out = malloc(needed);
+
+	if (!out) {
+		va_end(args);
+		return -1;
+	}
+
+	vsnprintf(out, needed, format, args);
+	uint8_t ret = WH_printmsg(out, needed);
+	free(out);
+
+	va_end(args);
+	return ret;
+}
+
 /** WH_abort
  * Sends a message to Einstein, print it and halt all worms.
  * @return 0 if OK, something else if error.
  */
-uint8_t WH_abort(char *msg)
+uint8_t WH_abort(const char *restrict msg)
 {
-	uint32_t len = 0;
+	return WH_abortn(msg, strlen(msg));
+}
+
+/** WH_abortn
+ * Sends a message to Einstein, print it and halt all worms.
+ * The msg can be NULL if length is 0
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_abortn(const char *restrict  msg, const uint32_t length)
+{
 	enum ctrlMsgType type = ABORT;
 
 	fprintf(stderr, "Aborting worm");
-
-	if (msg != NULL) {
-		len = strlen(msg);
-	}
 
 	if (tcp_message_ssend(WH_einsConn.socket, &type, sizeof(type))) {
 		return 1;
 	}
 
-	if (tcp_message_ssend(WH_einsConn.socket, &len, sizeof(len))) {
+	if (tcp_message_ssend(WH_einsConn.socket, &length, sizeof(length))) {
 		return 1;
 	}
 
-	if (len) {
+	if (length) {
 		fprintf(stderr, " cause: %s\n", msg);
 
-		if (tcp_message_ssend(WH_einsConn.socket, msg, len)) {
+		if (tcp_message_ssend(WH_einsConn.socket, msg, length)) {
 			return 1;
 		}
 	}
@@ -332,6 +359,32 @@ uint8_t WH_abort(char *msg)
 
 	abort();
 	return 1;
+}
+
+/** WH_abortf
+ * Sends a message to Einstein, print it and halt all worms.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_abortf(const char *restrict format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	size_t needed = vsnprintf(NULL, 0, format, args);
+	char *out = malloc(needed);
+
+	if (!out) {
+		va_end(args);
+		return -1;
+	}
+
+	vsnprintf(out, needed, format, args);
+	uint8_t ret = WH_abortn(out, needed);
+	free(out);
+
+	va_end(args);
+	return ret;
 }
 
 /** WH_flushIO
