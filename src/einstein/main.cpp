@@ -1,10 +1,10 @@
-#include <einstein/einstein.hpp>
 #include <einstein/einsshell.hpp>
+#include <einstein/einstein.hpp>
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include <cassert>
 #include <cstring>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 
 using namespace einstein;
 
@@ -38,8 +38,7 @@ int main(int argc, char **argv)
 	int ret = cmd->startShell();
 
 	if (ret)
-		std::cerr << "Some error happened...!" << endl
-				  << "Closing Einstein & Halting Everything"  << endl;
+		std::cerr << "Some error happened...!" << endl << "Closing Einstein & Halting Everything" << endl;
 
 	return ret;
 }

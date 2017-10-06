@@ -1,12 +1,12 @@
+#include <common.h>
 #include <worm.h>
 #include <worm_private.h>
-#include <common.h>
 
-#include <assert.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
-#include <string.h>
+#include <assert.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
 
 extern Worm2EinsConn WH_einsConn;
 extern uint16_t WH_myId;
@@ -22,12 +22,12 @@ int main(int argc, char **argv)
 	int st = WH_init();
 	assert(st == 0);
 
-	//assert(WH_myId == 1);
+	// assert(WH_myId == 1);
 
 	assert(WH_einsConn.Port == 5000);
-	//assert(WH_einsConn.IP == inet_addr("127.0.0.1"));
+	// assert(WH_einsConn.IP == inet_addr("127.0.0.1"));
 
-	//assert(WH_mySetup.id == 1);
+	// assert(WH_mySetup.id == 1);
 	assert(WH_mySetup.listenPort == 10000 + WH_myId);
 	assert(WH_mySetup.core == -1);
 	assert(WH_mySetup.IP == inet_addr("127.0.0.1"));

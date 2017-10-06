@@ -1,4 +1,4 @@
-#define _GNU_SOURCE //TODO find a better and standar way of set affinity
+#define _GNU_SOURCE  // TODO find a better and standar way of set affinity
 #include <worm_private.h>
 
 #include <sched.h>
@@ -21,7 +21,7 @@ pthread_t WH_wormThread;
 
 __thread enum wormErrorType WH_errno = 0;
 
-volatile uint8_t WH_bussy = 0;
+volatile uint8_t WH_bussy   = 0;
 volatile uint8_t WH_halting = 0;
 extern uint32_t WH_load;
 /*
@@ -41,7 +41,7 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
 		return 1;
 	}
 
-	memcpy(sTypes, types, sizeof(ConnectionDataType)*nTypes);
+	memcpy(sTypes, types, sizeof(ConnectionDataType) * nTypes);
 
 	if (WH_myConfig.inputTypes != NULL) {
 		ConnectionDataType *tmp;
@@ -55,7 +55,7 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
 		free(tmp);
 	}
 
-	WH_myConfig.inputTypes = sTypes;
+	WH_myConfig.inputTypes    = sTypes;
 	WH_myConfig.numInputTypes = nTypes;
 
 	return 0;
@@ -68,15 +68,15 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
 uint8_t WH_init(void)
 {
 	WH_myDstWorms.numberOfWorms = 0;
-	WH_myDstWorms.worms = malloc(sizeof(DestinationWorm));
+	WH_myDstWorms.worms         = malloc(sizeof(DestinationWorm));
 
 	WH_myRcvWorms.numberOfWorms = 0;
-	WH_myRcvWorms.worms = malloc(sizeof(DestinationWorm));
+	WH_myRcvWorms.worms         = malloc(sizeof(DestinationWorm));
 
 	WH_myId = atoi(getenv("WORM_ID"));
 
 	WH_einsConn.Port = atoi(getenv("EINSTEIN_PORT"));
-	WH_einsConn.ip = strdup(getenv("EINSTEIN_IP"));
+	WH_einsConn.ip   = strdup(getenv("EINSTEIN_IP"));
 
 	int EinsteinSocket = tcp_connect_to(getenv("EINSTEIN_IP"), WH_einsConn.Port);
 
@@ -108,9 +108,9 @@ uint8_t WH_init(void)
 	// Fill hello message with worm id
 	size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
 	uint8_t hellomsg[hellomsgSize];
-	enum ctrlMsgType *msgType = (enum ctrlMsgType *)hellomsg;
-	*msgType = HELLOEINSTEIN;
-	* ((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))) = htons(WH_myId);
+	enum ctrlMsgType *msgType                            = (enum ctrlMsgType *)hellomsg;
+	*msgType                                             = HELLOEINSTEIN;
+	*((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))) = htons(WH_myId);
 
 	// Send hello message
 	if (tcp_message_ssend(WH_einsConn.socket, hellomsg, hellomsgSize) != 0) {
@@ -122,7 +122,7 @@ uint8_t WH_init(void)
 
 	// Receive WormSetup
 
-//Check ctrl msg
+	// Check ctrl msg
 	if (tcp_message_srecv(WH_einsConn.socket, msgType, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
 #ifdef _WORMLIB_DEBUG_
 		perror("[WH]: Error recv myconfig.response from Einstein");
@@ -153,7 +153,7 @@ uint8_t WH_init(void)
 		return 1;
 	}
 
-	uint8_t *wormSetupMsg = (uint8_t *) &WH_mySetup;
+	uint8_t *wormSetupMsg = (uint8_t *)&WH_mySetup;
 
 	if (tcp_message_srecv(WH_einsConn.socket, wormSetupMsg, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
 #ifdef _WORMLIB_DEBUG_
@@ -166,7 +166,9 @@ uint8_t WH_init(void)
 	WH_mySetup.connectionDescription = calloc(WH_mySetup.connectionDescriptionLength + 1, sizeof(char));
 
 	if (WH_mySetup.connectionDescriptionLength > 0) {
-		if (tcp_message_srecv(WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) != WH_mySetup.connectionDescriptionLength) {
+		if (tcp_message_srecv(
+		        WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) !=
+		    WH_mySetup.connectionDescriptionLength) {
 #ifdef _WORMLIB_DEBUG_
 			perror("[WH]: Error recv connectionDescription from Einstein");
 #endif
@@ -174,18 +176,15 @@ uint8_t WH_init(void)
 		}
 	}
 
-	//TypeSetup
+	// TypeSetup
 	if (WH_myConfig.inputTypes == NULL) {
-		ConnectionDataType tmpType = {
-			.type = ARRAY,
-			.ext.arrayType = UINT8
-		};
+		ConnectionDataType tmpType = {.type = ARRAY, .ext.arrayType = UINT8};
 		WH_setup_types(1, &tmpType);
 	}
 
 	// Establecer afinidad
 	if (WH_mySetup.core != 0) {
-		if (sched_setaffinity(0, sizeof(WH_mySetup.core), (cpu_set_t *) &WH_mySetup.core)) {
+		if (sched_setaffinity(0, sizeof(WH_mySetup.core), (cpu_set_t *)&WH_mySetup.core)) {
 			perror("[WH]: Error setting up process affinity");
 		}
 	}
@@ -200,7 +199,7 @@ uint8_t WH_init(void)
 		return 1;
 	}
 
-	//Creamos el enrutado dinámico
+	// Creamos el enrutado dinámico
 	if (WH_DymRoute_init(WH_mySetup.connectionDescription, &WH_myDstWorms)) {
 #ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "[WH]: Error creating DymRoute\n");
@@ -211,16 +210,14 @@ uint8_t WH_init(void)
 	WH_bussy = 0;
 
 	struct timeval ts;
-	ts.tv_sec  =   0;
+	ts.tv_sec  = 0;
 	ts.tv_usec = 50000;
 
-	if (setsockopt(WH_einsConn.socket->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&ts,
-				   sizeof(struct timeval)) < 0) {
+	if (setsockopt(WH_einsConn.socket->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&ts, sizeof(struct timeval)) < 0) {
 		fputs("[TH] setsockopt failed [1]\n", stderr);
 	}
 
-	if (setsockopt(WH_einsConn.socket->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&ts,
-				   sizeof(struct timeval)) < 0) {
+	if (setsockopt(WH_einsConn.socket->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&ts, sizeof(struct timeval)) < 0) {
 		fputs("[TH] setsockopt failed [2]\n", stderr);
 	}
 
@@ -233,7 +230,7 @@ uint8_t WH_init(void)
  */
 uint8_t WH_halt(void)
 {
-	//TODO fix this function, in order to orderly shutdown
+	// TODO fix this function, in order to orderly shutdown
 	enum ctrlMsgType type = HALT;
 
 	if (tcp_message_ssend(WH_einsConn.socket, &type, sizeof(type))) {
@@ -243,12 +240,12 @@ uint8_t WH_halt(void)
 	WH_halting = 1;
 
 	struct timespec ts;
-	ts.tv_sec = 1;
+	ts.tv_sec  = 1;
 	ts.tv_nsec = 0;
 
 	WH_flushIO();
 
-	//close all output connections
+	// close all output connections
 	size_t numworms = WH_myDstWorms.numberOfWorms;
 
 	for (size_t i = 0; i < numworms; i++) {
@@ -268,10 +265,23 @@ uint8_t WH_halt(void)
 
 /** WH_printmsg
  * Sends a message to Einstein and print it.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_printmsg(const char *restrict msg)
+{
+	if (msg)
+		return WH_printnmsg(msg, strlen(msg));
+	else
+		return WH_printnmsg(NULL, 0);
+}
+
+/** WH_printnmsg
+ * Sends a message to Einstein and print it.
  * The msg can be NULL if length is 0
  * @return 0 if OK, something else if error.
  */
-uint8_t WH_printmsg(const char *restrict msg, const uint32_t length)
+uint8_t WH_printnmsg(const char *restrict msg, const uint32_t length)
 {
 	enum ctrlMsgType type = PRINTMSG;
 
@@ -303,7 +313,7 @@ uint8_t WH_printf(const char *restrict format, ...)
 
 	va_start(args, format);
 	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *out = malloc(needed);
+	char *out     = malloc(needed);
 
 	if (!out) {
 		va_end(args);
@@ -311,11 +321,33 @@ uint8_t WH_printf(const char *restrict format, ...)
 	}
 
 	vsnprintf(out, needed, format, args);
-	uint8_t ret = WH_printmsg(out, needed);
+	uint8_t ret = WH_printnmsg(out, needed);
 	free(out);
 
 	va_end(args);
 	return ret;
+}
+
+/** WH_sprintf
+ * Returns a malloced-string using classic printf format. Must be freeded
+ * @return a malloced-string.
+ */
+char *WH_sprintf(const char *restrict format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	size_t needed = vsnprintf(NULL, 0, format, args);
+	char *out     = malloc(needed);
+
+	if (!out) {
+		va_end(args);
+		return NULL;
+	}
+
+	vsnprintf(out, needed, format, args);
+	va_end(args);
+	return out;
 }
 
 /** WH_abort
@@ -324,7 +356,10 @@ uint8_t WH_printf(const char *restrict format, ...)
  */
 uint8_t WH_abort(const char *restrict msg)
 {
-	return WH_abortn(msg, strlen(msg));
+	if (msg)
+		return WH_abortn(msg, strlen(msg));
+	else
+		return WH_abortn(NULL, 0);
 }
 
 /** WH_abortn
@@ -332,7 +367,7 @@ uint8_t WH_abort(const char *restrict msg)
  * The msg can be NULL if length is 0
  * @return 0 if OK, something else if error.
  */
-uint8_t WH_abortn(const char *restrict  msg, const uint32_t length)
+uint8_t WH_abortn(const char *restrict msg, const uint32_t length)
 {
 	enum ctrlMsgType type = ABORT;
 
@@ -372,7 +407,7 @@ uint8_t WH_abortf(const char *restrict format, ...)
 
 	va_start(args, format);
 	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *out = malloc(needed);
+	char *out     = malloc(needed);
 
 	if (!out) {
 		va_end(args);
@@ -397,43 +432,43 @@ uint8_t WH_flushIO(void)
 
 	// for each dstWorm
 	/*for (uint32_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
-		if (WH_myDstWorms.worms[i].conns) {
-			// for each Connection/type
-			for (uint32_t j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
-				if (WH_myDstWorms.worms[i].conns[j] != NULL) {
+	    if (WH_myDstWorms.worms[i].conns) {
+	        // for each Connection/type
+	        for (uint32_t j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
+	            if (WH_myDstWorms.worms[i].conns[j] != NULL) {
 	#ifdef _WORMLIB_DEBUG_
 	#ifdef _WORMLIB_DEBUG_FLUSH_
-					fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d [%d:%d]\n",
-							WH_myDstWorms.worms[i].id,
-							WH_myDstWorms.worms[i].conns[j]->type.type,
-							WH_myDstWorms.worms[i].conns[j]->type.ext.arrayType);
+	                fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d [%d:%d]\n",
+	                        WH_myDstWorms.worms[i].id,
+	                        WH_myDstWorms.worms[i].conns[j]->type.type,
+	                        WH_myDstWorms.worms[i].conns[j]->type.ext.arrayType);
 	#endif
 	#endif
-					//flush_send_sync(&(WH_myDstWorms.worms[i].conns[j]->socket));
-				}
-			}
-		}
+	                //flush_send_sync(&(WH_myDstWorms.worms[i].conns[j]->socket));
+	            }
+	        }
+	    }
 	}*/
 
-	//volatile int k=0;
-	//while(!k);
+	// volatile int k=0;
+	// while(!k);
 
 	// for each recvWorm
 	/*for (int i = 0; i < WH_myRcvWorms.numberOfWorms; i++) {
-		if (WH_myRcvWorms.worms[i].conns) {
-			// for each Connection/type
-			for (int j = 0; j < WH_myRcvWorms.worms[i].numberOfTypes; j++) {
-				if (WH_myRcvWorms.worms[i].conns[j] != NULL) {
+	    if (WH_myRcvWorms.worms[i].conns) {
+	        // for each Connection/type
+	        for (int j = 0; j < WH_myRcvWorms.worms[i].numberOfTypes; j++) {
+	            if (WH_myRcvWorms.worms[i].conns[j] != NULL) {
 	#ifdef _WORMLIB_DEBUG_
-					fprintf(stderr, "[WORM:debug] Flushing IN Connection: %d [%d:%d]\n",
-							WH_myRcvWorms.worms[i].id,
-							WH_myRcvWorms.worms[i].conns[j]->type.type,
-							WH_myRcvWorms.worms[i].conns[j]->type.ext.arrayType);
+	                fprintf(stderr, "[WORM:debug] Flushing IN Connection: %d [%d:%d]\n",
+	                        WH_myRcvWorms.worms[i].id,
+	                        WH_myRcvWorms.worms[i].conns[j]->type.type,
+	                        WH_myRcvWorms.worms[i].conns[j]->type.ext.arrayType);
 	#endif
-					flush_recv(&(WH_myRcvWorms.worms[i].conns[j]->socket));
-				}
-			}
-		}
+	                flush_recv(&(WH_myRcvWorms.worms[i].conns[j]->socket));
+	            }
+	        }
+	    }
 	}*/
 
 	return ret;
@@ -448,8 +483,8 @@ void *WH_thread(void *arg)
 
 	int listeningSocket = tcp_listen_on_port(WH_mySetup.listenPort);
 	struct timeval ts;
-	ts.tv_sec  =   0;
-	//ts.tv_usec = 250000;
+	ts.tv_sec = 0;
+	// ts.tv_usec = 250000;
 	ts.tv_usec = 250000;
 
 	if (listeningSocket == -1) {
@@ -458,20 +493,20 @@ void *WH_thread(void *arg)
 	}
 
 	while (1) {
-		//poll for incomming connections/requests.
-		int tmpsock = tcp_accept(listeningSocket, &ts); //TODO Optimizar para no reconfigurar constantemente el socket
-		//int socket = tcp_accept(listeningSocket, NULL);
+		// poll for incomming connections/requests.
+		int tmpsock = tcp_accept(listeningSocket, &ts);  // TODO Optimizar para no reconfigurar constantemente el socket
+		// int socket = tcp_accept(listeningSocket, NULL);
 
 		if (tmpsock < 0) {
 			enum ctrlMsgType type;
 
-			//Lectura desde Einstein
+			// Lectura desde Einstein
 			if (!WH_bussy) {
 				ssize_t ret = tcp_message_srecv(WH_einsConn.socket, &type, sizeof(type), 0);
 
 				if (ret != sizeof(type)) {
 					if (ret == -1) {
-						//TODO: connection lost with Einstein, Reconnect!!
+						// TODO: connection lost with Einstein, Reconnect!!
 						fputs("EINSTEIN connection lost...! Forced Shutdown (1)\n", stderr);
 						exit(1);
 					}
@@ -480,7 +515,7 @@ void *WH_thread(void *arg)
 
 				} else {
 					if (WH_TH_checkCtrlMsgType(type, WH_einsConn.socket) > 0) {
-						//TODO: connection lost with Einstein, Reconnect!!
+						// TODO: connection lost with Einstein, Reconnect!!
 						fputs("EINSTEIN connection lost...! Forced Shutdown (2)\n", stderr);
 						exit(1);
 					}
@@ -488,7 +523,6 @@ void *WH_thread(void *arg)
 			}
 
 		} else {
-
 			SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 			enum wormMsgType type;
 			int retNum = 0;
@@ -501,7 +535,7 @@ void *WH_thread(void *arg)
 				}
 			}
 
-			if (retNum != 1) { // in case of stop without closing
+			if (retNum != 1) {  // in case of stop without closing
 				tcp_sclose(socket);
 			}
 		}
@@ -520,28 +554,28 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 	enum ctrlMsgType response;
 
 	switch (type) {
-	case PING:
-		response = PONG;
+		case PING:
+			response = PONG;
 
-		if (tcp_message_ssend(socket, &response, sizeof(response))) {
-			perror("[WH]: Pong error\n");
-		}
+			if (tcp_message_ssend(socket, &response, sizeof(response))) {
+				perror("[WH]: Pong error\n");
+			}
 
-		break;
+			break;
 
-	case HALT:
-		fputs("[WH]: Halting Worm by EINSTEIN...\n", stderr);
+		case HALT:
+			fputs("[WH]: Halting Worm by EINSTEIN...\n", stderr);
 
-		if (WH_halting) {
-			WH_halting = 0;
+			if (WH_halting) {
+				WH_halting = 0;
 
-		} else {
-			exit(0);
-		}
+			} else {
+				exit(0);
+			}
 
-		break;
+			break;
 
-	case CHANGEROUTE: {
+		case CHANGEROUTE: {
 			uint32_t routesize;
 			uint8_t *newroute = NULL;
 
@@ -553,7 +587,8 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 				newroute = malloc(routesize);
 			}
 
-			if (newroute) if (tcp_message_srecv(socket, newroute, routesize, 1) != routesize) {
+			if (newroute)
+				if (tcp_message_srecv(socket, newroute, routesize, 1) != routesize) {
 					ret = -1;
 				}
 
@@ -569,7 +604,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 
 			if (ret) {
 				type = CTRL_ERROR;
-				ret = -1;
+				ret  = -1;
 				fprintf(stderr, "Faling changing route..!\n");
 
 			} else {
@@ -581,13 +616,13 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 			break;
 		}
 
-	default:
-		fprintf(stderr, "Unsupported Einstein Message (%d)!\n", (int)type);
-		ret = 1; //Error!
-		break;
+		default:
+			fprintf(stderr, "Unsupported Einstein Message (%d)!\n", (int)type);
+			ret = 1;  // Error!
+			break;
 	}
 
-	return  ret;
+	return ret;
 }
 
 /** WH_TH_checkMsgType
@@ -599,25 +634,25 @@ int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 	int ret = 0;
 
 	switch (type) {
-	case HELLO: //Contestamos a Hello
-	default:
-		WH_TH_hello(socket); //TODO check if ret should be -1
-		//return -1;
-		break;
+		case HELLO:  // Contestamos a Hello
+		default:
+			WH_TH_hello(socket);  // TODO check if ret should be -1
+			// return -1;
+			break;
 
-	case SETUPWORMCONN:  //Establecemos una conexión completa con otro worm
-		WH_TH_setupworm(socket);
-		return 1;
+		case SETUPWORMCONN:  // Establecemos una conexión completa con otro worm
+			WH_TH_setupworm(socket);
+			return 1;
 
-	case SSLSTART:
+		case SSLSTART:
 #ifdef _WORMLIB_DEBUG_
-		fprintf(stderr, "[WH]: Starting SSL session\n");
+			fprintf(stderr, "[WH]: Starting SSL session\n");
 #endif
-		ret = syncSocketStartSSL(socket, SRVSSL, NULL);
-		break;
+			ret = syncSocketStartSSL(socket, SRVSSL, NULL);
+			break;
 	}
 
-	return  ret;
+	return ret;
 }
 
 /** WH_TH_hello
@@ -626,33 +661,35 @@ int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 inline void WH_TH_hello(SyncSocket *socket)
 {
 	enum wormMsgType type;
-	type = WORMINFO; //Con Worm Info
+	type = WORMINFO;  // Con Worm Info
 
-	//fputs("Worm Info Pedida\n", stderr);
+	// fputs("Worm Info Pedida\n", stderr);
 
 	if (tcp_message_ssend(socket, &type, sizeof(type))) {
 		perror("Error contestando socket [1]\n");
 		return;
 	}
 
-	if (tcp_message_ssend(socket, &WH_mySetup, sizeof(WH_mySetup))) { //Con wormSetup
+	if (tcp_message_ssend(socket, &WH_mySetup, sizeof(WH_mySetup))) {  // Con wormSetup
 		perror("Error contestando socket [2]\n");
 		return;
 	}
 
-	if (tcp_message_ssend(socket, &WH_myConfig, sizeof(WH_myConfig))) { //Con wormConfig
+	if (tcp_message_ssend(socket, &WH_myConfig, sizeof(WH_myConfig))) {  // Con wormConfig
 		perror("Error contestando socket [3]\n");
 		return;
 	}
 
-	//fprintf(stderr, "Enviando config con size=%zu\n", WH_myConfig.numInputTypes);
+	// fprintf(stderr, "Enviando config con size=%zu\n", WH_myConfig.numInputTypes);
 
-	if (tcp_message_ssend(socket, WH_myConfig.inputTypes, sizeof(ConnectionDataType)*WH_myConfig.numInputTypes)) { //Con wormConfig
+	if (tcp_message_ssend(socket,
+	                      WH_myConfig.inputTypes,
+	                      sizeof(ConnectionDataType) * WH_myConfig.numInputTypes)) {  // Con wormConfig
 		perror("Error contestando socket [4]");
 		return;
 	}
 
-	//fputs("Worm Info Respondida\n", stderr);
+	// fputs("Worm Info Respondida\n", stderr);
 }
 
 /** SETUPWORMCONN
@@ -662,35 +699,35 @@ inline void WH_TH_setupworm(SyncSocket *socket)
 {
 	DestinationWorm tmpDestWorm;
 
-	//Recibimos un destinationWorm
+	// Recibimos un destinationWorm
 	if (tcp_message_srecv(socket, &tmpDestWorm, sizeof(DestinationWorm), 1) != sizeof(DestinationWorm)) {
 		fputs("Error configurando socket", stderr);
-		tcp_sclose(socket); //cerramos el socket
+		tcp_sclose(socket);  // cerramos el socket
 		return;
 	}
 
-	DestinationWorm *tmpDestWormPtr
-		= WH_addWorm(&WH_myRcvWorms, tmpDestWorm.id, 0);
+	DestinationWorm *tmpDestWormPtr = WH_addWorm(&WH_myRcvWorms, tmpDestWorm.id, 0);
 
 	strncpy(tmpDestWormPtr->ip, tmpDestWorm.ip, INET6_ADDRSTRLEN);
 	tmpDestWormPtr->port = tmpDestWorm.port;
-	tmpDestWormPtr->supportedTypes = realloc(tmpDestWormPtr->supportedTypes,
-									 (tmpDestWormPtr->numberOfTypes + 1) * sizeof(ConnectionDataType));
+	tmpDestWormPtr->supportedTypes =
+	    realloc(tmpDestWormPtr->supportedTypes, (tmpDestWormPtr->numberOfTypes + 1) * sizeof(ConnectionDataType));
 
-	//TODO fix para en caso de que se reduzca/reordene la lista, no se quede memoria perdida...
+	// TODO fix para en caso de que se reduzca/reordene la lista, no se quede memoria perdida...
 	if (tmpDestWormPtr->conns)
 		tmpDestWormPtr->conns = realloc(tmpDestWormPtr->conns,
-										(tmpDestWormPtr->numberOfTypes + 1) * sizeof(Connection *)); //TODO test ==NULL
+		                                (tmpDestWormPtr->numberOfTypes + 1) * sizeof(Connection *));  // TODO test ==NULL
 
 	else {
 		tmpDestWormPtr->conns = calloc(sizeof(Connection *), tmpDestWormPtr->numberOfTypes + 1);
 	}
 
-	tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes] = calloc(sizeof(Connection), 1); //TODO test ==NULL
+	tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes] = calloc(sizeof(Connection), 1);  // TODO test ==NULL
 
-	if (tcp_message_srecv(socket, tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes], sizeof(Connection), 1) != sizeof(Connection)) {
+	if (tcp_message_srecv(socket, tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes], sizeof(Connection), 1) !=
+	    sizeof(Connection)) {
 		fputs("Error configurando socket", stderr);
-		tcp_sclose(socket); //cerramos el socket
+		tcp_sclose(socket);  // cerramos el socket
 		return;
 	}
 
@@ -703,15 +740,15 @@ inline void WH_TH_setupworm(SyncSocket *socket)
 }
 
 /* Name WH_connectionPoll
-	* Poll data from some socket
-	* Return some connection with data, NULL if error/timeout.
-	*/
+    * Poll data from some socket
+    * Return some connection with data, NULL if error/timeout.
+    */
 Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
 {
 	static uint32_t wormIndex = 0;
 	static uint32_t connIndex = 0;
 
-	uint32_t closedWorms = 0;
+	uint32_t closedWorms   = 0;
 	uint32_t unclosedWorms = 0;
 
 	uint32_t startingWormIndex = wormIndex;
@@ -719,8 +756,8 @@ Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
 
 WH_connectionPoll_loop:
 
-	for (; wormIndex < wms->numberOfWorms ; wormIndex++, connIndex = 0) {
-		for (; connIndex < wms->worms[wormIndex].numberOfTypes ; connIndex++) {
+	for (; wormIndex < wms->numberOfWorms; wormIndex++, connIndex = 0) {
+		for (; connIndex < wms->worms[wormIndex].numberOfTypes; connIndex++) {
 			Connection *conn;
 			conn = wms->worms[wormIndex].conns[connIndex];
 
@@ -738,9 +775,9 @@ WH_connectionPoll_loop:
 		}
 	}
 
-	if (startingWormIndex == 0 && startingConnIndex == 0) { //begin from the start
-		if (!unclosedWorms) { // there is no open worms
-			if (!closedWorms) { // there is no close worms
+	if (startingWormIndex == 0 && startingConnIndex == 0) {  // begin from the start
+		if (!unclosedWorms) {                                // there is no open worms
+			if (!closedWorms) {                              // there is no close worms
 				WH_errno = WH_ERRNO_EMPTY;
 				return NULL;
 
@@ -750,19 +787,19 @@ WH_connectionPoll_loop:
 			}
 
 		} else {
-			wormIndex = 0; //RST
-			connIndex = 0; //RST
-			WH_errno = WH_ERRNO_CLEAR; //TODO check when this call happens
+			wormIndex = 0;               // RST
+			connIndex = 0;               // RST
+			WH_errno  = WH_ERRNO_CLEAR;  // TODO check when this call happens
 			return NULL;
 		}
 
 	} else {
-		wormIndex = 0; //RST
-		connIndex = 0; //RST
+		wormIndex         = 0;  // RST
+		connIndex         = 0;  // RST
 		startingWormIndex = 0;
 		startingConnIndex = 0;
 		goto WH_connectionPoll_loop;
-		//return WH_connectionPoll(wms, mi);
+		// return WH_connectionPoll(wms, mi);
 	}
 }
 
@@ -782,7 +819,7 @@ int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
 		return 0;
 	}
 
-	if (mi->type && mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type)*tcp_async_peakInt(sock)) {
+	if (mi->type && mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type) * tcp_async_peakInt(sock)) {
 		return 0;
 	}
 
@@ -797,7 +834,7 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 {
 	int socket = 0;
 
-	//fprintf(stderr, "[DEBUG:%d ; %s:%d]\n", __LINE__, inet_ntoa(ip_addr), c->port);
+	// fprintf(stderr, "[DEBUG:%d ; %s:%d]\n", __LINE__, inet_ntoa(ip_addr), c->port);
 
 	do {
 		// Force keep-trying
@@ -810,8 +847,8 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 		}
 	} while (socket < 0);
 
-	//Solicitamos datos...
-	enum wormMsgType type = HELLO; //Con Worm Info
+	// Solicitamos datos...
+	enum wormMsgType type = HELLO;  // Con Worm Info
 
 	WormSetup wormSetup;
 	WormConfig wormConfig = {0, 0};
@@ -834,13 +871,13 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 		return 1;
 	}
 
-	if (tcp_message_recv(socket, &wormSetup, sizeof(wormSetup), 1) != sizeof(wormSetup)) { //Con wormSetup
+	if (tcp_message_recv(socket, &wormSetup, sizeof(wormSetup), 1) != sizeof(wormSetup)) {  // Con wormSetup
 		perror("Error solicitando información del Worm [2]");
 		close(socket);
 		return 1;
 	}
 
-	if (tcp_message_recv(socket, &wormConfig, sizeof(wormConfig), 1) != sizeof(wormConfig)) { //Con wormConfig
+	if (tcp_message_recv(socket, &wormConfig, sizeof(wormConfig), 1) != sizeof(wormConfig)) {  // Con wormConfig
 		perror("Error solicitando información del Worm [3]");
 		close(socket);
 		return 1;
@@ -848,7 +885,10 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 
 	wormConfig.inputTypes = realloc(c->supportedTypes, sizeof(ConnectionDataType) * wormConfig.numInputTypes);
 
-	if (tcp_message_recv(socket, wormConfig.inputTypes, sizeof(ConnectionDataType)*wormConfig.numInputTypes, 1) != (ssize_t)(sizeof(ConnectionDataType)*wormConfig.numInputTypes)) {  //Con wormConfig
+	if (tcp_message_recv(socket,
+	                     wormConfig.inputTypes,
+	                     sizeof(ConnectionDataType) * wormConfig.numInputTypes,
+	                     1) != (ssize_t)(sizeof(ConnectionDataType) * wormConfig.numInputTypes)) {  // Con wormConfig
 		perror("Error solicitando información del Worm [4]");
 		close(socket);
 		return 1;
@@ -856,12 +896,12 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 
 	close(socket);
 
-	//Rellenamos el worm entrante
-	c->id = wormSetup.id;
-	c->numberOfTypes = wormConfig.numInputTypes;
+	// Rellenamos el worm entrante
+	c->id             = wormSetup.id;
+	c->numberOfTypes  = wormConfig.numInputTypes;
 	c->supportedTypes = wormConfig.inputTypes;
 
-	//TODO en caso de que se reduzca el numero de conexiones problemas
+	// TODO en caso de que se reduzca el numero de conexiones problemas
 	if (c->conns) {
 		c->conns = realloc(c->conns, sizeof(Connection *) * wormConfig.numInputTypes);
 
@@ -888,9 +928,9 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 
-	//setup SSL
+	// setup SSL
 	if (WH_mySetup.isSSLNode) {
-		enum wormMsgType msgtype = SSLSTART; //Con Worm config
+		enum wormMsgType msgtype = SSLSTART;  // Con Worm config
 
 #ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "[WH]: Sending SSLSTART to worm\n");
@@ -905,7 +945,6 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 			fputs("Error configurando Worm externo [SSL 2]", stderr);
 			return 1;
 		}
-
 	}
 
 #ifdef _WORMLIB_DEBUG_
@@ -929,8 +968,8 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		return 1;
 	}
 
-	//Informamos del tipo de conexion...
-	enum wormMsgType msgtype = SETUPWORMCONN; //Con Worm config
+	// Informamos del tipo de conexion...
+	enum wormMsgType msgtype = SETUPWORMCONN;  // Con Worm config
 
 	if (tcp_message_ssend(socket, &msgtype, sizeof(msgtype))) {
 		fputs("Error configurando Worm externo", stderr);
@@ -948,24 +987,24 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		strdup(inet_ntop(AF_INET, &WH_mySetup.IP, dwtmp.ip, INET_ADDRSTRLEN));
 	}
 
-	dwtmp.port = WH_mySetup.listenPort;
+	dwtmp.port          = WH_mySetup.listenPort;
 	dwtmp.numberOfTypes = 1;
 
-	if (tcp_message_ssend(socket, &dwtmp, sizeof(dwtmp))) { //DstWorm
+	if (tcp_message_ssend(socket, &dwtmp, sizeof(dwtmp))) {  // DstWorm
 		fprintf(stderr, "Error configurando Worm externo %d\n", dw->id);
 		return 1;
 	}
 
-	Connection conntmp = {
-		.type = *type,
-		//.socket = {0} //error in some compilers (Clang)
+	Connection conntmp = {.type = *type,
+//.socket = {0} //error in some compilers (Clang)
 #ifdef _WORMLIB_STATISTICS_
-		, .stats = {.totalIO = 0, .lastIO = 0, .lastCheck = hptl_get()}
+	                      ,
+	                      .stats = {.totalIO = 0, .lastIO = 0, .lastCheck = hptl_get()}
 #endif
 	};
-	bzero(&conntmp.socket, sizeof(conntmp.socket)); //replaces socket={0}
+	bzero(&conntmp.socket, sizeof(conntmp.socket));  // replaces socket={0}
 
-	if (tcp_message_ssend(socket, &conntmp, sizeof(conntmp))) { //DstWorm
+	if (tcp_message_ssend(socket, &conntmp, sizeof(conntmp))) {  // DstWorm
 		fprintf(stderr, "Error configurando Worm externo %d\n", dw->id);
 		return 1;
 	}
@@ -974,11 +1013,10 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	for (uint32_t i = 0; i < dw->numberOfTypes; i++) {
 		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, type)) {
-
 			dw->conns[i] = calloc(sizeof(Connection), 1);
 			socket_sync_to_async_send(&(dw->conns[i]->socket), socket);
 			dw->conns[i]->type = *type;
-			flag = 1;
+			flag               = 1;
 			break;
 		}
 	}
@@ -995,20 +1033,20 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	return 0;
 }
 
-
 uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 {
 	enum ctrlMsgType ctrlMsg = QUERYID;
 
-	if (tcp_message_ssend(WH_einsConn.socket, (uint8_t *) &ctrlMsg, sizeof(enum ctrlMsgType)) != 0) {
+	if (tcp_message_ssend(WH_einsConn.socket, (uint8_t *)&ctrlMsg, sizeof(enum ctrlMsgType)) != 0) {
 		return 1;
 	}
 
-	if (tcp_message_ssend(WH_einsConn.socket, (void *) &wormId, sizeof(uint16_t)) != 0) {
+	if (tcp_message_ssend(WH_einsConn.socket, (void *)&wormId, sizeof(uint16_t)) != 0) {
 		return 1;
 	}
 
-	if (tcp_message_srecv(WH_einsConn.socket, (uint8_t *) &ctrlMsg, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
+	if (tcp_message_srecv(WH_einsConn.socket, (uint8_t *)&ctrlMsg, sizeof(enum ctrlMsgType), 1) !=
+	    sizeof(enum ctrlMsgType)) {
 		return 1;
 	}
 
@@ -1016,7 +1054,7 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 		return 1;
 	}
 
-	if (tcp_message_srecv(WH_einsConn.socket, (uint8_t *) ws, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
+	if (tcp_message_srecv(WH_einsConn.socket, (uint8_t *)ws, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
 		return 1;
 	}
 
@@ -1038,60 +1076,58 @@ uint16_t WH_get_id(void)
  */
 size_t WH_typesize(const ConnectionDataType *const type)
 {
-	//TODO optimize converting to static array
+	// TODO optimize converting to static array
 	switch (type->type) {
-	case   INT8:
-	case  UINT8:
-		return 1;
-
-	case  INT16:
-	case UINT16:
-		return 2;
-
-	case  INT32:
-	case UINT32:
-		return 4;
-
-	case  INT64:
-	case UINT64:
-		return 8;
-
-	case  STRING:
-		return 1;
-
-	case ARRAY:
-		switch (type->ext.arrayType) {
-		case   INT8:
-		case  UINT8:
+		case INT8:
+		case UINT8:
 			return 1;
 
-		case  INT16:
+		case INT16:
 		case UINT16:
 			return 2;
 
-		case  INT32:
+		case INT32:
 		case UINT32:
 			return 4;
 
-		case  INT64:
+		case INT64:
 		case UINT64:
 			return 8;
 
-		case  STRING:
+		case STRING:
 			return 1;
+
+		case ARRAY:
+			switch (type->ext.arrayType) {
+				case INT8:
+				case UINT8:
+					return 1;
+
+				case INT16:
+				case UINT16:
+					return 2;
+
+				case INT32:
+				case UINT32:
+					return 4;
+
+				case INT64:
+				case UINT64:
+					return 8;
+
+				case STRING:
+					return 1;
+
+				default:
+					fprintf(stderr, "NOT YET IMPLEMENTED (%d)\n", __LINE__);
+					exit(1);
+			}
 
 		default:
 			fprintf(stderr, "NOT YET IMPLEMENTED (%d)\n", __LINE__);
 			exit(1);
-
-		}
-
-	default:
-		fprintf(stderr, "NOT YET IMPLEMENTED (%d)\n", __LINE__);
-		exit(1);
 	}
 }
-
 
 /** WH_connectionDataTypecmp
  * Compares 2 datatypes
@@ -1117,9 +1153,8 @@ uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const Connec
 	}
 }
 
-
 /************************************************************
-	Bulking Routines
+    Bulking Routines
 *************************************************************/
 
 /** WH_send_blk
@@ -1142,13 +1177,8 @@ uint8_t WH_send_blk(const BulkList *const bl)
 	}
 
 	if (bl->cpyalign) {
-		for (i = 0;
-			 i < bl->len;
-			 i += ((MessageInfo *)(bl->list.rawdata + i))->size + sizeof(MessageInfo)) {
-
-			ret += WH_send(
-				bl->list.rawdata + i + sizeof(MessageInfo),
-				bl->list.rawdata + i);
+		for (i = 0; i < bl->len; i += ((MessageInfo *)(bl->list.rawdata + i))->size + sizeof(MessageInfo)) {
+			ret += WH_send(bl->list.rawdata + i + sizeof(MessageInfo), bl->list.rawdata + i);
 		}
 
 	} else {
@@ -1171,14 +1201,15 @@ uint8_t WH_send_blk(const BulkList *const bl)
 }
 
 /** WH_BL_create
- * @param cpyalign if set to other than 0, then each data added to the list would be copied and memory aligned
+ * @param cpyalign if set to other than 0, then each data added to the list would be copied and
+ * memory aligned
  * @return a new BulkList. Null if error.
  */
 BulkList *WH_BL_create(int_fast8_t cpyalign)
 {
 	BulkList *ret = calloc(sizeof(BulkList), 1);
 
-	if (ret) { //if not null
+	if (ret) {  // if not null
 		ret->cpyalign = cpyalign;
 	}
 
@@ -1194,7 +1225,6 @@ uint8_t WH_BL_add(BulkList *bl, const void *const msg, const MessageInfo *const 
 	uint8_t ret = 0;
 
 	if (bl->cpyalign) {
-
 		size_t oldlen = bl->len;
 		bl->len += mi->size + sizeof(MessageInfo);
 
@@ -1205,11 +1235,10 @@ uint8_t WH_BL_add(BulkList *bl, const void *const msg, const MessageInfo *const 
 			return 1;
 		}
 
-		memcpy(bl->list.rawdata + oldlen,						mi,	sizeof(MessageInfo));
-		memcpy(bl->list.rawdata + oldlen + sizeof(MessageInfo),	msg, mi->size);
+		memcpy(bl->list.rawdata + oldlen, mi, sizeof(MessageInfo));
+		memcpy(bl->list.rawdata + oldlen + sizeof(MessageInfo), msg, mi->size);
 
 	} else {
-
 		bl->list.msgs = realloc(bl->list.msgs, bl->len * sizeof(BulkMsg *));
 
 		if (bl->list.msgs) {
@@ -1217,8 +1246,8 @@ uint8_t WH_BL_add(BulkList *bl, const void *const msg, const MessageInfo *const 
 		}
 
 		BulkMsg *smsg = &(bl->list.msgs[bl->len]);
-		smsg->data = (void *)msg;
-		smsg->info = (MessageInfo *)mi;
+		smsg->data    = (void *)msg;
+		smsg->info    = (MessageInfo *)mi;
 
 		bl->len++;
 	}
@@ -1246,57 +1275,66 @@ void WH_BL_free(BulkList *bl)
 }
 
 /************************************************************
-	Dynamic Routing Library
+    Dynamic Routing Library
 *************************************************************/
 /***************************************/
 extern uint8_t _binary_structures_h_start;
 extern uint8_t _binary_structures_h_end;
 
-const char *_WH_DymRoute_CC_includes = "\n"
-									   "#include <stdint.h>\n"
-									   "#include <stdio.h>\n"
-									   "#include <pthread.h>\n"
-									   "#include <arpa/inet.h>\n" //TODO remove someday
-									   "#include <openssl/ssl.h>\n"; //TODO remove include
-const char *_WH_DymRoute_CC_FuncStart = "\n\n"
-										"uint8_t WH_DymRoute_precompiled_route (const void *const data, const MessageInfo *const mi, const DestinationWorms *const cns)\n{\n"
-										"int ret = 0;\n"
-										"DestinationWorm *dw;\n";
-const char *_WH_DymRoute_CC_FuncEnd = "\n"
-									  "return ret;"
-									  "}\n";
-const char *_WH_DymRoute_CC_send =    "ret += WH_DymRoute_send(data, mi, dw);\n";
-const char *_WH_DymRoute_CC_setDw =   "dw = cns->worms+%d;\n";
+const char *_WH_DymRoute_CC_includes =
+    "\n"
+    "#include <stdint.h>\n"
+    "#include <stdio.h>\n"
+    "#include <pthread.h>\n"
+    "#include <arpa/inet.h>\n"     // TODO remove someday
+    "#include <openssl/ssl.h>\n";  // TODO remove include
+const char *_WH_DymRoute_CC_FuncStart =
+    "\n\n"
+    "uint8_t WH_DymRoute_precompiled_route (const void *restrict const data,"
+    " const MessageInfo *restrict const mi,"
+    " const DestinationWorms *restrict const cns)\n{\n"
+    "int ret = 0;\n"
+    "DestinationWorm *dw;\n";
+const char *_WH_DymRoute_CC_FuncEnd =
+    "\n"
+    "return ret;"
+    "}\n";
+const char *_WH_DymRoute_CC_send  = "ret += WH_DymRoute_send(data, mi, dw);\n";
+const char *_WH_DymRoute_CC_setDw = "dw = cns->worms+%d;\n";
 
-//RR special
-//const char *_WH_DymRoute_CC_RRstatic    =    "static uint16_t rr%d=0;\n";
-const char *_WH_DymRoute_CC_RRswitch    =    "static uint16_t rr%d=0;\n"
-		"switch(rr%d){\n";
-const char *_WH_DymRoute_CC_RRcase      =    "case %d :\n{ ";
-const char *_WH_DymRoute_CC_RRbreak     =    "break;\n} ";
-const char *_WH_DymRoute_CC_RRend       =    "default:\n"
-		"ret++;"
-		"}\n"
-		"rr%d=(rr%d+1) %% %d;\n";
+// RR special
+// const char *_WH_DymRoute_CC_RRstatic    =    "static uint16_t rr%d=0;\n";
+const char *_WH_DymRoute_CC_RRswitch =
+    "static uint16_t rr%d=0;\n"
+    "switch(rr%d){\n";
+const char *_WH_DymRoute_CC_RRcase  = "case %d :\n{ ";
+const char *_WH_DymRoute_CC_RRbreak = "break;\n} ";
+const char *_WH_DymRoute_CC_RRend =
+    "default:\n"
+    "ret++;"
+    "}\n"
+    "rr%d=(rr%d+1) %% %d;\n";
 
-//Cat special
-const char *_WH_DymRoute_CC_Catswitch   =    "switch(mi->category){\n";
-const char *_WH_DymRoute_CC_Catcase     =    "case %d :\n{ ";
-const char *_WH_DymRoute_CC_Catbreak    =    "break;\n} ";
-const char *_WH_DymRoute_CC_Catend      =    "default:\n"
-		"ret++;"
-		"}\n";
+// Cat special
+const char *_WH_DymRoute_CC_Catswitch = "switch(mi->category){\n";
+const char *_WH_DymRoute_CC_Catcase   = "case %d :\n{ ";
+const char *_WH_DymRoute_CC_Catbreak  = "break;\n} ";
+const char *_WH_DymRoute_CC_Catend =
+    "default:\n"
+    "ret++;"
+    "}\n";
 
-//Hash special
-const char *_WH_DymRoute_CC_Hashswitch   =    "switch(((mi->hash)\%(%u))){\n";
-const char *_WH_DymRoute_CC_Hashcase     =    "case %d :\n{ ";
-const char *_WH_DymRoute_CC_Hashbreak    =    "break;\n} ";
-const char *_WH_DymRoute_CC_Hashend      =    "default:\n"
-		"ret++;"
-		"}\n";
+// Hash special
+const char *_WH_DymRoute_CC_Hashswitch = "switch(((mi->hash)\%(%u))){\n";
+const char *_WH_DymRoute_CC_Hashcase   = "case %d :\n{ ";
+const char *_WH_DymRoute_CC_Hashbreak  = "break;\n} ";
+const char *_WH_DymRoute_CC_Hashend =
+    "default:\n"
+    "ret++;"
+    "}\n";
 
-//Ignore special
-const char *_WH_DymRoute_CC_Ignoreunused =    "(void)dw;\n";
+// Ignore special
+const char *_WH_DymRoute_CC_Ignoreunused = "(void)dw;\n";
 
 void *_WH_DymRoute_libHandle = NULL;
 /***************************************/
@@ -1305,14 +1343,16 @@ void *_WH_DymRoute_libHandle = NULL;
  * Enrute a message
  * Return the number of msgs sent
  */
-uint8_t (*WH_DymRoute_precompiled_route)(const void *const data, const MessageInfo *const mi, const DestinationWorms *const cns) = 0;
+uint8_t (*WH_DymRoute_precompiled_route)(const void *restrict const data,
+                                         const MessageInfo *restrict const mi,
+                                         const DestinationWorms *restrict const cns) = 0;
 
 /* Name WH_send
  * TODO
  * Params:
  * Return 0 if OK, something else if error.
  */
-uint8_t WH_send(const void *const data, const MessageInfo *const mi)
+uint8_t WH_send(const void *restrict const data, const MessageInfo *restrict const mi)
 {
 	return WH_DymRoute_route(data, mi);
 }
@@ -1322,9 +1362,9 @@ uint8_t WH_send(const void *const data, const MessageInfo *const mi)
  * Params:
  * @return the number of bytes readed, 0 if ERROR or none.
  */
-uint32_t WH_recv(void *data, MessageInfo *mi)
+uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 {
-	//int pollCnt = 0;
+// int pollCnt = 0;
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: Polling...\n");
 #endif
@@ -1332,10 +1372,10 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 
 	do {
 		c = WH_connectionPoll(&WH_myRcvWorms, mi);
-	} while ((!c && (WH_errno == WH_ERRNO_CLEAR || WH_errno == WH_ERRNO_EMPTY))
-			 || ((c && mi->type) ? WH_connectionDataTypecmp(&c->type, mi->type) : 0));
+	} while ((!c && (WH_errno == WH_ERRNO_CLEAR || WH_errno == WH_ERRNO_EMPTY)) ||
+	         ((c && mi->type) ? WH_connectionDataTypecmp(&c->type, mi->type) : 0));
 
-	if (c == NULL) { //no msg found
+	if (c == NULL) {  // no msg found
 		WH_errno = WH_ERRNO_CLEAR;
 		return 0;
 	}
@@ -1352,81 +1392,90 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 	uint32_t ret = 0;
 
 	switch (c->type.type) {
-	case INT8:
-	case UINT8:
-		if (!tcp_message_recv_async(&(c->socket), data, 1 * mi->size)) {
-			ret = 1 * mi->size;
-		}
+		case INT8:
+		case UINT8:
+			if (!tcp_message_recv_async(&(c->socket), data, 1 * mi->size)) {
+				ret = 1 * mi->size;
+			}
 
-		break;
+			break;
 
-	case INT16:
-	case UINT16:
-		if (!tcp_message_recv_async(&(c->socket), data, 2 * mi->size)) {
-			ret = 2 * mi->size;
-		}
+		case INT16:
+		case UINT16:
+			if (!tcp_message_recv_async(&(c->socket), data, 2 * mi->size)) {
+				ret = 2 * mi->size;
+			}
 
-		break;
+			break;
 
-	case INT32:
-	case UINT32:
-		if (!tcp_message_recv_async(&(c->socket), data, 4 * mi->size)) {
-			ret = 4 * mi->size;
-		}
+		case INT32:
+		case UINT32:
+			if (!tcp_message_recv_async(&(c->socket), data, 4 * mi->size)) {
+				ret = 4 * mi->size;
+			}
 
-		break;
+			break;
 
-	case INT64:
-	case UINT64:
-		if (!tcp_message_recv_async(&(c->socket), data, 8 * mi->size)) {
-			ret = 8 * mi->size;
-		}
+		case INT64:
+		case UINT64:
+			if (!tcp_message_recv_async(&(c->socket), data, 8 * mi->size)) {
+				ret = 8 * mi->size;
+			}
 
-		break;
+			break;
 
-	case STRING:
-	case ARRAY: {
+		case STRING:
+		case ARRAY: {
 			if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp))) {
 #ifdef _DYM_ROUTE_DEBUG_
 				fprintf(stderr, "ROUTEDEBUG: Array of %lu elements\n", tmp);
 #endif
+				if (mi->size < tmp) {
+					MessageInfo mtmp;
+					// Size in output array is not enough
+					mtmp.size = tmp;
+					mtmp.type = &c->type;
+					mtmp.hash = (uint64_t)(&(c->socket));  // Hack for passing the sock id
+					WH_recv_complete(NULL, &mtmp);
+					return 0 - tmp;
+				}
 
 				switch (c->type.ext.arrayType) {
-				case INT8:
-				case UINT8:
-					if (!tcp_message_recv_async(&(c->socket), data, 1 * tmp)) {
-						ret = 1 * tmp;
-					}
+					case INT8:
+					case UINT8:
+						if (!tcp_message_recv_async(&(c->socket), data, 1 * tmp)) {
+							ret = 1 * tmp;
+						}
 
-					break;
+						break;
 
-				case INT16:
-				case UINT16:
-					if (!tcp_message_recv_async(&(c->socket), data, 2 * tmp)) {
-						ret = 2 * tmp;
-					}
+					case INT16:
+					case UINT16:
+						if (!tcp_message_recv_async(&(c->socket), data, 2 * tmp)) {
+							ret = 2 * tmp;
+						}
 
-					break;
+						break;
 
-				case INT32:
-				case UINT32:
-					if (! tcp_message_recv_async(&(c->socket), data, 4 * tmp)) {
-						ret = 4 * tmp;
-					}
+					case INT32:
+					case UINT32:
+						if (!tcp_message_recv_async(&(c->socket), data, 4 * tmp)) {
+							ret = 4 * tmp;
+						}
 
-					break;
+						break;
 
-				case INT64:
-				case UINT64:
-					if (! tcp_message_recv_async(&(c->socket), data, 8 * tmp)) {
-						ret = 8 * tmp;
-					}
+					case INT64:
+					case UINT64:
+						if (!tcp_message_recv_async(&(c->socket), data, 8 * tmp)) {
+							ret = 8 * tmp;
+						}
 
-					break;
+						break;
 
-				default:
-					fprintf(stderr, "ARRAYTYPE: NOT YET IMPLEMENTED [%d]\n", c->type.ext.arrayType); //TODO implement
-					break;
+					default:
+						fprintf(stderr, "ARRAYTYPE: NOT YET IMPLEMENTED [%d]\n", c->type.ext.arrayType);  // TODO implement
+						break;
 				}
 
 			} else {
@@ -1438,9 +1487,9 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 			break;
 		}
 
-	default:
-		fprintf(stderr, "NOT YET IMPLEMENTED [%d]\n", c->type.type); //TODO implement
-		break;
+		default:
+			fprintf(stderr, "NOT YET IMPLEMENTED [%d]\n", c->type.type);  // TODO implement
+			break;
 	}
 
 #ifdef _DYM_ROUTE_DEBUG_
@@ -1450,11 +1499,43 @@ uint32_t WH_recv(void *data, MessageInfo *mi)
 	return ret;
 }
 
+/** WH_recv_complete
+ * Complete a previous data transfer
+ * @return the number of bytes readed, 0 if ERROR or none.
+ */
+uint32_t WH_recv_complete(void *restrict data, MessageInfo *restrict mi)
+{
+	static MessageInfo lastmi;
+	static uint8_t isSet = 0;
+	uint32_t ret         = 0;
+
+	if (!data) {
+		if (isSet) {
+			uint64_t i;
+			for (i = 0; i < WH_typesize(lastmi.type) * lastmi.size; i++)
+				tcp_message_recv_async((AsyncSocket *)lastmi.hash, data, 1);
+		}
+		isSet  = 1;
+		lastmi = *mi;
+		return 0;
+
+	} else if (!isSet) {
+		return 0;
+	}
+
+	if (!tcp_message_recv_async((AsyncSocket *)lastmi.hash, data, WH_typesize(lastmi.type) * lastmi.size)) {
+		ret = 1 * WH_typesize(lastmi.type);
+	}
+
+	isSet = 0;
+	return ret;
+}
+
 /* Name WH_DymRoute_route
 * Enrute a message
 * Return 0 if OK, something else if error.
 */
-uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi)
+uint8_t WH_DymRoute_route(const void *restrict const data, const MessageInfo *restrict const mi)
 {
 	if (WH_DymRoute_precompiled_route == 0) {
 		return 1;
@@ -1471,9 +1552,9 @@ uint8_t WH_DymRoute_route(const void *const data, const MessageInfo *const mi)
  */
 uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	pid_t myPid = getpid();
-	char *cString = malloc(1024);
-	char *soString = malloc(1024);
+	pid_t myPid     = getpid();
+	char *cString   = malloc(1024);
+	char *soString  = malloc(1024);
 	char *gccString = malloc(1024);
 	char *errorString;
 
@@ -1542,7 +1623,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 
 		WH_DymRoute_precompiled_route = dlsym(tmplibHandle, "WH_DymRoute_precompiled_route");
 
-		if ((errorString = dlerror()) != NULL || WH_DymRoute_precompiled_route == NULL)  {
+		if ((errorString = dlerror()) != NULL || WH_DymRoute_precompiled_route == NULL) {
 			fputs(errorString, stderr);
 			ret = 6;
 		}
@@ -1572,11 +1653,11 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
   */
 uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const DestinationWorm *const dw)
 {
-	//TODO search info
-	//WH_setupConnectionType
+	// TODO search info
+	// WH_setupConnectionType
 	for (uint32_t i = 0; i < dw->numberOfTypes; i++) {
 		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, mi->type)) {
-			//tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
+			// tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
 			if (!dw->conns[i]) {
 				if (WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {
 #ifdef _DYM_ROUTE_DEBUG_
@@ -1585,7 +1666,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 					return 1;
 				}
 
-			} else if (unlikely(dw->conns[i]->socket.closed)) { //check if the socket has been closed
+			} else if (unlikely(dw->conns[i]->socket.closed)) {  // check if the socket has been closed
 				destroy_asyncSocket(&(dw->conns[i]->socket));
 				free(dw->conns[i]);
 				dw->conns[i] = NULL;
@@ -1602,9 +1683,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 #ifdef _DYM_ROUTE_DEBUG_
 			fprintf(stderr, "ROUTEDEBUG: sending data (%luB) to worm: %d\n", mi->size, dw->id);
 #endif
-			return tcp_message_send_async(&(dw->conns[i]->socket),
-										  data,
-										  mi->size * WH_typesize(mi->type));
+			return tcp_message_send_async(&(dw->conns[i]->socket), data, mi->size * WH_typesize(mi->type));
 		}
 	}
 
@@ -1612,11 +1691,11 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 	fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL]\n", dw->id);
 #endif
 
-	if (!WH_setupConnectionType((DestinationWorm *)dw, mi->type)) { //Refresh worm data
-		return WH_DymRoute_send(data, mi, dw);    //Try again if it is possible
+	if (!WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {  // Refresh worm data
+		return WH_DymRoute_send(data, mi, dw);                       // Try again if it is possible
 	}
 
-	//fprintf(stderr, "Sending %d bytes to %d\n", mi->size, cn->ip);
+	// fprintf(stderr, "Sending %d bytes to %d\n", mi->size, cn->ip);
 	return 1;
 }
 
@@ -1629,73 +1708,73 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 	uint16_t i = 0;
 
 	while (routeDescription[i] != '\0') {
-		switch (routeDescription[i]) { //default function is DUP
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-		case 'd':
-		case 'D':
-			// DUP Function
+		switch (routeDescription[i]) {  // default function is DUP
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+			case 'd':
+			case 'D':
+// DUP Function
 #ifdef _DYM_ROUTE_DEBUG_
-			fprintf(stderr, "ROUTEDEBUG: Calling DUP...\n");
+				fprintf(stderr, "ROUTEDEBUG: Calling DUP...\n");
 #endif
-			return WH_DymRoute_route_createFuncDUP(f, routeDescription + i, wms);
+				return WH_DymRoute_route_createFuncDUP(f, routeDescription + i, wms);
 
-		case 'r':
-		case 'R':
-			// Round Robin Function
+			case 'r':
+			case 'R':
+// Round Robin Function
 #ifdef _DYM_ROUTE_DEBUG_
-			fprintf(stderr, "ROUTEDEBUG: Calling RR...\n");
+				fprintf(stderr, "ROUTEDEBUG: Calling RR...\n");
 #endif
-			return WH_DymRoute_route_createFuncRR(f, routeDescription + i, wms);
+				return WH_DymRoute_route_createFuncRR(f, routeDescription + i, wms);
 
-		case 'c':
-		case 'C':
-			// Category Function
+			case 'c':
+			case 'C':
+// Category Function
 #ifdef _DYM_ROUTE_DEBUG_
-			fprintf(stderr, "ROUTEDEBUG: Calling CAT...\n");
+				fprintf(stderr, "ROUTEDEBUG: Calling CAT...\n");
 #endif
-			return WH_DymRoute_route_createFuncCat(f, routeDescription + i, wms);
+				return WH_DymRoute_route_createFuncCat(f, routeDescription + i, wms);
 
-		case 'h':
-		case 'H':
-			// Hash Function
+			case 'h':
+			case 'H':
+// Hash Function
 #ifdef _DYM_ROUTE_DEBUG_
-			fprintf(stderr, "ROUTEDEBUG: Calling HASH...\n");
+				fprintf(stderr, "ROUTEDEBUG: Calling HASH...\n");
 #endif
-			return WH_DymRoute_route_createFuncHash(f, routeDescription + i, wms);
+				return WH_DymRoute_route_createFuncHash(f, routeDescription + i, wms);
 
-		case 'i':
-		case 'I':
-			// Ignore Function
+			case 'i':
+			case 'I':
+// Ignore Function
 #ifdef _DYM_ROUTE_DEBUG_
-			fprintf(stderr, "ROUTEDEBUG: Calling IGNORE...\n");
+				fprintf(stderr, "ROUTEDEBUG: Calling IGNORE...\n");
 #endif
-			return WH_DymRoute_route_createFuncIgnore(f, routeDescription + i, wms);
+				return WH_DymRoute_route_createFuncIgnore(f, routeDescription + i, wms);
 
-		case ' ':
-		case '\n':
-		case '\t':
-		case '\r':
-		case '(':
-		case ')':
-		case '"':
-		case'\'':
-			i++;
-			break;
+			case ' ':
+			case '\n':
+			case '\t':
+			case '\r':
+			case '(':
+			case ')':
+			case '"':
+			case '\'':
+				i++;
+				break;
 
-		default:
+			default:
 #ifdef _DYM_ROUTE_DEBUG_
-			fprintf(stderr, "ROUTEDEBUG: Unexpected routing function.");
+				fprintf(stderr, "ROUTEDEBUG: Unexpected routing function.");
 #endif
-			return -1;
+				return -1;
 		}
 	}
 
@@ -1706,14 +1785,14 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
  * Adds a "c code" to duplicate messages.
  * Return 0 if OK, something else if error.
  * Used Constants:
-	//TODO
+    //TODO
  */
 uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	uint8_t ret = 0;
+	uint8_t ret        = 0;
 	int16_t parentesys = 0;
-	uint16_t i = 0;
-	uint16_t nextNode = 0;
+	uint16_t i         = 0;
+	uint16_t nextNode  = 0;
 
 	while (routeDescription[i] != '\0') {
 		if (routeDescription[i] == ')') {
@@ -1751,7 +1830,7 @@ uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescr
 				fprintf(f, "%s", _WH_DymRoute_CC_send);
 
 			} else {
-				return 77;    //some random error code
+				return 77;  // some random error code
 			}
 
 			i--;
@@ -1767,23 +1846,23 @@ uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescr
  * Adds a "c code" for round robin.
  * Return 0 if OK, something else if error.
  * Used Constants:
-	_WH_DymRoute_CC_RRswitch %rrid %rrid
-	_WH_DymRoute_CC_RRcase %idcase
-	_WH_DymRoute_CC_RRbreak
-	_WH_DymRoute_CC_RRend %rrid %rrid %ntotal
+    _WH_DymRoute_CC_RRswitch %rrid %rrid
+    _WH_DymRoute_CC_RRcase %idcase
+    _WH_DymRoute_CC_RRbreak
+    _WH_DymRoute_CC_RRend %rrid %rrid %ntotal
  */
 uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	uint8_t ret = 0;
+	uint8_t ret        = 0;
 	int16_t parentesys = 0;
-	uint16_t i = 0;
-	uint16_t nextNode = 0;
+	uint16_t i         = 0;
+	uint16_t nextNode  = 0;
 
 	static uint16_t rrCallId = 0;
-	uint16_t myrrCallId = rrCallId++;
-	uint16_t rrCaseId = 0;
+	uint16_t myrrCallId      = rrCallId++;
+	uint16_t rrCaseId        = 0;
 
-//_WH_DymRoute_CC_RRstatic
+	//_WH_DymRoute_CC_RRstatic
 
 	fprintf(f, _WH_DymRoute_CC_RRswitch, myrrCallId, myrrCallId);
 
@@ -1796,7 +1875,6 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 			}
 
 		} else if (routeDescription[i] == '(') {
-
 			if (parentesys == 0) {
 				fprintf(f, _WH_DymRoute_CC_RRcase, rrCaseId);
 
@@ -1821,9 +1899,8 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 			DestinationWorm *worm = WH_addWorm(wms, nextNode, 1);
 
 			if (worm) {
-
 				fprintf(f, _WH_DymRoute_CC_RRcase, rrCaseId);
-				//RR
+				// RR
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
 				fprintf(f, "%s", _WH_DymRoute_CC_send);
 
@@ -1835,7 +1912,7 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 				fprintf(f, "%s", _WH_DymRoute_CC_RRbreak);
 
 			} else {
-				return 77;    //some random error code
+				return 77;  // some random error code
 			}
 
 			i--;
@@ -1853,16 +1930,16 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
  * Adds a "c code" for round robin.
  * Return 0 if OK, something else if error.
  * Used Constants:
-		_WH_DymRoute_CC_Catswitch
-		_WH_DymRoute_CC_Catcase     %caseId
-		_WH_DymRoute_CC_Catbreak
-		_WH_DymRoute_CC_Catend
+        _WH_DymRoute_CC_Catswitch
+        _WH_DymRoute_CC_Catcase     %caseId
+        _WH_DymRoute_CC_Catbreak
+        _WH_DymRoute_CC_Catend
  */
 uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	uint8_t ret = 0;
+	uint8_t ret        = 0;
 	int16_t parentesys = 0;
-	uint16_t i = 0;
+	uint16_t i         = 0;
 
 	uint16_t myCat = 0;
 
@@ -1877,7 +1954,6 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
 			}
 
 		} else if (routeDescription[i] == '(') {
-
 			if (parentesys == 0) {
 				if (!sscanf((char *)routeDescription + i, "%*[^0-9]%hu%*[^0-9].%*[^0-9]", &myCat)) {
 					fprintf(stderr, "ERROR: La definición de categoria es incorrecta\n");
@@ -1912,14 +1988,14 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
  * Adds a "c code"  for hashing splitting.
  * Return 0 if OK, something else if error.
  * Used Constants:
-		TODO
+        TODO
  */
 uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	uint8_t ret = 0;
+	uint8_t ret        = 0;
 	int16_t parentesys = 0;
-	uint16_t i = 0;
-	uint16_t nextNode = 0;
+	uint16_t i         = 0;
+	uint16_t nextNode  = 0;
 
 	uint16_t myHash = 0;
 
@@ -1936,7 +2012,6 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 			}
 
 		} else if (routeDescription[i] == '(') {
-
 			if (parentesys == 0) {
 				fprintf(f, _WH_DymRoute_CC_Hashcase, myHash);
 
@@ -1962,9 +2037,8 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 			DestinationWorm *worm = WH_addWorm(wms, nextNode, 1);
 
 			if (worm) {
-
 				fprintf(f, _WH_DymRoute_CC_Hashcase, myHash);
-				//RR
+				// RR
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
 				fprintf(f, "%s", _WH_DymRoute_CC_send);
 
@@ -1975,7 +2049,7 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 				myHash++;
 
 			} else {
-				return 76;    //some random error code
+				return 76;  // some random error code
 			}
 
 			i--;
@@ -1992,13 +2066,13 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
  * Adds a "c code" for ignoring packets
  * Return 0 if OK, something else if error.
  * Used Constants:
- 		_WH_DymRoute_CC_Ignoreunused
+        _WH_DymRoute_CC_Ignoreunused
  */
 uint8_t WH_DymRoute_route_createFuncIgnore(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
 {
-	uint8_t ret = 0;
+	uint8_t ret        = 0;
 	int16_t parentesys = 0;
-	uint16_t i = 0;
+	uint16_t i         = 0;
 
 	UNUSED(wms);
 
@@ -2031,9 +2105,9 @@ uint8_t WH_DymRoute_route_createFuncIgnore(FILE *f, const uint8_t *const routeDe
  */
 uint32_t WH_DymRoute_route_countElems(const uint8_t *const routeDescription)
 {
-	uint32_t numElems = 0;
+	uint32_t numElems   = 0;
 	uint32_t parentesys = 1;
-	uint8_t *pointer = (uint8_t *) routeDescription;
+	uint8_t *pointer    = (uint8_t *)routeDescription;
 
 	if (pointer[0] == '(') {
 		pointer++;
@@ -2041,53 +2115,51 @@ uint32_t WH_DymRoute_route_countElems(const uint8_t *const routeDescription)
 
 	while (parentesys) {
 		switch (pointer[0]) {
-		case '(':
-			if (parentesys == 1) {
-				numElems++;
-			}
-
-			parentesys++;
-			break;
-
-		case ')':
-			parentesys--;
-			break;
-
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-
-			if (parentesys == 1) {
-				numElems++;
-
-				while (pointer[0] >= '0' && pointer[0] <= '9') {
-					pointer++;
+			case '(':
+				if (parentesys == 1) {
+					numElems++;
 				}
 
-				pointer --;
-			}
+				parentesys++;
+				break;
 
-			break;
+			case ')':
+				parentesys--;
+				break;
 
-		case '\0':
-			fprintf(stderr, "ERROR routing counting %d\n", numElems);
-			return numElems; //ERROR!
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
 
-		default:
-			break;
+				if (parentesys == 1) {
+					numElems++;
 
+					while (pointer[0] >= '0' && pointer[0] <= '9') {
+						pointer++;
+					}
+
+					pointer--;
+				}
+
+				break;
+
+			case '\0':
+				fprintf(stderr, "ERROR routing counting %d\n", numElems);
+				return numElems;  // ERROR!
+
+			default:
+				break;
 		}
 
 		pointer++;
 	}
-
 
 	return numElems;
 }
@@ -2100,12 +2172,12 @@ void WH_DymRoute_invalidate()
 	void *tmppointer;
 
 	if (WH_DymRoute_precompiled_route) {
-		tmppointer = WH_DymRoute_precompiled_route;
+		tmppointer                    = WH_DymRoute_precompiled_route;
 		WH_DymRoute_precompiled_route = NULL;
 	}
 
 	if (_WH_DymRoute_libHandle) {
-		tmppointer = _WH_DymRoute_libHandle;
+		tmppointer             = _WH_DymRoute_libHandle;
 		_WH_DymRoute_libHandle = NULL;
 
 		hptl_waitns(10 * 1000 * 1000L);
@@ -2127,10 +2199,9 @@ DestinationWorm *WH_findWorm(DestinationWorms *wms, const uint16_t wormId)
 	return NULL;
 }
 
-
 /* Name WH_findWormIndex
-	* Return the worm index in DestinationWorms
-	*/
+    * Return the worm index in DestinationWorms
+    */
 size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId)
 {
 	for (size_t i = 0; i < wms->numberOfWorms; i++) {
@@ -2149,19 +2220,19 @@ size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId)
 DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const uint8_t init)
 {
 	DestinationWorm *worm = NULL;
-	worm = WH_findWorm(wms, wormId);
+	worm                  = WH_findWorm(wms, wormId);
 
 	if (worm) {
 		return worm;
 	}
 
-	if (wormId == WH_myId) { //It is a check to remove posible loopbacks; //TODO allow loopbacks
+	if (wormId == WH_myId) {  // It is a check to remove posible loopbacks; //TODO allow loopbacks
 		WH_abort("Loopback not allowed");
 	}
 
 	wms->worms = realloc(wms->worms, sizeof(DestinationWorm) * (wms->numberOfWorms + 1));
 
-	worm = calloc(sizeof(DestinationWorm), 1); //TODO REVISAR
+	worm     = calloc(sizeof(DestinationWorm), 1);  // TODO REVISAR
 	worm->id = wormId;
 
 	if (init) {
@@ -2184,10 +2255,10 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
 		}
 	}
 
-	//TODO: Obtener información de los tipos disponibles.
-	worm->numberOfTypes = 0;
+	// TODO: Obtener información de los tipos disponibles.
+	worm->numberOfTypes  = 0;
 	worm->supportedTypes = NULL;
-	worm->conns = NULL;
+	worm->conns          = NULL;
 
 	if (init) {
 		WH_connectWorm(worm);
@@ -2217,7 +2288,7 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 	}
 
 	DestinationWorm *worm = WH_findWorm(wms, wormId);
-	ssize_t index = WH_findWormIndex(wms, wormId);
+	ssize_t index         = WH_findWormIndex(wms, wormId);
 
 	wms->numberOfWorms--;
 
@@ -2232,26 +2303,24 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 #ifdef _WORMLIB_DEBUG_
 		fprintf(stderr, "[WH]: memmoving...(index=%ld, nworms=%lu)\n", index, wms->numberOfWorms);
 #endif
-		memmove(wms->worms + index, wms->worms + index + 1,
-				(wms->numberOfWorms - index)*sizeof(DestinationWorm *));
+		memmove(wms->worms + index, wms->worms + index + 1, (wms->numberOfWorms - index) * sizeof(DestinationWorm *));
 	}
 
 	for (size_t i = 0; i < worm->numberOfTypes; i++) {
 		if (worm->conns[i]) {
 			destroy_asyncSocket(&(worm->conns[i]->socket));
-//fprintf(stderr, "[WH] free conns[%lu]\n",i);
+			// fprintf(stderr, "[WH] free conns[%lu]\n",i);
 			free(worm->conns[i]);
 			worm->conns[i] = NULL;
 		}
 	}
 
-//fprintf(stderr, "[WH] free conns\n");
+	// fprintf(stderr, "[WH] free conns\n");
 	free(worm->conns);
-//fprintf(stderr, "[WH] free supportedTypes\n");
+	// fprintf(stderr, "[WH] free supportedTypes\n");
 	free(worm->supportedTypes);
-//fprintf(stderr, "[WH] free worm\n");
-	//free(worm); //TODO this causes free corruption... why!?
+	// fprintf(stderr, "[WH] free worm\n");
+	// free(worm); //TODO this causes free corruption... why!?
 }
-
 
 /************************************************************/

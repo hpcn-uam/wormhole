@@ -9,17 +9,16 @@
 #include <cstring>
 #include <iostream>
 #include <map>
-#include <vector>
-#include <set>
 #include <memory>
-#include <thread>
+#include <set>
 #include <stdexcept>
+#include <thread>
+#include <vector>
 
 using namespace std;
 
 namespace einstein
 {
-
 class Einstein
 {
 	friend class Connection;
@@ -28,7 +27,7 @@ class Einstein
 	Connection ec;
 	thread thr;
 
- public:
+   public:
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort);
 	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms);
 	~Einstein();
@@ -46,7 +45,7 @@ class Einstein
 	void mutex_lock();
 	void mutex_unlock();
 
- private:
+   private:
 	void readConfig(const string configFileName);
 };
 }

@@ -1,28 +1,28 @@
+#include <common.h>
 #include <worm.h>
 #include <worm_private.h>
-#include <common.h>
 
-#include <assert.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
-#include <string.h>
+#include <assert.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
 
+#include <fcntl.h>
 #include <malloc.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 /* Global header */
 typedef struct pcap_hdr_s {
-	uint32_t magic_number;   /* magic number */
-	uint16_t version_major;  /* major version number */
-	uint16_t version_minor;  /* minor version number */
-	uint32_t thiszone;       /* GMT to local correction */
-	uint32_t sigfigs;        /* accuracy of timestamps */
-	uint32_t snaplen;        /* max length of captured packets, in octets */
-	uint32_t network;        /* data link type */
+	uint32_t magic_number;  /* magic number */
+	uint16_t version_major; /* major version number */
+	uint16_t version_minor; /* minor version number */
+	uint32_t thiszone;      /* GMT to local correction */
+	uint32_t sigfigs;       /* accuracy of timestamps */
+	uint32_t snaplen;       /* max length of captured packets, in octets */
+	uint32_t network;       /* data link type */
 } pcap_hdr_tJZ;
 
 /* Packet header */
@@ -44,14 +44,14 @@ int main(int argc, char **argv)
 
 	int c;
 	char *fname = NULL;
-	int loop = 1;
+	int loop    = 1;
 
-	uint8_t *file_cur = NULL;
-	uint8_t *file_end = NULL;
+	uint8_t *file_cur   = NULL;
+	uint8_t *file_end   = NULL;
 	uint8_t *file_start = NULL;
 
 	ConnectionDataType type;
-	type.type = ARRAY;
+	type.type          = ARRAY;
 	type.ext.arrayType = UINT8;
 
 	MessageInfo mi;
@@ -59,26 +59,26 @@ int main(int argc, char **argv)
 
 	while ((c = getopt(argc, argv, "f:l:h")) != -1) {
 		switch (c) {
-		case 'f': //type
-			fname = strdup(optarg);
-			break;
+			case 'f':  // type
+				fname = strdup(optarg);
+				break;
 
-		case 'l': //size
-			loop = atoi(optarg);
+			case 'l':  // size
+				loop = atoi(optarg);
 
-			if (loop < 0) {
-				return WH_abort("Error! loop is too small\n");
-			}
+				if (loop < 0) {
+					return WH_abort("Error! loop is too small\n");
+				}
 
-			break;
+				break;
 
-		case 'h': {
+			case 'h': {
 				char tmpmsg[4096];
 				sprintf(tmpmsg, "Use: ./%s -f <file name> [-l <times to loop the file)>]\n", argv[0]);
 				return WH_abort(tmpmsg);
 			}
 
-		case '?': {
+			case '?': {
 				char tmpmsg[4096];
 
 				if (optopt == 's' || optopt == 't') {
@@ -91,8 +91,8 @@ int main(int argc, char **argv)
 				return WH_abort(tmpmsg);
 			}
 
-		default:
-			return WH_abort(NULL);
+			default:
+				return WH_abort(NULL);
 		}
 	}
 
@@ -115,8 +115,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Preloading file...");
 	fflush(stderr);
 
-	file_start = mmap(NULL, sb.st_size, PROT_READ,
-					  MAP_PRIVATE | MAP_POPULATE, fd, 0);
+	file_start = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
 
 	if (file_start == MAP_FAILED) {
 		perror("mmap failed");
@@ -143,14 +142,14 @@ int main(int argc, char **argv)
 			WH_prefetch0(file_cur);
 
 			header = (pcaprec_hdr_tJZ *)file_cur;
-			data = file_cur + sizeof(pcaprec_hdr_tJZ);
+			data   = file_cur + sizeof(pcaprec_hdr_tJZ);
 
-			mi.hash = (*(uint32_t *)&data[14 + 12]) ^ (*(uint32_t *)&data[14 + 16]); //IP flow
+			mi.hash = (*(uint32_t *)&data[14 + 12]) ^ (*(uint32_t *)&data[14 + 16]);  // IP flow
 			mi.size = header->incl_len;
 
 			file_cur += header->incl_len + sizeof(pcaprec_hdr_tJZ);
 
-			if (file_cur < file_end) { //file ended
+			if (file_cur < file_end) {  // file ended
 				WH_prefetch1(file_cur);
 
 				if (file_cur < file_end - 128) {
@@ -163,15 +162,16 @@ int main(int argc, char **argv)
 				flag = 0;
 			}
 
-
-			if (file_cur >= file_end) { //file ended
+			if (file_cur >= file_end) {  // file ended
 				break;
 			}
 		}
 
 		gettimeofday(&end, 0);
-		fprintf(stderr, "Pcap sent @ %lf Gbps\n",
-				((((double)sb.st_size - sizeof(pcap_hdr_tJZ))      * 8) / 1000) / (((double)end.tv_sec     - start.tv_sec)     * 1000000 + (end.tv_usec     - start.tv_usec)));
+		fprintf(stderr,
+		        "Pcap sent @ %lf Gbps\n",
+		        ((((double)sb.st_size - sizeof(pcap_hdr_tJZ)) * 8) / 1000) /
+		            (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)));
 	}
 
 	return WH_halt();

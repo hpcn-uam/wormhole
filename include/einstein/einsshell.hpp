@@ -15,10 +15,10 @@
 #include <cstring>
 #include <iostream>
 #include <map>
-#include <vector>
-#include <set>
 #include <memory>
+#include <set>
 #include <stdexcept>
+#include <vector>
 
 using namespace std;
 
@@ -26,8 +26,8 @@ namespace einstein
 {
 class EinsShell
 {
- public:
-	//variables
+   public:
+	// variables
 	shared_ptr<Einstein> eins;
 	static set<ShellCommand> commands;
 
@@ -36,7 +36,7 @@ class EinsShell
 	int historyLength;
 	bool continueShell;
 
-	//methods
+	// methods
 	EinsShell(shared_ptr<Einstein> eins);
 	~EinsShell();
 
@@ -51,7 +51,7 @@ class EinsShell
 	 */
 	void waitForEinstein();
 
- private:
+   private:
 	int executeCmd(string cmd);
 };
 }

@@ -3,32 +3,40 @@
 using namespace einstein;
 
 Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string connectionDescription, string host, string programName)
-	: Worm(id, listenPort, core, connectionDescription, host, programName, vector<string>()) {}
+    : Worm(id, listenPort, core, connectionDescription, host, programName, vector<string>())
+{
+}
 
-Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string connectionDescription, string host, string programName, vector<string> runParams)
+Worm::Worm(uint16_t id,
+           uint16_t listenPort,
+           int16_t core,
+           string connectionDescription,
+           string host,
+           string programName,
+           vector<string> runParams)
 {
 	connectionDescription = Worm::expandCDescription(connectionDescription);
 	memset(&this->ws, 0, sizeof(this->ws));
 
-	this->ws.id = id;
-	this->ws.listenPort = listenPort;
+	this->ws.id                          = id;
+	this->ws.listenPort                  = listenPort;
 	this->ws.connectionDescriptionLength = connectionDescription.size();
-	this->ws.connectionDescription = (uint8_t *) strdup(connectionDescription.c_str());
-	this->ws.core = core;
+	this->ws.connectionDescription       = (uint8_t *)strdup(connectionDescription.c_str());
+	this->ws.core                        = core;
 
-	//flags
-	this->ws.isSSLNode = 0; //false
-	this->ws.isIPv6 = 0;
+	// flags
+	this->ws.isSSLNode   = 0;  // false
+	this->ws.isIPv6      = 0;
 	this->ws.einsteinSSL = 0;
 
-	//version
+	// version
 	this->ws.einsteinVersion = EINSTEINVERSION;
-	this->ws.wormVersion = WORMVERSION;
+	this->ws.wormVersion     = WORMVERSION;
 
-	this->host = host;
+	this->host        = host;
 	this->programName = programName;
-	this->halting = false;
-	this->deployed = false;
+	this->halting     = false;
+	this->deployed    = false;
 
 	this->runParams = runParams;
 
@@ -54,12 +62,12 @@ Worm::~Worm()
 
 void Worm::setIP(string iphostname)
 {
-	//check if ipaddr or name
+	// check if ipaddr or name
 	int result4 = 0, result6 = 0;
 
 	result4 = inet_pton(AF_INET, iphostname.c_str(), &(this->ws.IP));
 
-	if (result4 == -1 || result4 == 0) { //try IPv6
+	if (result4 == -1 || result4 == 0) {  // try IPv6
 		result6 = inet_pton(AF_INET6, iphostname.c_str(), &(this->ws.IP));
 	}
 
@@ -70,7 +78,7 @@ void Worm::setIP(string iphostname)
 
 		error = getaddrinfo(iphostname.c_str(), NULL, NULL, &result);
 
-		if (error) { //error
+		if (error) {  // error
 			throw std::runtime_error("Host '" + string(host) + "' does not exists");
 		}
 
@@ -104,19 +112,15 @@ void Worm::setIP(string iphostname)
 
 ostream &einstein::operator<<(ostream &os, Worm const &obj)
 {
-	os
-			<<  "ID: " << obj.ws.id
-			<< " ADDR: " <<  obj.host << ":" << obj.ws.listenPort
-			<< (obj.ws.isSSLNode ? " [SSL]" : "")
-			<< " | " << obj.programName << " " << endl
-			<< "\t Route: " << obj.ws.connectionDescription
-			;
+	os << "ID: " << obj.ws.id << " ADDR: " << obj.host << ":" << obj.ws.listenPort << (obj.ws.isSSLNode ? " [SSL]" : "")
+	   << " | " << obj.programName << " " << endl
+	   << "\t Route: " << obj.ws.connectionDescription;
 
 	if (obj.runParams.size() > 0) {
 		os << endl;
 		os << "\t Params:";
 
-	for (auto param : obj.runParams) {
+		for (auto param : obj.runParams) {
 			os << " " << param;
 		}
 	}
@@ -128,14 +132,14 @@ string Worm::expandCDescription(string cd)
 {
 	string ret = cd;
 
-	//clean the string
+	// clean the string
 	char removableChars[] = "\t\r\n\"'";
 
 	for (unsigned int i = 0; i < strlen(removableChars); i++) {
 		ret.erase(remove(ret.begin(), ret.end(), removableChars[i]), ret.end());
 	}
 
-	if (ret.length() == 0) { //TODO do more checks
+	if (ret.length() == 0) {  // TODO do more checks
 		ret = "IGNORE";
 	}
 
@@ -153,7 +157,7 @@ int64_t Worm::ping()
 	ctrlMsgType msg = PING;
 
 	try {
-		struct timeval ts = {.tv_sec = 2, .tv_usec = 0}; //timeout at 2 seconds
+		struct timeval ts = {.tv_sec = 2, .tv_usec = 0};  // timeout at 2 seconds
 		this->socket->setSocketTimeout(&ts);
 
 	} catch (exception e) {
@@ -179,7 +183,6 @@ int64_t Worm::ping()
 	return hptl_ntimestamp(end - begin) / 1000;
 }
 
-
 uint64_t Worm::chroute(string newRoute)
 {
 	if (this->socket == nullptr) {
@@ -195,7 +198,7 @@ uint64_t Worm::chroute(string newRoute)
 	this->socket->send(newRoute.c_str(), length);
 
 	this->ws.connectionDescriptionLength = length;
-	this->ws.connectionDescription = (uint8_t *)realloc(this->ws.connectionDescription, length);
+	this->ws.connectionDescription       = (uint8_t *)realloc(this->ws.connectionDescription, length);
 	memcpy(this->ws.connectionDescription, newRoute.c_str(), length);
 
 	return 0;

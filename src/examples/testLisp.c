@@ -1,12 +1,12 @@
+#include <common.h>
 #include <worm.h>
 #include <worm_private.h>
-#include <common.h>
 
-#include <assert.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
-#include <string.h>
+#include <assert.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
 
 #include <malloc.h>
 
@@ -31,24 +31,24 @@ int main(int argc, char **argv)
 
 	MessageInfo mi;
 	ConnectionDataType type;
-	type.type = ARRAY;
+	type.type          = ARRAY;
 	type.ext.arrayType = UINT8;
 
-	mi.size = strlen(TESTDATA) + 1;
-	mi.type = &type;
+	mi.size     = strlen(TESTDATA) + 1;
+	mi.type     = &type;
 	mi.category = 1;
 
 	st = WH_send(TESTDATA, &mi);
 	assert(st == 0);
 	fprintf(stderr, "Mensajes enrutados!\n");
 
-	//st = WH_flushIO();
-	//assert(st == 0);
+	// st = WH_flushIO();
+	// assert(st == 0);
 
-	//sleep(5);
-	//TODO que sucede con un doble flush??
-	//st = WH_flushIO();
-	//assert(st == 0);
+	// sleep(5);
+	// TODO que sucede con un doble flush??
+	// st = WH_flushIO();
+	// assert(st == 0);
 
 	char *data = (char *)malloc(1000);
 
@@ -62,5 +62,4 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Mensajes recibidos!\n");
 
 	return WH_halt();
-
 }

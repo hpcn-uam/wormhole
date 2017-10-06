@@ -3,12 +3,13 @@
 using namespace einstein;
 
 Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort)
-	: Einstein(configFileName, listenIp, listenPort, true) {}
+    : Einstein(configFileName, listenIp, listenPort, true)
+{
+}
 
 Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
-	: ec(listenIp, listenPort, autoDeployWorms)
+    : ec(listenIp, listenPort, autoDeployWorms)
 {
-
 	this->readConfig(configFileName);
 }
 
@@ -29,17 +30,16 @@ void Einstein::openHoles()
 
 void Einstein::openThreadedHoles()
 {
-	this->thr = thread([this] {this->openHoles();}); //Lambda
+	this->thr = thread([this] { this->openHoles(); });  // Lambda
 }
 
 void Einstein::readConfig(const string configFileName)
 {
-
 	// TODO: Leer realmente el fichero
-	uint16_t id = 0;
+	uint16_t id             = 0;
 	uint16_t baseListenPort = 10000;
-	int64_t core = 0;
-	//string connectionDescription = "(LISP connection description)";
+	int64_t core            = 0;
+	// string connectionDescription = "(LISP connection description)";
 
 	FILE *configFile = fopen(configFileName.c_str(), "r");
 
@@ -47,11 +47,11 @@ void Einstein::readConfig(const string configFileName)
 		throw std::runtime_error("Config file doesn't exist");
 	}
 
-	char id_string[128]; //TODO FIX POSIBLE OVERFLOW
-	char configLine[4096]; //TODO FIX POSIBLE OVERFLOW
-	char programName[512]; //TODO FIX POSIBLE OVERFLOW
-	char host[512]; //TODO FIX POSIBLE OVERFLOW
-	char connectionDescription[4096]; //TODO FIX POSIBLE OVERFLOW
+	char id_string[128];               // TODO FIX POSIBLE OVERFLOW
+	char configLine[4096];             // TODO FIX POSIBLE OVERFLOW
+	char programName[512];             // TODO FIX POSIBLE OVERFLOW
+	char host[512];                    // TODO FIX POSIBLE OVERFLOW
+	char connectionDescription[4096];  // TODO FIX POSIBLE OVERFLOW
 
 	while (!feof(configFile)) {
 		bool createAnotherWorm;
@@ -89,7 +89,7 @@ void Einstein::readConfig(const string configFileName)
 					throw std::runtime_error("Non valid id range: \"" + string(id_string) + "\"");
 				}
 
-				id = firstId;
+				id                = firstId;
 				createAnotherWorm = true;
 
 			} else if (createAnotherWorm) {
@@ -125,11 +125,12 @@ void Einstein::readConfig(const string configFileName)
 
 			vector<string> runParams;
 
-			unique_ptr<Worm> wc(new Worm(id, baseListenPort + id, core, conndesc, string(host), string(programName), runParams));
+			unique_ptr<Worm> wc(
+			    new Worm(id, baseListenPort + id, core, conndesc, string(host), string(programName), runParams));
 
 			/*Check for advanced options*/
 			string sconfline = string(configLine);
-			sconfline = sconfline.substr(0, sconfline.find('#'));
+			sconfline        = sconfline.substr(0, sconfline.find('#'));
 
 			/*SSL*/
 			if (sconfline.find("SSL") != string::npos) {
@@ -139,9 +140,9 @@ void Einstein::readConfig(const string configFileName)
 			/*PARAMS*/
 
 			while (sconfline.find("PARAM=") != string::npos) {
-				auto pos = sconfline.find("PARAM=");
+				auto pos  = sconfline.find("PARAM=");
 				sconfline = sconfline.substr(pos + 6);
-				pos = sconfline.find_first_of(" \n\r\t");
+				pos       = sconfline.find_first_of(" \n\r\t");
 
 				if (pos != string::npos) {
 					wc->runParams.push_back(sconfline.substr(0, pos));
@@ -154,7 +155,7 @@ void Einstein::readConfig(const string configFileName)
 			if (wc->runParams.size() > 0) {
 				cerr << "\tParams:";
 
-			for (auto param: wc->runParams) {
+				for (auto param : wc->runParams) {
 					cerr << " " << param;
 				}
 

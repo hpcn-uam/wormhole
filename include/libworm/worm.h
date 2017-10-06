@@ -12,176 +12,213 @@ extern "C" {
 //#define _DYM_ROUTE_DEBUG_
 //#define _WORMLIB_STATISTICS_
 
-	enum DataType {
-		CUSTOM = -3, COMPOUND, STRING, ARRAY = 0, INT8 = 1, CHAR = 1, UINT8 = 2, UCHAR = 2, INT16 = 3, JCHAR = 3, UINT16 = 4, INT32, UINT32, INT64, UINT64
-	};
+enum DataType {
+	CUSTOM = -3,
+	COMPOUND,
+	STRING,
+	ARRAY  = 0,
+	INT8   = 1,
+	CHAR   = 1,
+	UINT8  = 2,
+	UCHAR  = 2,
+	INT16  = 3,
+	JCHAR  = 3,
+	UINT16 = 4,
+	INT32,
+	UINT32,
+	INT64,
+	UINT64
+};
 
-	typedef struct {
-		enum DataType type;
-		union {
-			enum DataType arrayType;
-			/*TODO:		struct {
-						uint32_t size;
-						struct ConnectionDataType *elementTypes;
-					} compoundType;*/
-		} ext ; //extended
-	} ConnectionDataType;
+typedef struct {
+	enum DataType type;
+	union {
+		enum DataType arrayType;
+		/*TODO:		struct {
+		            uint32_t size;
+		            struct ConnectionDataType *elementTypes;
+		        } compoundType;*/
+	} ext;  // extended
+} ConnectionDataType;
 
-	typedef struct {
-		uint64_t size;
-		uint64_t hash;
-		ConnectionDataType const *type;
-		uint_fast16_t category;
-	} MessageInfo;
+typedef struct {
+	uint64_t size;
+	uint64_t hash;
+	ConnectionDataType const *type;
+	uint_fast16_t category;
+} MessageInfo;
 
-	typedef struct {
-		size_t numInputTypes;
-		ConnectionDataType *inputTypes;
-	} WormConfig;
+typedef struct {
+	size_t numInputTypes;
+	ConnectionDataType *inputTypes;
+} WormConfig;
 
-	typedef struct {
-		MessageInfo *info;
-		void *data;
-	} BulkMsg;
+typedef struct {
+	MessageInfo *info;
+	void *data;
+} BulkMsg;
 
-	typedef struct {
-		union {
-			BulkMsg *msgs;
-			void *rawdata;
-		} list;
-		size_t len;
-		int_fast8_t cpyalign;
-	} BulkList;
+typedef struct {
+	union {
+		BulkMsg *msgs;
+		void *rawdata;
+	} list;
+	size_t len;
+	int_fast8_t cpyalign;
+} BulkList;
 
 #ifdef _WORMLIB_STATISTICS_
-	typedef struct {
-		uint64_t totalIO;
-		uint64_t lastIO;
-		uint64_t lastCheck; //hptl_t
-	} ConnectionStatistics;
+typedef struct {
+	uint64_t totalIO;
+	uint64_t lastIO;
+	uint64_t lastCheck;  // hptl_t
+} ConnectionStatistics;
 #endif
 
-	/** WH_setup_types
-	 * Setups the available types of this Worm.
-	 * 	If this function is never called, only UINT8-Array would be supported.
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types);
+/** WH_setup_types
+ * Setups the available types of this Worm.
+ * 	If this function is never called, only UINT8-Array would be supported.
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types);
 
-	/** WH_init
-	 * Starts the WormHole Library
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_init(void);
+/** WH_init
+ * Starts the WormHole Library
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_init(void);
 
-	/** WH_halt
-	 * Stops and free the WormHole Library
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_halt(void);
+/** WH_halt
+ * Stops and free the WormHole Library
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_halt(void);
 
-	/** WH_printmsg
-	 * Sends a message to Einstein and print it.
-	 * The msg can be NULL if length is 0
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_printmsg(const char *restrict msg, const uint32_t length);
+/** WH_printmsg
+ * Sends a message to Einstein and print it.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_printmsg(const char *restrict msg);
 
-	/** WH_printf
-	 * Sends a message to Einstein and print it.
-	 * The msg can be NULL
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_printf(const char *restrict format, ...);
+/** WH_printnmsg
+ * Sends a message to Einstein and print it.
+ * The msg can be NULL if length is 0
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_printnmsg(const char *restrict msg, const uint32_t length);
 
-	/** WH_abort
-	 * Sends a message to Einstein, print it and halt all worms.
-	 * The msg can be NULL
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_abort(const char *restrict  msg);
+/** WH_printf
+ * Sends a message to Einstein and print it.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_printf(const char *restrict format, ...);
 
-	/** WH_abortn
-	 * Sends a message to Einstein, print it and halt all worms.
-	 * The msg can be NULL if length is 0
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_abortn(const char *restrict  msg, const uint32_t length);
+/** WH_abort
+ * Sends a message to Einstein, print it and halt all worms.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_abort(const char *restrict msg);
 
-	/** WH_abortf
-	 * Sends a message to Einstein, print it and halt all worms.
-	 * The msg can be NULL
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_abortf(const char *restrict format, ...);
+/** WH_abortn
+ * Sends a message to Einstein, print it and halt all worms.
+ * The msg can be NULL if length is 0
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_abortn(const char *restrict msg, const uint32_t length);
 
+/** WH_abortf
+ * Sends a message to Einstein, print it and halt all worms.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_abortf(const char *restrict format, ...);
 
-	/** WH_recv
-	 * TODO
-	 * Params:
-	 * @return the number of bytes readed, 0 if ERROR or none.
-	 */
-	uint32_t WH_recv(void *data, MessageInfo *mi);
+/** WH_recv
+ * Receives data from some one of the sources.
+ * If data is an array and mi->size is not enougth for writing incomming data,
+ * the function would return a negative number of the needed bytes in order to
+ * save the last incomming message. Function WH_recv_complete MUST be called or data corruption may happen
+ * Params:
+ * @return the number of bytes readed, 0 if ERROR or none.
+ */
+uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi);
 
-	/** WH_send
-	 * TODO
-	 * Params:
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_send(const void *const data, const MessageInfo *const mi);
+/** WH_recv_complete
+ * Complete a previous data transfer
+ * @return the number of bytes readed, 0 if ERROR or none.
+ */
+uint32_t WH_recv_complete(void *restrict data, MessageInfo *restrict mi);
 
-	/** WH_flushIO
-	 * Flushes all the IO queues.
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_flushIO(void);
+/** WH_send
+ * TODO
+ * Params:
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_send(const void *restrict const data, const MessageInfo *restrict const mi);
 
-	/** WH_connectionDataTypecmp
-	 * Compares 2 datatypes
-	 * @return 0 if are equal, something else if not.
-	 */
-	uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const ConnectionDataType *const b);
+/** WH_flushIO
+ * Flushes all the IO queues.
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_flushIO(void);
 
-	/**************** Info Utils ****************/
+/** WH_connectionDataTypecmp
+ * Compares 2 datatypes
+ * @return 0 if are equal, something else if not.
+ */
+uint8_t WH_connectionDataTypecmp(const ConnectionDataType *const a, const ConnectionDataType *const b);
 
-	/** WH_get_id
-	 * @return the WORM-ID.
-	 */
-	uint16_t WH_get_id(void);
+/**************** Info Utils ****************/
 
-	/**************** Bulk Utils ****************/
+/** WH_get_id
+ * @return the WORM-ID.
+ */
+uint16_t WH_get_id(void);
 
-	/** WH_recv_blk //TODO : not implemented
-	 * Receives multiples messages.
-	 * @return the number of bytes readed, 0 if ERROR or none.
-	 */
-	//uint32_t WH_recv_blk(BulkList *bl);
+/**************** Bulk Utils ****************/
 
-	/** WH_send_blk
-	 * Sends multiples messages.
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_send_blk(const BulkList *const bl);
+/** WH_recv_blk //TODO : not implemented
+ * Receives multiples messages.
+ * @return the number of bytes readed, 0 if ERROR or none.
+ */
+// uint32_t WH_recv_blk(BulkList *bl);
 
-	/** WH_BL_create
-	 * @param cpyalign if set to other than 0, then each data added to the list would be copied and memory aligned
-	 * @return a new BulkList. Null if error.
-	 */
-	BulkList *WH_BL_create(const int_fast8_t cpyalign);
+/** WH_send_blk
+ * Sends multiples messages.
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_send_blk(const BulkList *const bl);
 
-	/** WH_BL_add
-	 * Adds a message info and msg to the list.
-	 * @return 0 if OK, something else if error.
-	 */
-	uint8_t WH_BL_add(BulkList *bl, const void *const msg, const MessageInfo *const mi);
+/** WH_BL_create
+ * @param cpyalign if set to other than 0, then each data added to the list would be copied and memory aligned
+ * @return a new BulkList. Null if error.
+ */
+BulkList *WH_BL_create(const int_fast8_t cpyalign);
 
-	/** WH_BL_free
-	 * Frees the list
-	 */
-	void WH_BL_free(BulkList *bl);
+/** WH_BL_add
+ * Adds a message info and msg to the list.
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_BL_add(BulkList *bl, const void *const msg, const MessageInfo *const mi);
 
+/** WH_BL_free
+ * Frees the list
+ */
+void WH_BL_free(BulkList *bl);
+
+/**************** Other Utils ****************/
+
+/** WH_sprintf
+ * Returns a malloced-string using classic printf format. Must be freeded
+ * @return a malloced-string.
+ */
+char *WH_sprintf(const char *restrict format, ...);
 
 #ifdef __cplusplus
 }
 #endif
+
 #endif

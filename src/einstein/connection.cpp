@@ -4,16 +4,17 @@ using namespace einstein;
 
 bool Connection::keepRunning = true;
 
-Connection::Connection(string listenIp, uint16_t listenPort)
-	: Connection(listenIp, listenPort, true) {}
+Connection::Connection(string listenIp, uint16_t listenPort) : Connection(listenIp, listenPort, true)
+{
+}
 
 Connection::Connection(const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
 {
 	// Start socket to receive connections from worms
-	this->listenIpStr = listenIp;
-	this->listenIp = inet_addr(listenIp.c_str());
-	this->listenPort = listenPort;
-	this->listeningSocket = unique_ptr<SSocket> (new SSocket());
+	this->listenIpStr     = listenIp;
+	this->listenIp        = inet_addr(listenIp.c_str());
+	this->listenPort      = listenPort;
+	this->listeningSocket = unique_ptr<SSocket>(new SSocket());
 
 	if (this->listeningSocket == nullptr) {
 		throw std::runtime_error("Error listening to socket");
@@ -21,13 +22,13 @@ Connection::Connection(const string listenIp, const uint16_t listenPort, bool au
 
 	this->listeningSocket->listen(listenPort);
 
-	this->wormSockets = 0;
-	this->fdinfo = 0;
-	this->numWormSockets = 0;
+	this->wormSockets       = 0;
+	this->fdinfo            = 0;
+	this->numWormSockets    = 0;
 	this->previousPollIndex = 0;
-	this->autoDeployWorms = autoDeployWorms;
+	this->autoDeployWorms   = autoDeployWorms;
 
-	signal((int) SIGINT, Connection::signal_callback_handler);
+	signal((int)SIGINT, Connection::signal_callback_handler);
 }
 
 void Connection::signal_callback_handler(int signum)
@@ -48,7 +49,7 @@ Connection::~Connection()
 	if (this->wormSockets != 0) {
 		for (size_t i = 0; i < this->connections.size(); i++) {
 			if ((this->wormSockets)[i] > 0) {
-				close((this->wormSockets) [i]);
+				close((this->wormSockets)[i]);
 			}
 		}
 
@@ -67,16 +68,15 @@ void Connection::createWorm(shared_ptr<Worm> wc)
 
 	this->connections.insert(make_pair(wc->ws.id, wc));
 	this->numWormSockets = this->connections.size();
-	void *ret = realloc(static_cast<void *>(wormSockets), this->numWormSockets * sizeof(int));
+	void *ret            = realloc(static_cast<void *>(wormSockets), this->numWormSockets * sizeof(int));
 
 	if (ret == 0) {
 		mutex_unlock();
 		throw std::runtime_error("Error reallocating socket array");
 	}
 
-	this->wormSockets = static_cast<int *>(ret);
+	this->wormSockets                           = static_cast<int *>(ret);
 	this->wormSockets[this->numWormSockets - 1] = 0;
-
 
 	ret = realloc(static_cast<void *>(fdinfo), this->connections.size() * sizeof(struct pollfd));
 
@@ -90,7 +90,6 @@ void Connection::createWorm(shared_ptr<Worm> wc)
 
 	mutex_unlock();
 }
-
 
 void Connection::deleteWorm(const uint16_t id)
 {
@@ -129,7 +128,6 @@ void Connection::run()
 	cerr << "Completed deployment of all worms" << endl;
 
 	for (;;) {
-
 		mutex_lock();
 		pollWorms();
 		mutex_unlock();
@@ -141,19 +139,19 @@ void Connection::run()
 		usleep(10);
 	}
 
-	//throw std::runtime_error("Forcing to delete Einstein"); //TODO: Is necesary?
+	// throw std::runtime_error("Forcing to delete Einstein"); //TODO: Is necesary?
 }
 
 int Connection::setupWorm()
 {
 	struct timeval ts;
-	ts.tv_sec  =   0; //TODO parametrizar esta variable
-	ts.tv_usec =   100;
+	ts.tv_sec  = 0;  // TODO parametrizar esta variable
+	ts.tv_usec = 100;
 
 	unique_ptr<SSocket> currentWormSocket = unique_ptr<SSocket>(this->listeningSocket->accept(&ts));
 
 	if (currentWormSocket == nullptr) {
-		//throw std::runtime_error("Error accepting connection");
+		// throw std::runtime_error("Error accepting connection");
 		return 1;
 	}
 
@@ -171,10 +169,10 @@ int Connection::setupWorm()
 		return 1;
 	}
 
-	uint16_t wormId = ntohs(* ((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))));
+	uint16_t wormId = ntohs(*((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))));
 
 	// Send configuration message
-	const void *wormSetup = static_cast<const void *>(& (this->connections.at(wormId)->ws));
+	const void *wormSetup = static_cast<const void *>(&(this->connections.at(wormId)->ws));
 
 	*msgType = SETUP;
 
@@ -206,11 +204,11 @@ int Connection::setupWorm()
 
 void Connection::connectWorm(const uint16_t id, unique_ptr<SSocket> socket)
 {
-	int fd = socket->getFd();
+	int fd                           = socket->getFd();
 	this->connections.at(id)->socket = move(socket);
 
 	// Add socket to the list used for polling
-	int socketIndex = distance(this->connections.begin() , this->connections.find(id));
+	int socketIndex          = distance(this->connections.begin(), this->connections.find(id));
 	wormSockets[socketIndex] = fd;
 
 	// TODO: Insert socket descriptor in property wormSockets
@@ -218,9 +216,10 @@ void Connection::connectWorm(const uint16_t id, unique_ptr<SSocket> socket)
 
 void Connection::deployWorm(Worm &wc)
 {
-	//Check if alredy deployed
-	auto v = deployedWorms.find(wc.host);
-	bool copyData = true;;
+	// Check if alredy deployed
+	auto v        = deployedWorms.find(wc.host);
+	bool copyData = true;
+	;
 
 	if (v == deployedWorms.end()) {
 		set<string> tmpset;
@@ -250,13 +249,24 @@ void Connection::deployWorm(Worm &wc)
 		}
 	}
 
-	executable = "ssh -T " + wc.host + " 'tar -xzf " + wc.programName + ".tgz;"
-				 "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/" + wc.programName + "/lib;"
-				 "export WORM_ID=" + std::to_string(wc.ws.id) + ";"
-				 "export EINSTEIN_PORT=" + std::to_string(this->listenPort) + ";"
-				 "export EINSTEIN_IP=" + this->listenIpStr + ";"
-				 "cd " + wc.programName + ";"
-				 "nohup sh run.sh ";
+	executable = "ssh -T " + wc.host + " 'tar -xzf " + wc.programName +
+	             ".tgz;"
+	             "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/" +
+	             wc.programName +
+	             "/lib;"
+	             "export WORM_ID=" +
+	             std::to_string(wc.ws.id) +
+	             ";"
+	             "export EINSTEIN_PORT=" +
+	             std::to_string(this->listenPort) +
+	             ";"
+	             "export EINSTEIN_IP=" +
+	             this->listenIpStr +
+	             ";"
+	             "cd " +
+	             wc.programName +
+	             ";"
+	             "nohup sh run.sh ";
 
 	if (wc.runParams.size() > 0) {
 		for (unsigned i = 0; i < wc.runParams.size(); i++) {
@@ -275,8 +285,7 @@ void Connection::deployWorm(Worm &wc)
 
 void Connection::setupWormThread()
 {
-	this->setupThread = thread(
-	[this] {
+	this->setupThread = thread([this] {
 		while (keepRunning) {
 			// TODO: Relanzar worm si pasa mucho tiempo sin responder
 			this->setupWorm();
@@ -287,14 +296,13 @@ void Connection::setupWormThread()
 
 void Connection::pollWorms()
 {
-
 	int i = 0, j = 0;
 
 	// Add all socket descriptors to a poll array. Try to reconnect if one of the sockets is closed.
 	for (i = 0, j = 0; j < this->numWormSockets; ++i, ++j) {
-		memset(& (this->fdinfo[i]), 0, sizeof(struct pollfd));
+		memset(&(this->fdinfo[i]), 0, sizeof(struct pollfd));
 
-		if (this->wormSockets[j] == -1) { // The connection to the worm was closed
+		if (this->wormSockets[j] == -1) {  // The connection to the worm was closed
 			// Relaunch worm
 			auto connIterator = connections.begin();
 
@@ -307,17 +315,16 @@ void Connection::pollWorms()
 			deployWorm(*(connIterator->second));
 
 		} else {
-			this->fdinfo[i].fd = this->wormSockets[j];
+			this->fdinfo[i].fd     = this->wormSockets[j];
 			this->fdinfo[i].events = POLLIN | POLLHUP | POLLRDNORM | POLLNVAL;
 		}
 
-		if (this->wormSockets[j] == 0) { // The socket was not prepared. Skip it
+		if (this->wormSockets[j] == 0) {  // The socket was not prepared. Skip it
 			--i;
 		}
 	}
 
 	this->numFilledPolls = i;
-
 
 	if (this->numFilledPolls > 0) {
 		int st;
@@ -345,7 +352,9 @@ void Connection::pollWorms()
 				if (this->fdinfo[i].revents & POLLIN) {
 					enum ctrlMsgType ctrlMsg;
 
-					if (tcp_message_recv(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&ctrlMsg), sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
+					if (tcp_message_recv(
+					        this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&ctrlMsg), sizeof(enum ctrlMsgType), 1) !=
+					    sizeof(enum ctrlMsgType)) {
 						// Closed socket
 						this->wormSockets[i] = -1;
 						continue;
@@ -353,55 +362,59 @@ void Connection::pollWorms()
 
 					// Check message and do corresponding action
 					switch (ctrlMsg) {
-					case QUERYID:
-						// Get worm id
-						uint16_t wormId;
+						case QUERYID:
+							// Get worm id
+							uint16_t wormId;
 
-						if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t), 1) != sizeof(uint16_t)) {
-							// Closed socket
-							close(this->wormSockets[i]);
-							this->wormSockets[i] = -1;
-							continue;
-						}
-
-						// Send worm configuration message
-						try {
-
-							const void *wormSetup = static_cast<const void *>(& (this->connections.at(wormId)->ws));
-							enum ctrlMsgType okMsg = CTRL_OK;
-
-							cerr << "Received request for information of worm " << wormId << endl;
-
-							if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&okMsg), sizeof(enum ctrlMsgType)) != 0) {
+							if (tcp_message_recv(this->fdinfo[i].fd, static_cast<void *>(&wormId), sizeof(uint16_t), 1) !=
+							    sizeof(uint16_t)) {
 								// Closed socket
 								close(this->wormSockets[i]);
 								this->wormSockets[i] = -1;
 								continue;
 							}
 
-							if (tcp_message_send(this->fdinfo[i].fd, wormSetup, sizeof(WormSetup)) != 0) {
-								// Closed socket
-								close(this->wormSockets[i]);
-								this->wormSockets[i] = -1;
-								continue;
+							// Send worm configuration message
+							try {
+								const void *wormSetup  = static_cast<const void *>(&(this->connections.at(wormId)->ws));
+								enum ctrlMsgType okMsg = CTRL_OK;
+
+								cerr << "Received request for information of worm " << wormId << endl;
+
+								if (tcp_message_send(this->fdinfo[i].fd,
+								                     reinterpret_cast<uint8_t *>(&okMsg),
+								                     sizeof(enum ctrlMsgType)) != 0) {
+									// Closed socket
+									close(this->wormSockets[i]);
+									this->wormSockets[i] = -1;
+									continue;
+								}
+
+								if (tcp_message_send(this->fdinfo[i].fd, wormSetup, sizeof(WormSetup)) != 0) {
+									// Closed socket
+									close(this->wormSockets[i]);
+									this->wormSockets[i] = -1;
+									continue;
+								}
+
+							} catch (std::out_of_range &e) {
+								// Send error
+								enum ctrlMsgType errorMsg = CTRL_ERROR;
+								cerr << "Worm " << wormId << " does not exist" << endl;
+
+								if (tcp_message_send(this->fdinfo[i].fd,
+								                     reinterpret_cast<uint8_t *>(&errorMsg),
+								                     sizeof(enum ctrlMsgType)) != 0) {
+									// Closed socket
+									close(this->wormSockets[i]);
+									this->wormSockets[i] = -1;
+									continue;
+								}
 							}
 
-						} catch (std::out_of_range &e) {
-							// Send error
-							enum ctrlMsgType errorMsg = CTRL_ERROR;
-							cerr << "Worm " << wormId << " does not exist" << endl;
+							break;
 
-							if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
-								// Closed socket
-								close(this->wormSockets[i]);
-								this->wormSockets[i] = -1;
-								continue;
-							}
-						}
-
-						break;
-
-					case HALT: { // TODO better implementation
+						case HALT: {  // TODO better implementation
 							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
 								if (it->second->socket == this->wormSockets[i]) {
 									it->second->halting = true;
@@ -422,47 +435,48 @@ void Connection::pollWorms()
 							if (flag) {
 								cerr << "Cerrando Einstein debido a que todas las tareas han sido completadas" << endl;
 								this->deleteAllWorms();
-								exit(0); //TODO cambiar por un cierre mas ordenado, como por ejemplo, modificando la variable de salida utilizada para el cntl+c
+								exit(0);  // TODO cambiar por un cierre mas ordenado, como por ejemplo, modificando la
+								          // variable de salida utilizada para el cntl+c
 							}
 
 							break;
 						}
 
-					case DOWNLINK:
+						case DOWNLINK:
 
 						// TODO
-					case OVERLOAD:
+						case OVERLOAD:
 
 						// TODO
-					case UNDERLOAD:
+						case UNDERLOAD:
 
 						// TODO
 
-					case CTRL_ERROR:
+						case CTRL_ERROR:
 
-						// TODO better implementation
-						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-							if (it->second->socket == this->wormSockets[i]) {
-								cerr << "ERROR MSG from worm.id = " << it->first << endl;
-								break;
+							// TODO better implementation
+							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+								if (it->second->socket == this->wormSockets[i]) {
+									cerr << "ERROR MSG from worm.id = " << it->first << endl;
+									break;
+								}
 							}
-						}
 
-						break;
+							break;
 
-					case CTRL_OK:
+						case CTRL_OK:
 
-						// TODO better implementation
-						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-							if (it->second->socket == this->wormSockets[i]) {
-								cerr << "OK MSG from worm.id = " << it->first << endl;
-								break;
+							// TODO better implementation
+							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+								if (it->second->socket == this->wormSockets[i]) {
+									cerr << "OK MSG from worm.id = " << it->first << endl;
+									break;
+								}
 							}
-						}
 
-						break;
+							break;
 
-					case PING: {
+						case PING: {
 							// TODO better implementation
 							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
 								if (it->second->socket == this->wormSockets[i]) {
@@ -477,20 +491,19 @@ void Connection::pollWorms()
 							break;
 						}
 
-					case PONG:
+						case PONG:
 
-						// TODO better implementation
-						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-							if (it->second->socket == this->wormSockets[i]) {
-								cerr << "PONG MSG from worm.id = " << it->first << endl;
-								break;
+							// TODO better implementation
+							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+								if (it->second->socket == this->wormSockets[i]) {
+									cerr << "PONG MSG from worm.id = " << it->first << endl;
+									break;
+								}
 							}
-						}
 
-						break;
+							break;
 
-
-					case PRINTMSG: {
+						case PRINTMSG: {
 							uint32_t msgsize = 0;
 							tcp_message_recv(this->fdinfo[i].fd, &msgsize, sizeof(uint32_t), 1);
 
@@ -522,7 +535,7 @@ void Connection::pollWorms()
 							break;
 						}
 
-					case ABORT: {
+						case ABORT: {
 							uint32_t msgsize = 0;
 							tcp_message_recv(this->fdinfo[i].fd, &msgsize, sizeof(uint32_t), 1);
 
@@ -555,27 +568,31 @@ void Connection::pollWorms()
 							break;
 						}
 
-					default:
-						// Send error
-						enum ctrlMsgType errorMsg = CTRL_ERROR;
+						default:
+							// Send error
+							enum ctrlMsgType errorMsg = CTRL_ERROR;
 
-						// TODO better implementation
-						for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-							if (it->second->socket == this->wormSockets[i]) {
-								cerr << "NON IMPLEMENTED MSG (" << ctrlMsgType2str(ctrlMsg) << ") from worm.id " << it->first << endl;
-								break;
+							// TODO better implementation
+							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+								if (it->second->socket == this->wormSockets[i]) {
+									cerr << "NON IMPLEMENTED MSG (" << ctrlMsgType2str(ctrlMsg) << ") from worm.id "
+									     << it->first << endl;
+									break;
+								}
 							}
-						}
 
-						if (tcp_message_send(this->fdinfo[i].fd, reinterpret_cast<uint8_t *>(&errorMsg), sizeof(enum ctrlMsgType)) != 0) {
-							// Closed socket
-							close(this->wormSockets[i]);
-							this->wormSockets[i] = -1;
-							continue;
-						}
+							if (tcp_message_send(this->fdinfo[i].fd,
+							                     reinterpret_cast<uint8_t *>(&errorMsg),
+							                     sizeof(enum ctrlMsgType)) != 0) {
+								// Closed socket
+								close(this->wormSockets[i]);
+								this->wormSockets[i] = -1;
+								continue;
+							}
 					}
 
-				} else if (this->fdinfo[i].revents & POLLHUP || this->fdinfo[i].revents & POLLRDNORM || this->fdinfo[i].revents & POLLNVAL) {
+				} else if (this->fdinfo[i].revents & POLLHUP || this->fdinfo[i].revents & POLLRDNORM ||
+				           this->fdinfo[i].revents & POLLNVAL) {
 					close(this->wormSockets[i]);
 					this->wormSockets[i] = -1;
 				}
@@ -585,13 +602,10 @@ void Connection::pollWorms()
 			for (int i = 0; i < this->numFilledPolls; ++i) {
 				if (this->wormSockets[i] == -1) {
 					// TODO: Try to reconnect. If it doesn't work launch worm again
-
 				}
 			}
 		}
-
 	}
-
 }
 
 void Connection::mutex_lock()

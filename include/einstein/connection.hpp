@@ -12,12 +12,12 @@
 #include <cstring>
 #include <iostream>
 #include <map>
-#include <vector>
-#include <set>
 #include <memory>
-#include <stdexcept>
 #include <mutex>
+#include <set>
+#include <stdexcept>
 #include <thread>
+#include <vector>
 
 using namespace std;
 
@@ -29,7 +29,7 @@ class Connection
 	friend class EinsShell;
 	friend class ShellCommand;
 
-	std::map <uint16_t, std::shared_ptr<Worm>> connections;
+	std::map<uint16_t, std::shared_ptr<Worm>> connections;
 	string listenIpStr;
 	uint32_t listenIp;
 	uint16_t listenPort;
@@ -37,9 +37,9 @@ class Connection
 
 	// This map represents the worms alredy deployed.
 	// The key represents the host, the vector, the programs alredy deployed on it.
-	map <string, set<string>> deployedWorms;
+	map<string, set<string>> deployedWorms;
 
-	int *wormSockets; // Sockets for polling
+	int *wormSockets;  // Sockets for polling
 	struct pollfd *fdinfo;
 	int numWormSockets;
 	int previousPollIndex;
@@ -51,7 +51,7 @@ class Connection
 	mutex mtx;
 	thread setupThread;
 
- public:
+   public:
 	Connection(const string listenIp, const uint16_t listenPort);
 	Connection(const string listenIp, const uint16_t listenPort, bool autoDeployWorms);
 	~Connection();
@@ -70,7 +70,7 @@ class Connection
 	void mutex_lock();
 	void mutex_unlock();
 
- private:
+   private:
 	// Add socket to worm
 	void connectWorm(const uint16_t id, unique_ptr<SSocket> socket);
 	void pollWorms();

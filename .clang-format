@@ -4,9 +4,9 @@ IndentWidth: 4
 TabWidth: 4
 UseTab: ForIndentation
 
-BreakBeforeBraces: Attach
+BreakBeforeBraces: Linux
 IndentCaseLabels: true
-SpaceBeforeParens: Always
+SpaceBeforeParens: ControlStatements
 
 AlignAfterOpenBracket: true
 AlignConsecutiveAssignments: true
@@ -20,6 +20,6 @@ AllowShortLoopsOnASingleLine: false
 BinPackArguments: false
 BinPackParameters: false
 
-ColumnLimit: 100
+ColumnLimit: 125
 
 Cpp11BracedListStyle: true
