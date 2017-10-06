@@ -73,12 +73,9 @@ int main(int argc, char** argv)
 
 	{
 		// Create outputPath if not exists
-		char* tmp;
-		size_t tmp_size;
-		tmp_size = snprintf(NULL, 0, "mkdir -p %s", outputPath);
-		tmp      = malloc(tmp_size);
-		snprintf(tmp, tmp_size, "mkdir -p %s", outputPath);
-		if (system(outputPath))
+		char* tmp = WH_sprintf("mkdir -p %s", outputPath);
+
+		if (system(tmp))
 			WH_abortf("Cant create directory '%s'.\n", outputPath);
 
 		free(tmp);
