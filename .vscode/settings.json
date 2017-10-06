@@ -40,6 +40,10 @@
     "files.associations": {
         "*.ipp": "c",
         "cstdlib": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "common.h": "c",
+        "inet.h": "c",
+        "worm_private.h": "c",
+        "worm.h": "c"
     }
 }

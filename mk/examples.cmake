@@ -9,7 +9,7 @@ if (WH_EXAMPLES)
 
     function(add_wormhole_application appName app_runscript app_sources app_includes app_libs)
         set(tmp_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/appsANDexamples/${appName}")
-        MESSAGE (STATUS "Adding application: " ${appName})
+        MESSAGE (STATUS "Adding example app: " ${appName})
         # Command to create the executable
 
         # Executable
@@ -51,7 +51,7 @@ if (WH_EXAMPLES)
     unset(files CACHE)
     file(GLOB files "mk/examples/*.cmake")
     foreach(file ${files})
-        MESSAGE( STATUS "Including file: " ${file})
+        #MESSAGE( STATUS "Including file: " ${file})
         include(${file})
     endforeach()
 endif()
