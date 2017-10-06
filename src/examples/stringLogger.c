@@ -17,7 +17,7 @@
 
 int main(int argc, char** argv)
 {
-	ConnectionDataType type = {.type = ARRAY, .ext.arrayType = CHAR};
+	ConnectionDataType type = {.type = ARRAY, .ext.arrayType = UCHAR};
 
 	int st = WH_init();
 	assert(st == 0);
