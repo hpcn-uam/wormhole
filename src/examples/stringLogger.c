@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 			case 'p': {  // output path
 				outputPath = strdup(optarg);
 				if (!outputPath)
-					WH_abortf("Strdup failed copiying string '%s'.\n", optarg);
+					WH_abortf("Strdup failed copying string '%s'.\n", optarg);
 
 				// Create outputPath if not exists
 				char* tmp;
