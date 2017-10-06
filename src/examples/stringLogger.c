@@ -35,6 +35,8 @@ int main(int argc, char** argv)
 		switch (c) {
 			case 'p': {  // output path
 				outputPath = strdup(optarg);
+				if (!outputPath)
+					WH_abortf("Strdup failed copiying string '%s'.\n", optarg);
 
 				// Create outputPath if not exists
 				char* tmp;
