@@ -38,17 +38,6 @@ int main(int argc, char** argv)
 				if (!outputPath)
 					WH_abortf("Strdup failed copying string '%s'.\n", optarg);
 
-				// Create outputPath if not exists
-				char* tmp;
-				size_t tmp_size;
-				tmp_size = snprintf(NULL, 0, "mkdir -p %s", outputPath);
-				tmp      = malloc(tmp_size);
-				snprintf(tmp, tmp_size, "mkdir -p %s", outputPath);
-				if (system(outputPath))
-					WH_abortf("Cant create directory '%s'.\n", outputPath);
-
-				free(tmp);
-
 				break;
 			}
 			case 's': {  // buffer size
@@ -80,6 +69,19 @@ int main(int argc, char** argv)
 				return WH_abort(NULL);
 			}
 		}
+	}
+
+	{
+		// Create outputPath if not exists
+		char* tmp;
+		size_t tmp_size;
+		tmp_size = snprintf(NULL, 0, "mkdir -p %s", outputPath);
+		tmp      = malloc(tmp_size);
+		snprintf(tmp, tmp_size, "mkdir -p %s", outputPath);
+		if (system(outputPath))
+			WH_abortf("Cant create directory '%s'.\n", outputPath);
+
+		free(tmp);
 	}
 
 	WH_setup_types(1, &type);
