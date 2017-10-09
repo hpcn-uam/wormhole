@@ -310,6 +310,8 @@ uint8_t WH_printnmsg(const char *restrict msg, const uint32_t length)
 uint8_t WH_printf(const char *restrict format, ...)
 {
 	va_list args;
+	va_list args_cp;
+	va_copy(args_cp, args);
 
 	va_start(args, format);
 	size_t needed = vsnprintf(NULL, 0, format, args);
@@ -317,14 +319,16 @@ uint8_t WH_printf(const char *restrict format, ...)
 
 	if (!out) {
 		va_end(args);
+		va_end(args_cp);
 		return -1;
 	}
 
-	vsnprintf(out, needed, format, args);
+	vsnprintf(out, needed, format, args_cp);
 	uint8_t ret = WH_printnmsg(out, needed);
 	free(out);
 
 	va_end(args);
+	va_end(args_cp);
 	return ret;
 }
 
@@ -335,6 +339,8 @@ uint8_t WH_printf(const char *restrict format, ...)
 char *WH_sprintf(const char *restrict format, ...)
 {
 	va_list args;
+	va_list args_cp;
+	va_copy(args_cp, args);
 
 	va_start(args, format);
 	size_t needed = vsnprintf(NULL, 0, format, args);
@@ -342,11 +348,13 @@ char *WH_sprintf(const char *restrict format, ...)
 
 	if (!out) {
 		va_end(args);
+		va_end(args_cp);
 		return NULL;
 	}
 
-	vsnprintf(out, needed, format, args);
+	vsnprintf(out, needed, format, args_cp);
 	va_end(args);
+	va_end(args_cp);
 	return out;
 }
 
@@ -404,6 +412,8 @@ uint8_t WH_abortn(const char *restrict msg, const uint32_t length)
 uint8_t WH_abortf(const char *restrict format, ...)
 {
 	va_list args;
+	va_list args_cp;
+	va_copy(args_cp, args);
 
 	va_start(args, format);
 	size_t needed = vsnprintf(NULL, 0, format, args);
@@ -411,14 +421,16 @@ uint8_t WH_abortf(const char *restrict format, ...)
 
 	if (!out) {
 		va_end(args);
+		va_end(args_cp);
 		return -1;
 	}
 
-	vsnprintf(out, needed, format, args);
+	vsnprintf(out, needed, format, args_cp);
 	uint8_t ret = WH_abortn(out, needed);
 	free(out);
 
 	va_end(args);
+	va_end(args_cp);
 	return ret;
 }
 
