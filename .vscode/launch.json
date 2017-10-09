@@ -2,6 +2,19 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Attach Node",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceRoot}/build/bin/examples/stringLogger",
+			"miDebuggerServerAddress": "magnesio.ii.uam.es:2345",
+			"args": [],
+			"cwd": "${workspaceRoot}",
+			"environment": [],
+			"externalConsole": true,
+			"stopAtEntry": true,
+			"MIMode": "gdb"
+		},
+		{
 			"name": "Debug",
 			"type": "gdb",
 			"request": "attach",

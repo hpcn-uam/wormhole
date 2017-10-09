@@ -97,6 +97,9 @@ int main(int argc, char** argv)
 	for (;;) {
 		mi.size = buffleft;
 		recvret = WH_recv((void*)buffer, &mi);
+		buffer += recvret;
+		buffleft -= recvret;
+
 		if (recvret == 0) {
 			// error ?¿
 		} else if (recvret < 0) {
@@ -117,8 +120,6 @@ int main(int argc, char** argv)
 				rotationNum = 0;
 			sprintf(outputFile, outputFileFormat, rotationNum);  // first file
 		}
-		buffer += recvret;
-		buffleft -= recvret;
 	}
 
 	return WH_halt();
