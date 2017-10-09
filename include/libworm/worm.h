@@ -139,8 +139,8 @@ uint8_t WH_abortf(const char *restrict format, ...);
 /** WH_recv
  * Receives data from some one of the sources.
  * If data is an array and mi->size is not enougth for writing incomming data,
- * the function would return a negative number of the needed bytes in order to
- * save the last incomming message. Function WH_recv_complete MUST be called or data corruption may happen
+ * the function would return 0 and set errno to EMSGSIZE (Message too long)
+ * Function WH_recv_complete MUST be called in this case or data corruption may happen
  * Params:
  * @return the number of bytes readed, 0 if ERROR or none.
  */

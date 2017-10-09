@@ -1449,7 +1449,8 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 					mtmp.type = &c->type;
 					mtmp.hash = (uint64_t)(&(c->socket));  // Hack for passing the sock id
 					WH_recv_complete(NULL, &mtmp);
-					return 0 - tmp;
+					errno = EMSGSIZE;
+					return 0;
 				}
 
 				switch (c->type.ext.arrayType) {
@@ -1536,7 +1537,8 @@ uint32_t WH_recv_complete(void *restrict data, MessageInfo *restrict mi)
 	}
 
 	if (!tcp_message_recv_async((AsyncSocket *)lastmi.hash, data, WH_typesize(lastmi.type) * lastmi.size)) {
-		ret = 1 * WH_typesize(lastmi.type);
+		ret   = 1 * WH_typesize(lastmi.type);
+		errno = 0;
 	}
 
 	isSet = 0;

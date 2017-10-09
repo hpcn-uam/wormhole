@@ -100,9 +100,7 @@ int main(int argc, char** argv)
 		buffer += recvret;
 		buffleft -= recvret;
 
-		if (recvret == 0) {
-			// error ?¿
-		} else if (recvret < 0) {
+		if ((recvret == 0 && errno == EMSGSIZE) || buffleft == 0) {
 			// Flush file
 			buffer -= buffleft;  // set buffer to begining
 

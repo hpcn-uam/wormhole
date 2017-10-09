@@ -13,15 +13,6 @@
 			"externalConsole": true,
 			"stopAtEntry": true,
 			"MIMode": "gdb"
-		},
-		{
-			"name": "Debug",
-			"type": "gdb",
-			"request": "attach",
-			"target": "13644",
-			"executable": "/home/rafael/testLisp/testLisp",
-			//"cwd": "/home/rafael/"
-			"cwd": "${workspaceRoot}"
 		}
 	]
 }
