@@ -313,7 +313,7 @@ uint8_t WH_printf(const char *restrict format, ...)
 
 	va_start(args, format);
 	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *out     = malloc(needed);
+	char *out     = malloc(++needed);
 
 	if (!out) {
 		va_end(args);
@@ -338,7 +338,7 @@ char *WH_sprintf(const char *restrict format, ...)
 
 	va_start(args, format);
 	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *out     = malloc(needed);
+	char *out     = malloc(++needed);
 
 	if (!out) {
 		va_end(args);
@@ -407,7 +407,7 @@ uint8_t WH_abortf(const char *restrict format, ...)
 
 	va_start(args, format);
 	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *out     = malloc(needed);
+	char *out     = malloc(++needed);
 
 	if (!out) {
 		va_end(args);
