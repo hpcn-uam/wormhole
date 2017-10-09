@@ -311,9 +311,9 @@ uint8_t WH_printf(const char *restrict format, ...)
 {
 	va_list args;
 	va_list args_cp;
-	va_copy(args_cp, args);
 
 	va_start(args, format);
+	va_copy(args_cp, args);
 	size_t needed = vsnprintf(NULL, 0, format, args);
 	char *out     = malloc(++needed);
 
@@ -340,9 +340,9 @@ char *WH_sprintf(const char *restrict format, ...)
 {
 	va_list args;
 	va_list args_cp;
-	va_copy(args_cp, args);
 
 	va_start(args, format);
+	va_copy(args_cp, args);
 	size_t needed = vsnprintf(NULL, 0, format, args);
 	char *out     = malloc(++needed);
 
@@ -413,9 +413,9 @@ uint8_t WH_abortf(const char *restrict format, ...)
 {
 	va_list args;
 	va_list args_cp;
-	va_copy(args_cp, args);
 
 	va_start(args, format);
+	va_copy(args_cp, args);
 	size_t needed = vsnprintf(NULL, 0, format, args);
 	char *out     = malloc(++needed);
 
