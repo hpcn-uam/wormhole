@@ -107,9 +107,9 @@ int main(int argc, char** argv)
 			// Write the file
 			int fd = open(outputFile, O_CREAT | O_WRONLY | O_DIRECT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 			if (write(fd, buffer, buffSize))
-				WH_printf("Cant write %d Bytes into file '%s' (errno=%d)\n", buffSize, outputFile, errno);
+				WH_perror("Cant write %d Bytes into file '%s'\n", buffSize, outputFile);
 			if (ftruncate(fd, buffSize - (buffleft - recvret)))
-				WH_printf("Cant truncate file '%s' (errno=%d)\n", outputFile, buffSize - (buffleft - recvret), errno);
+				WH_perror("Cant truncate file '%s'\n", outputFile, buffSize - (buffleft - recvret));
 			close(fd);
 
 			// prepare data for next log

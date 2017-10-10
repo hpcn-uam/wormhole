@@ -115,6 +115,13 @@ uint8_t WH_printnmsg(const char *restrict msg, const uint32_t length);
  */
 uint8_t WH_printf(const char *restrict format, ...);
 
+/** WH_perror
+ * Sends a message to Einstein and print it with the errno value and string.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_perror(const char *restrict format, ...);
+
 /** WH_abort
  * Sends a message to Einstein, print it and halt all worms.
  * The msg can be NULL

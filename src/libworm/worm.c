@@ -1,4 +1,5 @@
 #define _GNU_SOURCE  // TODO find a better and standar way of set affinity
+#include <wh_config.h>
 #include <worm_private.h>
 
 #include <sched.h>
@@ -221,6 +222,7 @@ uint8_t WH_init(void)
 		fputs("[TH] setsockopt failed [2]\n", stderr);
 	}
 
+	fprintf(stdout, "[WH] %s Online\n", wh_VERSION);
 	return 0;
 }
 
@@ -329,6 +331,34 @@ uint8_t WH_printf(const char *restrict format, ...)
 
 	va_end(args);
 	va_end(args_cp);
+	return ret;
+}
+
+/** WH_perror
+ * Sends a message to Einstein and print it with the errno value and string.
+ * The msg can be NULL
+ * @return 0 if OK, something else if error.
+ */
+uint8_t WH_perror(const char *restrict format, ...)
+{
+	va_list args;
+	int errno_prv = errno;
+
+	va_start(args, format);
+	size_t needed = vsnprintf(NULL, 0, format, args);
+	char *msg     = malloc(++needed);
+
+	if (!msg) {
+		va_end(args);
+		return 1;
+	}
+
+	vsnprintf(msg, needed, format, args);
+	va_end(args);
+
+	int ret = WH_printf("%s: %s [Errno=%d]", msg, strerror(errno_prv), errno_prv);
+	free(msg);
+
 	return ret;
 }
 
