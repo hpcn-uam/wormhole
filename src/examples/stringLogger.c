@@ -106,11 +106,14 @@ int main(int argc, char** argv)
 
 			// Write the file
 			int fd = open(outputFile, O_CREAT | O_WRONLY | O_DIRECT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-			if (write(fd, buffer, buffSize))
-				WH_perror("Cant write %d Bytes into file '%s'\n", buffSize, outputFile);
-			if (ftruncate(fd, buffSize - (buffleft - recvret)))
-				WH_perror("Cant truncate file '%s'\n", outputFile, buffSize - (buffleft - recvret));
-			close(fd);
+			if (fd == -1)
+				WH_perror("Cant open file '%s'", outputFile);
+			else if (write(fd, buffer, buffSize))
+				WH_perror("Cant write %d Bytes into file '%s'", buffSize, outputFile);
+			else if (ftruncate(fd, buffSize - (buffleft - recvret)))
+				WH_perror("Cant truncate file '%s'", outputFile, buffSize - (buffleft - recvret));
+			else
+				close(fd);
 
 			// prepare data for next log
 			buffleft = buffSize;  // set buffleft to "max" value
