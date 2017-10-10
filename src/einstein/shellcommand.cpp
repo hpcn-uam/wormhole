@@ -226,5 +226,7 @@ int ShellCommand::cmdVersion(string cmd)
 	cout << "Libworm version: " << wh_VERSION << endl;
 	cout << "Netlib version: " << netlib_VERSION << endl;
 	cout << "Hptl version: " << hptl_VERSION << endl;
-	cout << "Libressl version: " << LIBRESSL_VERSION_TEXT << endl;
+	cout << "SSL version: " << LIBRESSL_VERSION_TEXT << endl;
+
+	return 0;
 }
