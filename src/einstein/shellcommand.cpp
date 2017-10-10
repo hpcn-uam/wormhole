@@ -130,8 +130,7 @@ set<ShellCommand> ShellCommand::getCommandList()
 	                        "Changes the route of one or all worms",
 	                        "<worm id/all> <new route>"));
 
-	ret.insert(ShellCommand(
-	    "version", cmdVersion, "Show Einstein's and & libworm's version", "Show Einstein's and & libworm's version"));
+	ret.insert(ShellCommand("version", cmdVersion, "Show libraries's version", "Show libraries's version"));
 
 	return ret;
 }
@@ -224,5 +223,8 @@ int ShellCommand::cmdChRoute(string cmd)
 int ShellCommand::cmdVersion(string cmd)
 {
 	UNUSED(cmd);
-	cout << "Version: " << wh_VERSION << endl;
+	cout << "Libworm version: " << wh_VERSION << endl;
+	cout << "Netlib version: " << netlib_VERSION << endl;
+	cout << "Hptl version: " << hptl_VERSION << endl;
+	cout << "Libressl version: " << LIBRESSL_VERSION_TEXT << endl;
 }
