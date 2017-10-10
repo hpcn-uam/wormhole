@@ -59,6 +59,7 @@ class ShellCommand
 	static int cmdList(string cmd);
 	static int cmdPing(string cmd);
 	static int cmdChRoute(string cmd);
+	static int cmdVersion(string cmd);
 
    private:
 	ShellCommand(string cmd);

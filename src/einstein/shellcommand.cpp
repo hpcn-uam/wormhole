@@ -1,3 +1,4 @@
+#include <wh_config.h>
 #include <einstein/shellcommand.hpp>
 
 using namespace einstein;
@@ -129,6 +130,9 @@ set<ShellCommand> ShellCommand::getCommandList()
 	                        "Changes the route of one or all worms",
 	                        "<worm id/all> <new route>"));
 
+	ret.insert(ShellCommand(
+	    "version", cmdVersion, "Show Einstein's and & libworm's version", "Show Einstein's and & libworm's version"));
+
 	return ret;
 }
 
@@ -215,4 +219,10 @@ int ShellCommand::cmdChRoute(string cmd)
 
 		return 0;
 	});
+}
+
+int ShellCommand::cmdVersion(string cmd)
+{
+	UNUSED(cmd);
+	cout << "Version: " << wh_VERSION << endl;
 }
