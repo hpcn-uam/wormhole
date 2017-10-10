@@ -1,5 +1,5 @@
 #define _GNU_SOURCE  // TODO find a better and standar way of set affinity
-#include <wh_config.h>
+//#include <wh_config.h>
 #include <worm_private.h>
 
 #include <sched.h>
@@ -222,7 +222,7 @@ uint8_t WH_init(void)
 		fputs("[TH] setsockopt failed [2]\n", stderr);
 	}
 
-	fprintf(stdout, "[WH] %s Online\n", wh_VERSION);
+	// fprintf(stdout, "[WH] %s Online\n", wh_VERSION);
 	return 0;
 }
 
