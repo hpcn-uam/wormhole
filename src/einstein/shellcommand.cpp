@@ -115,6 +115,12 @@ set<ShellCommand> ShellCommand::getCommandList()
 	                        "Stops all worms and closes einstein",
 	                        "Stops all worms sending a special HALT message and closes einstein"));
 
+	ret.insert(ShellCommand("quit",
+	                        cmdQuit,
+	                        "Stops all worms and then closes einstein",
+	                        "Send HALT to all worms and then exites Einstein. At this time this command is equivalent to "
+	                        "HALT, in future, halt wont close einstein"));
+
 	ret.insert(ShellCommand("list",
 	                        cmdList,
 	                        "Lists information about many things",
@@ -173,6 +179,17 @@ int ShellCommand::cmdHalt(string cmd)
 	eins->ec.keepRunning = false;
 
 	return 1;
+}
+
+int ShellCommand::cmdQuit(string cmd)
+{
+	UNUSED(cmd);
+
+	cout << "Exiting einstein..." << endl;
+	eins->ec.keepRunning = false;
+	this->cmdHalt(cmd);
+
+	return 1;  // for efectively halt
 }
 
 int ShellCommand::cmdList(string cmd)

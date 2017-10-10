@@ -56,6 +56,7 @@ class ShellCommand
 	// Commands for methods
 	static int cmdHelp(string cmd);
 	static int cmdHalt(string cmd);
+	static int cmdQuit(string cmd);
 	static int cmdList(string cmd);
 	static int cmdPing(string cmd);
 	static int cmdChRoute(string cmd);

@@ -49,14 +49,14 @@ Worm::~Worm()
 
 	if (this->deployed) {
 		ctrlMsgType msg = HALT;
-		cerr << "Enviando HALT al Worm id = " << this->ws.id << endl;
+		cerr << "Worm id = " << this->ws.id << "HALTED" << endl;
 
 		if (this->socket->send(&msg, sizeof(msg)) != 0) {
 			throw std::runtime_error("Error sending HALT");
 		}
 
 	} else {
-		cerr << "Worm with id = " << this->ws.id << " has not alredy been deployed, do not sending HALT..." << endl;
+		cerr << "Worm with id = " << this->ws.id << " has not alredy been deployed (UNHALTED)..." << endl;
 	}
 }
 
