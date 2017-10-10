@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	uint64_t buffleft = buffSize;
 	uint32_t recvret;
 
-	outputFileFormat = WH_sprintf("%s/%%10d.log", outputPath);
+	outputFileFormat = WH_sprintf("%s/%%010d.log", outputPath);
 	outputFile       = WH_sprintf(outputFileFormat, rotationNum);  // first file
 
 	for (;;) {
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 			buffer -= buffleft;  // set buffer to begining
 
 			// Write the file
-			int fd = open(outputFile, O_CREAT | O_WRONLY | O_DIRECT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+			int fd = open(outputFile, O_CREAT | O_WRONLY | O_DIRECT);
 			if (fd == -1)
 				WH_perror("Cant open file '%s'", outputFile);
 			else if (write(fd, buffer, buffSize))
