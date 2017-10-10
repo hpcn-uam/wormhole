@@ -53,6 +53,7 @@ set(DESTDIR "/")
 set(OPENSSLDIR "/etc/ssl")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/dependencies/libressl/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib/src)
 add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/dependencies/repos/netlib dependencies/repos/netlib/build)
 
