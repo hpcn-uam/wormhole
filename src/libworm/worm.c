@@ -342,23 +342,27 @@ uint8_t WH_printf(const char *restrict format, ...)
 uint8_t WH_perror(const char *restrict format, ...)
 {
 	va_list args;
+	va_list args_cp;
 	int errno_prv = errno;
 
 	va_start(args, format);
+	va_copy(args_cp, args);
 	size_t needed = vsnprintf(NULL, 0, format, args);
 	char *msg     = malloc(++needed);
 
 	if (!msg) {
 		va_end(args);
+		va_end(args_cp);
 		return 1;
 	}
 
-	vsnprintf(msg, needed, format, args);
-	va_end(args);
+	vsnprintf(msg, needed, format, args_cp);
 
 	int ret = WH_printf("%s: %s [Errno=%d]", msg, strerror(errno_prv), errno_prv);
 	free(msg);
 
+	va_end(args);
+	va_end(args_cp);
 	return ret;
 }
 
