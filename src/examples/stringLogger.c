@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 	uint64_t buffleft = buffSize;
 	uint32_t recvret;
 
-	if (!posix_memalign((void**)&buffer, buffSize, buffSize))
+	if (!posix_memalign((void**)&buffer, 4096, buffSize))
 		WH_abort("Failed to allocate memory");
 
 	outputFileFormat = WH_sprintf("%s/%%010d.log", outputPath);
