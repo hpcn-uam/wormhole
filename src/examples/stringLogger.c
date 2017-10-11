@@ -105,8 +105,8 @@ int main(int argc, char** argv)
 			buffer -= buffSize - buffleft;  // set buffer to begining
 
 			// Write the file
-			int fd =
-			    open(outputFile, O_CREAT | O_RDWR | O_DIRECT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+			int fd = open(
+			    outputFile, O_CREAT | O_RDWR | O_DIRECT | O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 			if (fd == -1)
 				WH_perror("Cant open file '%s'", outputFile);
 			else if (write(fd, buffer, buffSize))
