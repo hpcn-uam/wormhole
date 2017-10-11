@@ -90,8 +90,9 @@ int main(int argc, char** argv)
 	uint64_t buffleft = buffSize;
 	uint32_t recvret;
 
-	if (!posix_memalign((void**)&buffer, 4096, buffSize))
-		WH_abort("Failed to allocate memory");
+	int memstatus = posix_memalign((void**)&buffer, 4096, buffSize);
+	if (!memstatus)
+		WH_abortf("Failed to allocate memory (Error=%d/%s)", memstatus, strerror(memstatus));
 
 	outputFileFormat = WH_sprintf("%s/%%010d.log", outputPath);
 	outputFile       = WH_sprintf(outputFileFormat, rotationNum);  // first file
