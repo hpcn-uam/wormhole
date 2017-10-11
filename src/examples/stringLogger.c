@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 
 		if ((recvret == 0 && errno == EMSGSIZE) || buffleft == 0) {
 			// Flush file
-			buffer -= buffleft;  // set buffer to begining
+			buffer -= buffSize - buffleft;  // set buffer to begining
 
 			// Write the file
 			int fd =
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 				WH_perror("Cant open file '%s'", outputFile);
 			else if (write(fd, buffer, buffSize))
 				WH_perror("Cant write %d Bytes into file '%s'", buffSize, outputFile);
-			else if (ftruncate(fd, buffSize - (buffleft - recvret)))
+			else if (ftruncate(fd, buffSize - buffleft))
 				WH_perror("Cant truncate file '%s'", outputFile, buffSize - (buffleft - recvret));
 			else
 				close(fd);
