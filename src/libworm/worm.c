@@ -1718,6 +1718,13 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, co
 				destroy_asyncSocket(&(dw->conns[i]->socket));
 				free(dw->conns[i]);
 				dw->conns[i] = NULL;
+				int j;
+				for (j = i + 1; i < dw->numberOfTypes; j++) {
+					dw->conns[j - 1]          = dw->conns[j];
+					dw->supportedTypes[j - 1] = dw->supportedTypes[j];
+				}
+
+				dw->numberOfTypes--;
 				continue;
 			}
 
