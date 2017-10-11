@@ -15,7 +15,7 @@ Einstein::Einstein(const string configFileName, const string listenIp, const uin
 
 Einstein::~Einstein()
 {
-	cerr << "Eliminando Einstein" << endl;
+	cerr << "Deleting Einstein..." << endl;
 	this->ec.keepRunning = false;
 
 	if (this->thr.joinable()) {
