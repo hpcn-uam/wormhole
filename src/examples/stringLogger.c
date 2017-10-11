@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 	uint32_t rotationNum = 0;
 	uint32_t rotationMax = 1024;
 	uint32_t linelen     = 512;
-	char* outputPath     = "~/tmp/stringlogger";
+	char* outputPath     = "tmp/stringlogger";
 	char* outputFileFormat;
 	char* outputFile;
 
