@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 			    outputFile, O_CREAT | O_RDWR | O_DIRECT | O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 			if (fd == -1)
 				WH_perror("Cant open file '%s'", outputFile);
-			else if (write(fd, buffer, buffSize))
+			else if (write(fd, buffer, buffSize) == buffSize)
 				WH_perror("Cant write %d Bytes into file '%s'", buffSize, outputFile);
 			else if (ftruncate(fd, buffSize - buffleft))
 				WH_perror("Cant truncate file '%s'", outputFile, buffSize - (buffleft - recvret));
