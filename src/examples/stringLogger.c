@@ -86,9 +86,12 @@ int main(int argc, char** argv)
 	mi.size = linelen;
 	mi.type = &type;
 
-	uint8_t* buffer   = calloc(buffSize, 1);
+	uint8_t* buffer;
 	uint64_t buffleft = buffSize;
 	uint32_t recvret;
+
+	if (!posix_memalign(&buffer, buffSize, buffSize))
+		WH_abort("Failed to allocate memory");
 
 	outputFileFormat = WH_sprintf("%s/%%010d.log", outputPath);
 	outputFile       = WH_sprintf(outputFileFormat, rotationNum);  // first file
