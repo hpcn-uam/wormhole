@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	uint32_t recvret;
 
 	int memstatus = posix_memalign((void**)&buffer, 4096, buffSize);
-	if (!memstatus)
+	if (memstatus)
 		WH_abortf("Failed to allocate memory (Error=%d/%s)", memstatus, strerror(memstatus));
 
 	outputFileFormat = WH_sprintf("%s/%%010d.log", outputPath);
