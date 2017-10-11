@@ -1,16 +1,8 @@
 #ifndef __WH_CONF__H__
 #define __WH_CONF__H__
 
-//Basic defines for processing other defines
-#define HBC_xstr(a) HBC_str(a)
-#define HBC_str(a) #a
-
-//The current version
-#define wh_VERSION_trash @wh_VERSION@
-#define wh_VERSION HBC_xstr(wh_VERSION_trash)
-
 //Is debug on?
 #cmakedefine EINSTEIN_DEBUG
-#cmakedefine WORMS_DEBUG
+#cmakedefine LIBWORM_DEBUG
 
 #endif

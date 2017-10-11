@@ -11,7 +11,9 @@ option(WH_SSLCERTS "Enable the autogeneration of certs" ON)
 #################################
 
 option(EINSTEIN_DEBUG "Enable Einstein debug text" ON)
-option(WORMS_DEBUG "Enable Einstein debug text" ON)
+option(LIBWORM_DEBUG "Enable libworm debug text" ON)
+
+option(WH_STATISTICS "Enable transfer statistics on each connection" ON)
 
 #################################
 # CONFIG FILES
@@ -24,6 +26,10 @@ option(WORMS_DEBUG "Enable Einstein debug text" ON)
 configure_file (
   "${PROJECT_SOURCE_DIR}/include/wh_config.h.in"
   "${PROJECT_SOURCE_DIR}/include/wh_config.h"
+  )
+configure_file (
+  "${PROJECT_SOURCE_DIR}/include/wh_version.h.in"
+  "${PROJECT_SOURCE_DIR}/include/wh_version.h"
   )
 
 
