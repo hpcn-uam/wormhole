@@ -187,7 +187,7 @@ int ShellCommand::cmdQuit(string cmd)
 
 	cout << "Exiting einstein..." << endl;
 	eins->ec.keepRunning = false;
-	this->cmdHalt(cmd);
+	ShellCommand::cmdHalt(cmd);
 
 	return 1;  // for efectively halt
 }

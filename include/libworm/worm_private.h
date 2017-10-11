@@ -187,7 +187,7 @@ uint8_t WH_DymRoute_route(const void *restrict const data, const MessageInfo *re
  * Sends a message to the network
  * @return 0 if OK, something else if error.
  */
-uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const DestinationWorm *const cn);
+uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, DestinationWorm *const cn);
 
 /** WH_DymRoute_invalidate
  * Invalidate the current routing system, and frees the necesary data

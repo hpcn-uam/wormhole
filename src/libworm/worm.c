@@ -1699,7 +1699,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
  * Sends a message to the network
  * Return 0 if OK, something else if error.
   */
-uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, const DestinationWorm *const dw)
+uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, DestinationWorm *const dw)
 {
 	// TODO search info
 	// WH_setupConnectionType
