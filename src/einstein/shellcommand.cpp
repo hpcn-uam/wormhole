@@ -34,6 +34,12 @@ string ShellCommand::normalize(string str)
 	return out;
 }
 
+string ShellCommand::normalize(string str, int length)
+{
+	string tmp = str.substr(0, length);
+	return normalize(tmp);
+}
+
 int ShellCommand::forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn)
 {
 	// all worms
@@ -88,8 +94,12 @@ int ShellCommand::forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn
 
 bool ShellCommand::operator<(const ShellCommand &rhs) const
 {
-	string a = normalize(this->cmd);
-	string b = normalize(rhs.cmd);
+	int la  = this->cmd.length();
+	int lb  = rhs.cmd.length();
+	int len = la > lb ? lb : la;
+
+	string a = normalize(this->cmd, len);
+	string b = normalize(rhs.cmd, len);
 
 	return a < b;
 	// return this->cmd < rhs.cmd;

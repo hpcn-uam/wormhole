@@ -66,6 +66,7 @@ class ShellCommand
 	ShellCommand(string cmd);
 	static int forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn);
 	static string normalize(string str);
+	static string normalize(string str, int length);
 };
 }
 
