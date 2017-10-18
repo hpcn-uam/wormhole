@@ -1,4 +1,5 @@
 #include <wh_config.h>
+#include <wh_version.h>
 #include <einstein/shellcommand.hpp>
 
 using namespace einstein;
@@ -148,6 +149,12 @@ set<ShellCommand> ShellCommand::getCommandList()
 
 	ret.insert(ShellCommand("version", cmdVersion, "Show libraries's version", "Show libraries's version"));
 
+	ret.insert(ShellCommand("statistics",
+	                        cmdStatistics,
+	                        "Show worm connection statistics",
+	                        "Retrieve from specific (or every) connected worm each connection statistics.",
+	                        "<worm id/all>"));
+
 	return ret;
 }
 
@@ -256,4 +263,22 @@ int ShellCommand::cmdVersion(string cmd)
 	cout << "SSL version: " << LIBRESSL_VERSION_TEXT << endl;
 
 	return 0;
+}
+
+int ShellCommand::cmdStatistics(string cmd)
+{
+#ifdef WH_STATISTICS
+
+	return forWorm(cmd, [](shared_ptr<Worm> elem, string param) -> int {
+
+		cout << "== Worm " << elem->ws.id << " ==" << endl;
+		cout << "Input: " << endl;
+		cout << "Output: " << endl;
+
+		return 0;
+	});
+
+#else  // Not compiled statistics
+	cout << "Function not compiled, to get statistics compile with WH_STATISTICS set to On " << endl;
+#endif
 }

@@ -1,5 +1,4 @@
-#ifndef __EINSTEIN_H__
-#define __EINSTEIN_H__
+#pragma once
 
 #include <common.h>
 #include <einstein/connection.hpp>
@@ -49,5 +48,3 @@ class Einstein
 	void readConfig(const string configFileName);
 };
 }
-
-#endif

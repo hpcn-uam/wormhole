@@ -1,5 +1,4 @@
-#ifndef __EINSTEIN_SHELLCOMMAND_H__
-#define __EINSTEIN_SHELLCOMMAND_H__
+#pragma once
 
 #include <common.h>
 #include <einstein/einstein.hpp>
@@ -61,6 +60,7 @@ class ShellCommand
 	static int cmdPing(string cmd);
 	static int cmdChRoute(string cmd);
 	static int cmdVersion(string cmd);
+	static int cmdStatistics(string cmd);
 
    private:
 	ShellCommand(string cmd);
@@ -69,5 +69,3 @@ class ShellCommand
 	static string normalize(string str, int length);
 };
 }
-
-#endif

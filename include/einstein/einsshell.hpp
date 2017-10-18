@@ -1,5 +1,4 @@
-#ifndef __EINSTEIN_SHELL_H__
-#define __EINSTEIN_SHELL_H__
+#pragma once
 
 #include <common.h>
 #include <einstein/einstein.hpp>
@@ -55,5 +54,3 @@ class EinsShell
 	int executeCmd(string cmd);
 };
 }
-
-#endif

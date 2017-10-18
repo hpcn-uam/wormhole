@@ -1,5 +1,4 @@
-#ifndef __EINSTEIN_CONNECTION_H__
-#define __EINSTEIN_CONNECTION_H__
+#pragma once
 
 #include <common.h>
 #include <einstein/worm.hpp>
@@ -84,5 +83,3 @@ class Connection
 	static bool keepRunning;
 };
 }
-
-#endif

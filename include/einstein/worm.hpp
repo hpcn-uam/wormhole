@@ -1,5 +1,4 @@
-#ifndef __EINSTEIN_WORM_H__
-#define __EINSTEIN_WORM_H__
+#pragma once
 
 #include <common.h>
 #include <netlib.hpp>
@@ -55,5 +54,3 @@ struct Worm {
 
 ostream &operator<<(ostream &os, Worm const &obj);
 }
-
-#endif

@@ -2,24 +2,75 @@ docs:
     script:
         - make Docs
         - cp -r doc/html /var/www/docs/wormhole
+    tags:
+        - docs
 
-compilation:
+centos7:
+    image: centos:7
     script:
         - make -j
     artifacts:
         paths:
         - build/lib
-        - doc
         - build/bin
-        #- certs
+        - build/examples
+        - build/certs
+        - doc
+
+ubuntu16.04:
+    image: ubuntu:16.04
+    script:
+        - make -j
+    artifacts:
+        paths:
+        - build/lib
+        - build/bin
+        - build/examples
+        - build/certs
+        - doc
+
+ubuntu14.04:
+    image: ubuntu:14.04
+    script:
+        - make -j
+    artifacts:
+        paths:
+        - build/lib
+        - build/bin
+        - build/examples
+        - build/certs
+        - doc
+
+ubuntu17.10:
+    image: ubuntu:17.10
+    script:
+        - make -j
+    artifacts:
+        paths:
+        - build/lib
+        - build/bin
+        - build/examples
+        - build/certs
+        - doc
+
+fedora:
+    image: fedora:latest
+    script:
+        - make -j
+    artifacts:
+        paths:
+        - build/lib
+        - build/bin
+        - build/examples
+        - build/certs
+        - doc
 
 before_script:
-    - killall -9 testSendAsync testRecvAsync testRecvSSL testSendSSL testRecvAsyncSSL testSendAsyncSSL || true
     - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
+    - git submodule sync --recursive || true
     - git submodule update --recursive || true
         
 clean:
     script:
         - make clean
-        - killall -9 testSendAsync testRecvAsync testRecvSSL testSendSSL testRecvAsyncSSL testSendAsyncSSL || true
     when: on_failure
