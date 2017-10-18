@@ -8,6 +8,7 @@ docs:
 ubuntu14.04:
     image: ubuntu:14.04
     script:
+        - apt-get -y update
         - apt-get -y install build-essential cmake libpcap-dev
         - make -j
     artifacts:
@@ -21,6 +22,7 @@ ubuntu14.04:
 ubuntu16.04:
     image: ubuntu:16.04
     script:
+        - apt-get -y update
         - apt-get -y install build-essential cmake libpcap-dev
         - make -j
     artifacts:
@@ -34,6 +36,7 @@ ubuntu16.04:
 ubuntu17.10:
     image: ubuntu:17.10
     script:
+        - apt-get -y update
         - apt-get -y install build-essential cmake libpcap-dev
         - make -j
     artifacts:
@@ -47,6 +50,8 @@ ubuntu17.10:
 centos7:
     image: centos:7
     script:
+        - sudo yum -y update
+        - sudo yum -y groupinstall 'Development Tools'
         - make -j
     artifacts:
         paths:
@@ -59,6 +64,8 @@ centos7:
 fedora:
     image: fedora:latest
     script:
+        - sudo yum -y update
+        - sudo yum -y groupinstall 'Development Tools'
         - make -j
     artifacts:
         paths:
