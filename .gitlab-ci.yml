@@ -5,25 +5,8 @@ docs:
     tags:
         - docs
 
-ubuntu14.04:
-    image: ubuntu:14.04
-    script:
-        - apt-get -y update
-        - apt-get -y install build-essential cmake libpcap-dev
-        - make -j
-    artifacts:
-        paths:
-        - build/lib
-        - build/bin
-        - build/examples
-        - build/certs
-        - doc
-
 ubuntu16.04:
-    image: ubuntu:16.04
     script:
-        - apt-get -y update
-        - apt-get -y install build-essential cmake libpcap-dev
         - make -j
     artifacts:
         paths:
@@ -32,48 +15,8 @@ ubuntu16.04:
         - build/examples
         - build/certs
         - doc
-
-ubuntu17.10:
-    image: ubuntu:17.10
-    script:
-        - apt-get -y update
-        - apt-get -y install build-essential cmake libpcap-dev
-        - make -j
-    artifacts:
-        paths:
-        - build/lib
-        - build/bin
-        - build/examples
-        - build/certs
-        - doc
-
-centos7:
-    image: centos:7
-    script:
-        - yum -y update
-        - yum -y groupinstall 'Development Tools'
-        - make -j
-    artifacts:
-        paths:
-        - build/lib
-        - build/bin
-        - build/examples
-        - build/certs
-        - doc
-
-fedora:
-    image: fedora:latest
-    script:
-        - yum -y update
-        - yum -y groupinstall 'Development Tools'
-        - make -j
-    artifacts:
-        paths:
-        - build/lib
-        - build/bin
-        - build/examples
-        - build/certs
-        - doc
+    tags:
+        - ubuntu16.04
 
 before_script:
     - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
