@@ -5,9 +5,10 @@ docs:
     tags:
         - docs
 
-centos7:
-    image: centos:7
+ubuntu14.04:
+    image: ubuntu:14.04
     script:
+        - apt-get -y install build-essential cmake libpcap-dev
         - make -j
     artifacts:
         paths:
@@ -20,18 +21,7 @@ centos7:
 ubuntu16.04:
     image: ubuntu:16.04
     script:
-        - make -j
-    artifacts:
-        paths:
-        - build/lib
-        - build/bin
-        - build/examples
-        - build/certs
-        - doc
-
-ubuntu14.04:
-    image: ubuntu:14.04
-    script:
+        - apt-get -y install build-essential cmake libpcap-dev
         - make -j
     artifacts:
         paths:
@@ -43,6 +33,19 @@ ubuntu14.04:
 
 ubuntu17.10:
     image: ubuntu:17.10
+    script:
+        - apt-get -y install build-essential cmake libpcap-dev
+        - make -j
+    artifacts:
+        paths:
+        - build/lib
+        - build/bin
+        - build/examples
+        - build/certs
+        - doc
+
+centos7:
+    image: centos:7
     script:
         - make -j
     artifacts:
