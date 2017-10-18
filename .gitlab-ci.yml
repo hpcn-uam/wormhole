@@ -50,8 +50,8 @@ ubuntu17.10:
 centos7:
     image: centos:7
     script:
-        - sudo yum -y update
-        - sudo yum -y groupinstall 'Development Tools'
+        - yum -y update
+        - yum -y groupinstall 'Development Tools'
         - make -j
     artifacts:
         paths:
@@ -64,8 +64,8 @@ centos7:
 fedora:
     image: fedora:latest
     script:
-        - sudo yum -y update
-        - sudo yum -y groupinstall 'Development Tools'
+        - yum -y update
+        - yum -y groupinstall 'Development Tools'
         - make -j
     artifacts:
         paths:
