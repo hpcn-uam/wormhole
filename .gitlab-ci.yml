@@ -18,6 +18,8 @@ ubuntu16.04:
         expire_in: 2 weeks
     tags:
         - ubuntu16.04
+    cache:
+        untracked: true
 
 centos7:
     image: onelab4.ii.uam.es:5000/centos7
@@ -33,6 +35,8 @@ centos7:
         expire_in: 2 weeks
     tags:
         - docker
+    cache:
+        untracked: true
 
 before_script:
     - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
