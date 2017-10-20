@@ -15,9 +15,24 @@ ubuntu16.04:
         - build/examples
         - build/certs
         - doc
-        expire_in: 4 weeks
+        expire_in: 2 weeks
     tags:
         - ubuntu16.04
+
+centos7:
+    image: onelab4.ii.uam.es:5000/centos7
+    script:
+        - make -j
+    artifacts:
+        paths:
+        - build/lib
+        - build/bin
+        - build/examples
+        - build/certs
+        - doc
+        expire_in: 2 weeks
+    tags:
+        - docker
 
 before_script:
     - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
