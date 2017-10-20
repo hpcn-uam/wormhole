@@ -1,9 +1,11 @@
 export INCLUDES := $(wildcard include/*.h include/*hpp)
 export SRCS := $(wildcard src/*.c src/*.cpp src/einstein/*c src/einstein/*cpp src/examples/*.c src/examples/*.cpp)
 
+CMAKE ?= cmake
+
 all: $(INCLUDES) $(SRCS) | build 
 	git submodule update --init --recursive
-	cd build && cmake ..
+	cd build && $(CMAKE) ..
 	cd build && ${MAKE} --no-print-directory
 
 clean: build

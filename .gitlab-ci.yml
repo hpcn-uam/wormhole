@@ -22,8 +22,7 @@ ubuntu16.04:
 centos7:
     image: onelab4.ii.uam.es:5000/centos7
     script:
-        - alias cmake=cmake3
-        - make -j
+        - CMAKE=cmake3 make -j
     artifacts:
         paths:
         - build/lib
