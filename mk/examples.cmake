@@ -24,8 +24,8 @@ if (WH_EXAMPLES)
         add_custom_command(
             OUTPUT "${ex_out_dir}/${appName}.tgz"
 
-            COMMAND mkdir -p ${tmp_dir}
-            COMMAND mkdir -p ${ex_out_dir}
+            COMMAND ${CMAKE_COMMAND} -E make_directory  ${tmp_dir}
+            COMMAND ${CMAKE_COMMAND} -E make_directory  ${ex_out_dir}
 
             COMMAND ${CMAKE_COMMAND} -E copy_directory  ${CMAKE_CURRENT_BINARY_DIR}/lib ${tmp_dir}/lib
             COMMAND ${CMAKE_COMMAND} -E copy            ${app_runscript} ${tmp_dir}/run.sh
@@ -48,10 +48,44 @@ if (WH_EXAMPLES)
         unset(tmp_dir)
     endfunction(add_wormhole_application)
 
+    if (WH_REMOTE_EXAMPLES)
+        find_package(Git REQUIRED)
+        
+        function(add_wormhole_remote_application giturl gittag appName app_runscript app_sources app_includes app_libs)
+            MESSAGE (STATUS "Downloading example app: " ${appName})
+            set(clone_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/appsANDexamples/sources/${appName}")
+
+            if(EXISTS ${clone_dir})
+                execute_process (COMMAND ${GIT_EXECUTABLE} -C "${clone_dir}" pull RESULT_VARIABLE gitstatus) 
+            else()
+                execute_process (COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/appsANDexamples/sources/)
+                execute_process (COMMAND ${GIT_EXECUTABLE} clone -b "${gittag}" "${giturl}" "${clone_dir}" RESULT_VARIABLE gitstatus) 
+            endif()
+            
+            if(NOT ${gitstatus})
+                prepend_string(concat_app_sources "${clone_dir}/" ${app_sources})
+                prepend_string(concat_app_includes "${clone_dir}/" ${app_includes})
+
+                file(GLOB final_app_sources ${concat_app_sources})
+                file(GLOB final_app_includes ${concat_app_includes})
+
+                add_wormhole_application(${appName} ${app_runscript} "${final_app_sources}" "${final_app_includes}" ${app_libs})
+            else()
+                MESSAGE(WARNING "Can't add nor download example " ${appName} ". Probably, you dont have enough permissions to download it")            
+            endif()
+
+        endfunction(add_wormhole_remote_application)    
+    else()
+        function(add_wormhole_remote_application giturl gittag appName app_runscript app_sources app_includes app_libs)
+            MESSAGE(STATUS "Can't add example " ${appName} " as remote applications are disabled")
+        endfunction(add_wormhole_remote_application)  
+    endif()  
+
+    # Include example-config files from examples dir
     unset(files CACHE)
     file(GLOB files "mk/examples/*.cmake")
     foreach(file ${files})
         #MESSAGE( STATUS "Including file: " ${file})
         include(${file})
-    endforeach()
+    endforeach()  
 endif()
