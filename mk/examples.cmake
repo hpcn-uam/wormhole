@@ -39,6 +39,13 @@ if (WH_EXAMPLES)
             DEPENDS ${appName} libworm certificates ${app_runscript}  #${app_libs}
             VERBATIM
         )
+
+        # Include include_directories
+        FOREACH(cur_dir ${ARGN})
+            include_directories("${cur_dir}")
+            message(STATUS "HEEEEEEYYY : ${cur_dir}")
+        ENDFOREACH(cur_dir)
+
         # Target to create the tar
         add_custom_target(
             "${appName}-tar"
@@ -65,11 +72,12 @@ if (WH_EXAMPLES)
             if(NOT ${gitstatus})
                 prepend_string(concat_app_sources "${clone_dir}/" ${app_sources})
                 prepend_string(concat_app_includes "${clone_dir}/" ${app_includes})
+                prepend_string(final_app_includeDir "${clone_dir}/" ${ARGN})
 
                 file(GLOB final_app_sources ${concat_app_sources})
                 file(GLOB final_app_includes ${concat_app_includes})
 
-                add_wormhole_application(${appName} ${app_runscript} "${final_app_sources}" "${final_app_includes}" ${app_libs})
+                add_wormhole_application(${appName} ${app_runscript} "${final_app_sources}" "${final_app_includes}" ${app_libs} ${final_app_includeDir})
             else()
                 MESSAGE(WARNING "Can't add nor download example " ${appName} ". Probably, you dont have enough permissions to download it")            
             endif()
