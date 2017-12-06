@@ -307,7 +307,7 @@ int ShellCommand::cmdStatistics(string cmd)
 		for (ConnectionStatistics stat : stats) {
 			cout << "\t" << stat.wormId << ": ";
 			cout << humanReadableSize(stat.lastMinIO_tmp) << " in current minute \t";
-			cout << humanReadableSpeed(stat.lastMinIO * 8) << " last minute \t";
+			cout << humanReadableSpeed(stat.lastMinIO * 8 / 60) << " last minute \t";
 			cout << humanReadableSize(stat.totalIO) << " in total.\t";
 			cout << endl;
 		}
@@ -316,7 +316,7 @@ int ShellCommand::cmdStatistics(string cmd)
 		for (ConnectionStatistics stat : stats) {
 			cout << "\t" << stat.wormId << ": ";
 			cout << humanReadableSize(stat.lastMinIO_tmp) << " in current minute \t";
-			cout << humanReadableSpeed(stat.lastMinIO * 8) << " last minute \t";
+			cout << humanReadableSpeed(stat.lastMinIO * 8 / 60) << " last minute \t";
 			cout << humanReadableSize(stat.totalIO) << " in total.\t";
 			cout << endl;
 		}
