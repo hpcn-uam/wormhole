@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <sstream>
 
 #include <wh_config.h>
@@ -267,16 +268,29 @@ int ShellCommand::cmdVersion(string cmd)
 	return 0;
 }
 
-string humanReadableSpeed(double size /*in bits*/)
+string humanReadableSpeed(double speed /*in bits*/)
 {
 	int i               = 0;
 	const char* units[] = {"bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", "Ebps", "Zbps", "Ybps"};
-	while (size > 1000) {
-		size /= 1000;
+	while (speed > 1000) {
+		speed /= 1000;
 		i++;
 	}
 	stringstream sb;
-	sb << size << units[i];
+	sb << std::setprecision(2) << speed << units[i];
+	return sb.str();
+}
+
+string humanReadableSize(double size /*in bytes*/)
+{
+	int i               = 0;
+	const char* units[] = {"iB", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"};
+	while (size > 1024) {
+		size /= 1024;
+		i++;
+	}
+	stringstream sb;
+	sb << std::setprecision(2) << size << units[i];
 	return sb.str();
 }
 
@@ -292,18 +306,18 @@ int ShellCommand::cmdStatistics(string cmd)
 		stats = elem->getStatistics(true);
 		for (ConnectionStatistics stat : stats) {
 			cout << "\t" << stat.wormId << ": ";
-			cout << stat.lastMinIO_tmp << "Bytes in current minute \t";
+			cout << humanReadableSize(stat.lastMinIO_tmp) << " in current minute \t";
 			cout << humanReadableSpeed(stat.lastMinIO * 8) << " last minute \t";
-			cout << stat.totalIO << "Total bytes.\t";
+			cout << humanReadableSize(stat.totalIO) << " in total.\t";
 			cout << endl;
 		}
 		cout << "Output: " << endl;
 		stats = elem->getStatistics(false);
 		for (ConnectionStatistics stat : stats) {
 			cout << "\t" << stat.wormId << ": ";
-			cout << stat.lastMinIO_tmp << "Bytes in current minute \t";
+			cout << humanReadableSize(stat.lastMinIO_tmp) << " in current minute \t";
 			cout << humanReadableSpeed(stat.lastMinIO * 8) << " last minute \t";
-			cout << stat.totalIO << "Total bytes.\t";
+			cout << humanReadableSize(stat.totalIO) << " in total.\t";
 			cout << endl;
 		}
 
