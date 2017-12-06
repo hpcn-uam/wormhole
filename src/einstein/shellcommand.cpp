@@ -285,7 +285,7 @@ string humanReadableSpeed(double speed /*in bits*/)
 string humanReadableSize(double size /*in bytes*/)
 {
 	int i               = 0;
-	const char* units[] = {"iB", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"};
+	const char* units[] = {"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"};
 	while (size > 1024) {
 		size /= 1024;
 		i++;
@@ -301,26 +301,36 @@ int ShellCommand::cmdStatistics(string cmd)
 
 	return forWorm(cmd, [](shared_ptr<Worm> elem, string param) -> int {
 		vector<ConnectionStatistics> stats;
+		ConnectionStatistics total;
 
 		cout << "== Worm " << elem->ws.id << " ==" << endl;
 		cout << "Input: " << endl;
 		stats = elem->getStatistics(true);
+		total = {0};
 		for (ConnectionStatistics stat : stats) {
 			cout << "\t" << stat.wormId << ": ";
 			cout << humanReadableSize(stat.lastMinIO_tmp) << " in current minute \t";
 			cout << humanReadableSpeed(stat.lastMinIO * 8 / 60) << " last minute \t";
 			cout << humanReadableSize(stat.totalIO) << " in total.\t";
 			cout << endl;
+			total.lastMinIO += stat.lastMinIO;
 		}
+		if (stats.size() > 1)
+			cout << "\t\tTotal last minute:" << humanReadableSpeed(total.lastMinIO * 8 / 60) << endl;
+
 		cout << "Output: " << endl;
 		stats = elem->getStatistics(false);
+		total = {0};
 		for (ConnectionStatistics stat : stats) {
 			cout << "\t" << stat.wormId << ": ";
 			cout << humanReadableSize(stat.lastMinIO_tmp) << " in current minute \t";
 			cout << humanReadableSpeed(stat.lastMinIO * 8 / 60) << " last minute \t";
 			cout << humanReadableSize(stat.totalIO) << " in total.\t";
 			cout << endl;
+			total.lastMinIO += stat.lastMinIO;
 		}
+		if (stats.size() > 1)
+			cout << "\t\tTotal last minute:" << humanReadableSpeed(total.lastMinIO * 8 / 60) << endl;
 
 		return 0;
 	});
