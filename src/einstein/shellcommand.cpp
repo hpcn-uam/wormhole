@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <ios>
 #include <sstream>
 
 #include <wh_config.h>
@@ -277,7 +278,7 @@ string humanReadableSpeed(double speed /*in bits*/)
 		i++;
 	}
 	stringstream sb;
-	sb << std::setprecision(2) << speed << units[i];
+	sb << std::fixed << std::setprecision(2) << speed << units[i];
 	return sb.str();
 }
 
@@ -290,7 +291,7 @@ string humanReadableSize(double size /*in bytes*/)
 		i++;
 	}
 	stringstream sb;
-	sb << std::setprecision(2) << size << units[i];
+	sb << std::fixed << std::setprecision(2) << size << units[i];
 	return sb.str();
 }
 
