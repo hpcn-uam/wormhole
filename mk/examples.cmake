@@ -43,7 +43,6 @@ if (WH_EXAMPLES)
         # Include include_directories
         FOREACH(cur_dir ${ARGN})
             include_directories("${cur_dir}")
-            message(STATUS "HEEEEEEYYY : ${cur_dir}")
         ENDFOREACH(cur_dir)
 
         # Target to create the tar

@@ -1,11 +1,11 @@
 #define _GNU_SOURCE  // TODO find a better and standar way of set affinity
-//#include <wh_config.h>
-#include <worm_private.h>
+#include <libworm/worm_private.h>
+#include <wh_config.h>
 
 #include <sched.h>
 //#undef _GNU_SOURCE
 
-#include "netlib_inline.c"
+#include <netlib_inline.c>
 /*
 *Global variables
 */
@@ -245,8 +245,6 @@ uint8_t WH_halt(void)
 	ts.tv_sec  = 1;
 	ts.tv_nsec = 0;
 
-	WH_flushIO();
-
 	// close all output connections
 	size_t numworms = WH_myDstWorms.numberOfWorms;
 
@@ -263,261 +261,6 @@ uint8_t WH_halt(void)
 	}
 
 	return 0;
-}
-
-/** WH_printmsg
- * Sends a message to Einstein and print it.
- * The msg can be NULL
- * @return 0 if OK, something else if error.
- */
-uint8_t WH_printmsg(const char *restrict msg)
-{
-	if (msg)
-		return WH_printnmsg(msg, strlen(msg));
-	else
-		return WH_printnmsg(NULL, 0);
-}
-
-/** WH_printnmsg
- * Sends a message to Einstein and print it.
- * The msg can be NULL if length is 0
- * @return 0 if OK, something else if error.
- */
-uint8_t WH_printnmsg(const char *restrict msg, const uint32_t length)
-{
-	enum ctrlMsgType type = PRINTMSG;
-
-	if (tcp_message_ssend(WH_einsConn.socket, &type, sizeof(type))) {
-		return 1;
-	}
-
-	if (tcp_message_ssend(WH_einsConn.socket, &length, sizeof(length))) {
-		return 1;
-	}
-
-	if (length) {
-		if (tcp_message_ssend(WH_einsConn.socket, msg, length)) {
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
-/** WH_printf
- * Sends a message to Einstein and print it.
- * The msg can be NULL
- * @return 0 if OK, something else if error.
- */
-uint8_t WH_printf(const char *restrict format, ...)
-{
-	va_list args;
-	va_list args_cp;
-
-	va_start(args, format);
-	va_copy(args_cp, args);
-	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *out     = malloc(++needed);
-
-	if (!out) {
-		va_end(args);
-		va_end(args_cp);
-		return -1;
-	}
-
-	vsnprintf(out, needed, format, args_cp);
-	uint8_t ret = WH_printnmsg(out, needed);
-	free(out);
-
-	va_end(args);
-	va_end(args_cp);
-	return ret;
-}
-
-/** WH_perror
- * Sends a message to Einstein and print it with the errno value and string.
- * The msg can be NULL
- * @return 0 if OK, something else if error.
- */
-uint8_t WH_perror(const char *restrict format, ...)
-{
-	va_list args;
-	va_list args_cp;
-	int errno_prv = errno;
-
-	va_start(args, format);
-	va_copy(args_cp, args);
-	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *msg     = malloc(++needed);
-
-	if (!msg) {
-		va_end(args);
-		va_end(args_cp);
-		return 1;
-	}
-
-	vsnprintf(msg, needed, format, args_cp);
-
-	int ret = WH_printf("%s: %s [Errno=%d]", msg, strerror(errno_prv), errno_prv);
-	free(msg);
-
-	va_end(args);
-	va_end(args_cp);
-	return ret;
-}
-
-/** WH_sprintf
- * Returns a malloced-string using classic printf format. Must be freeded
- * @return a malloced-string.
- */
-char *WH_sprintf(const char *restrict format, ...)
-{
-	va_list args;
-	va_list args_cp;
-
-	va_start(args, format);
-	va_copy(args_cp, args);
-	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *out     = malloc(++needed);
-
-	if (!out) {
-		va_end(args);
-		va_end(args_cp);
-		return NULL;
-	}
-
-	vsnprintf(out, needed, format, args_cp);
-	va_end(args);
-	va_end(args_cp);
-	return out;
-}
-
-/** WH_abort
- * Sends a message to Einstein, print it and halt all worms.
- * @return 0 if OK, something else if error.
- */
-uint8_t WH_abort(const char *restrict msg)
-{
-	if (msg)
-		return WH_abortn(msg, strlen(msg));
-	else
-		return WH_abortn(NULL, 0);
-}
-
-/** WH_abortn
- * Sends a message to Einstein, print it and halt all worms.
- * The msg can be NULL if length is 0
- * @return 0 if OK, something else if error.
- */
-uint8_t WH_abortn(const char *restrict msg, const uint32_t length)
-{
-	enum ctrlMsgType type = ABORT;
-
-	fprintf(stderr, "Aborting worm");
-
-	if (tcp_message_ssend(WH_einsConn.socket, &type, sizeof(type))) {
-		return 1;
-	}
-
-	if (tcp_message_ssend(WH_einsConn.socket, &length, sizeof(length))) {
-		return 1;
-	}
-
-	if (length) {
-		fprintf(stderr, " cause: %s\n", msg);
-
-		if (tcp_message_ssend(WH_einsConn.socket, msg, length)) {
-			return 1;
-		}
-	}
-
-	fprintf(stderr, "\n");
-	fflush(stderr);
-
-	abort();
-	return 1;
-}
-
-/** WH_abortf
- * Sends a message to Einstein, print it and halt all worms.
- * The msg can be NULL
- * @return 0 if OK, something else if error.
- */
-uint8_t WH_abortf(const char *restrict format, ...)
-{
-	va_list args;
-	va_list args_cp;
-
-	va_start(args, format);
-	va_copy(args_cp, args);
-	size_t needed = vsnprintf(NULL, 0, format, args);
-	char *out     = malloc(++needed);
-
-	if (!out) {
-		va_end(args);
-		va_end(args_cp);
-		return -1;
-	}
-
-	vsnprintf(out, needed, format, args_cp);
-	uint8_t ret = WH_abortn(out, needed);
-	free(out);
-
-	va_end(args);
-	va_end(args_cp);
-	return ret;
-}
-
-/** WH_flushIO
- * Flushes all the IO queues.
- * @return 0 if OK, something else if error.
- */
-uint8_t WH_flushIO(void)
-{
-	uint8_t ret = 0;
-
-	// for each dstWorm
-	/*for (uint32_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
-	    if (WH_myDstWorms.worms[i].conns) {
-	        // for each Connection/type
-	        for (uint32_t j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
-	            if (WH_myDstWorms.worms[i].conns[j] != NULL) {
-	#ifdef _WORMLIB_DEBUG_
-	#ifdef _WORMLIB_DEBUG_FLUSH_
-	                fprintf(stderr, "[WORM:debug] Flushing OUT Connection: %d [%d:%d]\n",
-	                        WH_myDstWorms.worms[i].id,
-	                        WH_myDstWorms.worms[i].conns[j]->type.type,
-	                        WH_myDstWorms.worms[i].conns[j]->type.ext.arrayType);
-	#endif
-	#endif
-	                //flush_send_sync(&(WH_myDstWorms.worms[i].conns[j]->socket));
-	            }
-	        }
-	    }
-	}*/
-
-	// volatile int k=0;
-	// while(!k);
-
-	// for each recvWorm
-	/*for (int i = 0; i < WH_myRcvWorms.numberOfWorms; i++) {
-	    if (WH_myRcvWorms.worms[i].conns) {
-	        // for each Connection/type
-	        for (int j = 0; j < WH_myRcvWorms.worms[i].numberOfTypes; j++) {
-	            if (WH_myRcvWorms.worms[i].conns[j] != NULL) {
-	#ifdef _WORMLIB_DEBUG_
-	                fprintf(stderr, "[WORM:debug] Flushing IN Connection: %d [%d:%d]\n",
-	                        WH_myRcvWorms.worms[i].id,
-	                        WH_myRcvWorms.worms[i].conns[j]->type.type,
-	                        WH_myRcvWorms.worms[i].conns[j]->type.ext.arrayType);
-	#endif
-	                flush_recv(&(WH_myRcvWorms.worms[i].conns[j]->socket));
-	            }
-	        }
-	    }
-	}*/
-
-	return ret;
 }
 
 /* Name WH_thread
@@ -659,6 +402,78 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 			}
 
 			tcp_message_ssend(socket, &type, sizeof(type));
+			break;
+		}
+
+		case QUERYID: {
+			enum queryType qtype;
+			response = RESPONSEID;
+			if (tcp_message_srecv(socket, &qtype, sizeof(qtype), 1) != sizeof(qtype)) {
+				ret = -1;
+				break;
+			}
+
+			tcp_message_ssend(socket, &response, sizeof(response));
+
+			switch (qtype) {
+#ifdef WH_STATISTICS
+
+				case qSTATISTICS_IN: {
+					tcp_message_ssend(socket, &qtype, sizeof(qtype));
+
+					// Enviamos cuantos worms tenemos de entrada
+					tcp_message_ssend(socket, &WH_myRcvWorms.numberOfWorms, sizeof(size_t));
+
+					// Enviamos las estadisticas de cada uno de ellos
+					for (size_t i = 0; i < WH_myRcvWorms.numberOfWorms; i++) {
+						// estadisticas acumuladas
+						ConnectionStatistics stats = {0};
+						stats.wormId               = WH_myRcvWorms.worms[i].id;
+						for (size_t j = 0; j < WH_myRcvWorms.worms[i].numberOfTypes; j++) {
+							if (WH_myRcvWorms.worms[i].conns[j]) {
+								stats.totalIO += WH_myRcvWorms.worms[i].conns[j]->stats.totalIO;
+								stats.lastMinIO += WH_myRcvWorms.worms[i].conns[j]->stats.lastMinIO;
+								if (stats.lastCheck < WH_myRcvWorms.worms[i].conns[j]->stats.lastCheck)
+									stats.lastCheck = WH_myRcvWorms.worms[i].conns[j]->stats.lastCheck;
+							}
+						}
+						tcp_message_ssend(socket, &stats, sizeof(stats));
+					}
+					break;
+				}
+
+				case qSTATISTICS_OUT: {
+					tcp_message_ssend(socket, &qtype, sizeof(qtype));
+
+					// Enviamos cuantos worms tenemos de entrada
+					tcp_message_ssend(socket, &WH_myDstWorms.numberOfWorms, sizeof(size_t));
+
+					// Enviamos las estadisticas de cada uno de ellos
+					for (size_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
+						// estadisticas acumuladas
+						ConnectionStatistics stats = {0};
+						stats.wormId               = WH_myDstWorms.worms[i].id;
+						for (size_t j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
+							if (WH_myDstWorms.worms[i].conns[j]) {
+								stats.totalIO += WH_myDstWorms.worms[i].conns[j]->stats.totalIO;
+								stats.lastMinIO += WH_myDstWorms.worms[i].conns[j]->stats.lastMinIO;
+								if (stats.lastCheck < WH_myDstWorms.worms[i].conns[j]->stats.lastCheck)
+									stats.lastCheck = WH_myDstWorms.worms[i].conns[j]->stats.lastCheck;
+							}
+						}
+						tcp_message_ssend(socket, &stats, sizeof(stats));
+					}
+					break;
+				}
+#endif
+				default: {
+					qtype = qUNSUPORTED;
+					tcp_message_ssend(socket, &qtype, sizeof(qtype));
+
+					ret = -1;
+					break;
+				}
+			}
 			break;
 		}
 
@@ -1042,10 +857,9 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	}
 
 	Connection conntmp = {.type = *type,
-//.socket = {0} //error in some compilers (Clang)
-#ifdef _WORMLIB_STATISTICS_
-	                      ,
-	                      .stats = {.totalIO = 0, .lastIO = 0, .lastCheck = hptl_get()}
+//.socket = {0}, //error in some compilers (Clang)
+#ifdef WH_STATISTICS
+	                      .stats = {.totalIO = 0, .lastMinIO = 0, .lastMinIO_tmp = 0, .lastCheck = hptl_fget()}
 #endif
 	};
 	bzero(&conntmp.socket, sizeof(conntmp.socket));  // replaces socket={0}
@@ -1542,7 +1356,16 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 #ifdef _DYM_ROUTE_DEBUG_
 	fprintf(stderr, "ROUTEDEBUG: Recv %dB\n", ret);
 #endif
-
+#ifdef WH_STATISTICS
+	if ((c->stats.lastCheck + (60 * 1000000000ul)) < hptl_fget()) {
+		c->stats.lastCheck     = hptl_fget();
+		c->stats.lastMinIO     = c->stats.lastMinIO_tmp;
+		c->stats.lastMinIO_tmp = ret;
+	} else {
+		c->stats.lastMinIO_tmp += ret;
+	}
+	c->stats.totalIO += ret;
+#endif
 	return ret;
 }
 
@@ -1727,6 +1550,13 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, De
 				dw->numberOfTypes--;
 				continue;
 			}
+#ifdef WH_STATISTICS
+			if ((dw->conns[i]->stats.lastCheck + (60 * 1000000000ul)) < hptl_fget()) {
+				dw->conns[i]->stats.lastCheck     = hptl_fget();
+				dw->conns[i]->stats.lastMinIO     = dw->conns[i]->stats.lastMinIO_tmp;
+				dw->conns[i]->stats.lastMinIO_tmp = 0;
+			}
+#endif
 
 			if (mi->type->type == ARRAY) {
 #ifdef _DYM_ROUTE_DEBUG_
@@ -1737,6 +1567,10 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, De
 
 #ifdef _DYM_ROUTE_DEBUG_
 			fprintf(stderr, "ROUTEDEBUG: sending data (%luB) to worm: %d\n", mi->size, dw->id);
+#endif
+#ifdef WH_STATISTICS
+			dw->conns[i]->stats.lastMinIO_tmp += mi->size * WH_typesize(mi->type);
+			dw->conns[i]->stats.totalIO += mi->size * WH_typesize(mi->type);
 #endif
 			return tcp_message_send_async(&(dw->conns[i]->socket), data, mi->size * WH_typesize(mi->type));
 		}

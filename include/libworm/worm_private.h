@@ -1,7 +1,8 @@
 #ifndef __WORM_PRIV_H__
 #define __WORM_PRIV_H__
 
-#include <worm.h>
+#include <libworm/messages.h>
+#include <libworm/worm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,7 +21,7 @@ typedef struct {
 typedef struct {
 	AsyncSocket socket;
 	ConnectionDataType type;
-#ifdef _WORMLIB_STATISTICS_
+#ifdef WH_STATISTICS
 	ConnectionStatistics stats;
 #endif
 } Connection;

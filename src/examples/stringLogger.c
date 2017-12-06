@@ -1,7 +1,8 @@
 #define _GNU_SOURCE
 #include <common.h>
-#include <worm.h>
-#include <worm_private.h>
+#include <libworm/worm.h>
+#include <libworm/worm_private.h>
+#include <libworm/messages.h>
 
 #include <arpa/inet.h>
 #include <assert.h>

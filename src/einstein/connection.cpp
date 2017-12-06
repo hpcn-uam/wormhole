@@ -206,6 +206,7 @@ void Connection::connectWorm(const uint16_t id, unique_ptr<SSocket> socket)
 {
 	int fd                           = socket->getFd();
 	this->connections.at(id)->socket = move(socket);
+	this->connections.at(id)->setTimeoutResponse(2);
 
 	// Add socket to the list used for polling
 	int socketIndex          = distance(this->connections.begin(), this->connections.find(id));

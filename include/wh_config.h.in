@@ -5,4 +5,7 @@
 #cmakedefine EINSTEIN_DEBUG
 #cmakedefine LIBWORM_DEBUG
 
+//Statistics
+#cmakedefine WH_STATISTICS
+
 #endif

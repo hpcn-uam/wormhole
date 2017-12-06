@@ -41,6 +41,7 @@ Worm::Worm(uint16_t id,
 	this->runParams = runParams;
 
 	this->setIP(this->host);
+	this->setTimeoutResponse(2);  // default timeout set to 2
 }
 
 Worm::~Worm()
@@ -110,6 +111,23 @@ void Worm::setIP(string iphostname)
 	}
 }
 
+bool Worm::setTimeoutResponse(time_t seconds)
+{
+	if (this->socket == nullptr) {
+		return false;
+	}
+
+	try {
+		struct timeval ts = {.tv_sec = seconds, .tv_usec = 0};  // timeout at 2 seconds
+		this->socket->setSocketTimeout(&ts);
+		return true;
+
+	} catch (exception e) {
+		cerr << "Warning, timeout failed" << endl;
+		return false;
+	}
+}
+
 ostream &einstein::operator<<(ostream &os, Worm const &obj)
 {
 	os << "ID: " << obj.ws.id << " ADDR: " << obj.host << ":" << obj.ws.listenPort << (obj.ws.isSSLNode ? " [SSL]" : "")
@@ -156,14 +174,7 @@ int64_t Worm::ping()
 
 	ctrlMsgType msg = PING;
 
-	try {
-		struct timeval ts = {.tv_sec = 2, .tv_usec = 0};  // timeout at 2 seconds
-		this->socket->setSocketTimeout(&ts);
-
-	} catch (exception e) {
-		cerr << "Warning, timeout failed, the ping will not stop until pong!" << endl;
-	}
-
+	this->setTimeoutResponse(2);
 	this->socket->send(&msg, sizeof(msg));
 	msg = TIMEOUT;
 
@@ -203,3 +214,41 @@ uint64_t Worm::chroute(string newRoute)
 
 	return 0;
 }
+
+#ifdef WH_STATISTICS
+vector<ConnectionStatistics> Worm::getStatistics(bool inout)
+{
+	ctrlMsgType msg = QUERYID;
+	vector<ConnectionStatistics> ret;
+
+	enum queryType qtype;
+	enum queryType qtype_rep;
+	if (inout) {
+		// Input statistics
+		qtype = qSTATISTICS_IN;
+	} else {
+		// Output statistics
+		qtype = qSTATISTICS_OUT;
+	}
+	this->socket->send(&msg, sizeof(msg));
+	this->socket->send(&qtype, sizeof(qtype));
+
+	this->setTimeoutResponse(5);
+
+	// get the response
+	this->socket->recv(&msg, sizeof(msg), 0);
+	this->socket->recv(&qtype_rep, sizeof(qtype_rep), 0);
+	if (msg == RESPONSEID && qtype == qtype_rep) {
+		size_t responseNumber;
+
+		if (this->socket->recv(&responseNumber, sizeof(responseNumber), 0) == sizeof(responseNumber)) {
+			for (int i = 0; i < responseNumber; i++) {
+				ConnectionStatistics tmp;
+				this->socket->recv(&tmp, sizeof(tmp), 0);
+				ret.push_back(tmp);
+			}
+		}
+	}
+	return ret;
+}
+#endif

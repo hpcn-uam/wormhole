@@ -46,10 +46,15 @@ struct Worm {
 	~Worm();
 
 	void setIP(string iphostname);
+	bool setTimeoutResponse(time_t seconds);  // returns true if applied, false if failed
 	static string expandCDescription(string cd);
 
 	int64_t ping();                     // returns the ms passed from the ping. If negative, timeout reached
 	uint64_t chroute(string newRoute);  // returns 0 if changed, and 1 if not
+#ifdef WH_STATISTICS
+	vector<ConnectionStatistics> getStatistics(
+	    bool inout);  // returns the worm statistics. If innout is true, input statistics, else, output statistics
+#endif
 };
 
 ostream &operator<<(ostream &os, Worm const &obj);

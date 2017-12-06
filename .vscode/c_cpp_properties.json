@@ -26,27 +26,34 @@
         {
             "name": "Linux",
             "includePath": [
+                "/usr/lib64/gcc/x86_64-pc-linux-gnu/5.4.0/include/",
+                "/usr/lib64/gcc/x86_64-pc-linux-gnu/5.4.0/include/g++-v5",
                 "/usr/include",
                 "/usr/include/linux",
                 "/usr/local/include",
-                "${workspaceRoot}/include/libworm",
                 "${workspaceRoot}/include",
                 "${workspaceRoot}/dependencies/repos/hptimelib/include",
                 "${workspaceRoot}/dependencies/repos/netlib/include",
+                "${workspaceRoot}/dependencies/repos/netlib/src",
                 "${workspaceRoot}/dependencies/repos/netlib/dependencies/libressl/include",
                 "${workspaceRoot}/dependencies/repos/linenoise"
             ],
-            "defines": [],
+            "defines": [
+                "WH_STATISTICS",
+                "_GNU_SOURCE"
+            ],
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
+                    "/usr/lib64/gcc/x86_64-pc-linux-gnu/5.4.0/include/",
+                    "/usr/lib64/gcc/x86_64-pc-linux-gnu/5.4.0/include/g++-v5",
                     "/usr/include",
                     "/usr/include/linux",
                     "/usr/local/include",
-                    "${workspaceRoot}/include/libworm",
                     "${workspaceRoot}/include",
                     "${workspaceRoot}/dependencies/repos/hptimelib/include",
                     "${workspaceRoot}/dependencies/repos/netlib/include",
+                    "${workspaceRoot}/dependencies/repos/netlib/src",
                     "${workspaceRoot}/dependencies/repos/netlib/dependencies/libressl/include",
                     "${workspaceRoot}/dependencies/repos/linenoise"
                 ],

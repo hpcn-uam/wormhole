@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include <wh_config.h>
 #include <wh_version.h>
 #include <einstein/shellcommand.hpp>
@@ -93,7 +95,7 @@ int ShellCommand::forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn
 	return ret;
 }
 
-bool ShellCommand::operator<(const ShellCommand &rhs) const
+bool ShellCommand::operator<(const ShellCommand& rhs) const
 {
 	int la  = this->cmd.length();
 	int lb  = rhs.cmd.length();
@@ -265,15 +267,45 @@ int ShellCommand::cmdVersion(string cmd)
 	return 0;
 }
 
+string humanReadableSpeed(double size /*in bits*/)
+{
+	int i               = 0;
+	const char* units[] = {"bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", "Ebps", "Zbps", "Ybps"};
+	while (size > 1000) {
+		size /= 1000;
+		i++;
+	}
+	stringstream sb;
+	sb << size << units[i];
+	return sb.str();
+}
+
 int ShellCommand::cmdStatistics(string cmd)
 {
 #ifdef WH_STATISTICS
 
 	return forWorm(cmd, [](shared_ptr<Worm> elem, string param) -> int {
+		vector<ConnectionStatistics> stats;
 
 		cout << "== Worm " << elem->ws.id << " ==" << endl;
 		cout << "Input: " << endl;
+		stats = elem->getStatistics(true);
+		for (ConnectionStatistics stat : stats) {
+			cout << "\t" << stat.wormId << ": ";
+			cout << stat.lastMinIO_tmp << "Bytes in current minute \t";
+			cout << humanReadableSpeed(stat.lastMinIO * 8) << " last minute \t";
+			cout << stat.totalIO << "Total bytes.\t";
+			cout << endl;
+		}
 		cout << "Output: " << endl;
+		stats = elem->getStatistics(false);
+		for (ConnectionStatistics stat : stats) {
+			cout << "\t" << stat.wormId << ": ";
+			cout << stat.lastMinIO_tmp << "Bytes in current minute \t";
+			cout << humanReadableSpeed(stat.lastMinIO * 8) << " last minute \t";
+			cout << stat.totalIO << "Total bytes.\t";
+			cout << endl;
+		}
 
 		return 0;
 	});

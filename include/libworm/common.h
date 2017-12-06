@@ -9,6 +9,7 @@
 #include <poll.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,11 +28,19 @@
 #include <hptl.h>
 #include <netlib.h>
 
+#include <wh_config.h>
+
+// API VERSION
 #define WORMVERSION 0
 #define EINSTEINVERSION 0
 
 #ifndef uint128_t
+#ifdef __clang__
+#pragma message "WARNING: This compiler does not support uint128_t: DO NOT USE IPv6!!!"
+#define uint128_t uint64_t;
+#else
 typedef unsigned __int128 uint128_t;
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -57,6 +66,8 @@ enum ctrlMsgType {
 	PRINTMSG,
 	TIMEOUT
 };
+
+enum queryType { qUNSUPORTED, qSTATISTICS_IN, qSTATISTICS_OUT };
 
 char *ctrlMsgType2str(enum ctrlMsgType msg);
 
@@ -125,6 +136,16 @@ static inline void WH_prefetch2(volatile void *p)
 {
 	asm volatile("prefetcht2 %[p]" : [p] "+m"(*(volatile char *)p));
 }
+#endif
+
+#ifdef WH_STATISTICS
+typedef struct {
+	uint64_t wormId;
+	uint64_t totalIO;
+	uint64_t lastMinIO_tmp;
+	uint64_t lastMinIO;
+	uint64_t lastCheck;  // hptl_t
+} ConnectionStatistics;
 #endif
 
 #ifdef __cplusplus
