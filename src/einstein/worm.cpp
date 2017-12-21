@@ -44,7 +44,7 @@ Worm::Worm(uint16_t id,
 	this->setTimeoutResponse(2);  // default timeout set to 2
 }
 
-Worm::~Worm()
+Worm::~Worm() noexcept(false)
 {
 	free(this->ws.connectionDescription);
 

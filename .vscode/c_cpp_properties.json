@@ -26,8 +26,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "/usr/lib64/gcc/x86_64-pc-linux-gnu/5.4.0/include/",
-                "/usr/lib64/gcc/x86_64-pc-linux-gnu/5.4.0/include/g++-v5",
+                "/usr/lib64/gcc/x86_64-pc-linux-gnu/6.4.0/include/",
+                "/usr/lib64/gcc/x86_64-pc-linux-gnu/6.4.0/include/g++-v6",
                 "/usr/include",
                 "/usr/include/linux",
                 "/usr/local/include",
@@ -45,8 +45,8 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "/usr/lib64/gcc/x86_64-pc-linux-gnu/5.4.0/include/",
-                    "/usr/lib64/gcc/x86_64-pc-linux-gnu/5.4.0/include/g++-v5",
+                    "/usr/lib64/gcc/x86_64-pc-linux-gnu/6.4.0/include/",
+                    "/usr/lib64/gcc/x86_64-pc-linux-gnu/6.4.0/include/g++-v6",
                     "/usr/include",
                     "/usr/include/linux",
                     "/usr/local/include",

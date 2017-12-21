@@ -43,7 +43,7 @@ struct Worm {
 	     string host,
 	     string programName,
 	     vector<string> runParams);
-	~Worm();
+	~Worm() noexcept(false);
 
 	void setIP(string iphostname);
 	bool setTimeoutResponse(time_t seconds);  // returns true if applied, false if failed
