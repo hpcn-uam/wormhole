@@ -20,6 +20,7 @@
 #define BUFFSIZE 4096
 
 //#define CHECKMSG
+//#define STDOUTPUT
 
 int main(int argc, char **argv)
 {
@@ -100,7 +101,9 @@ int main(int argc, char **argv)
 	uint64_t roadBytes_peak;
 
 	for (;;) {
+#ifdef STDOUTPUT
 		gettimeofday(&start, 0);
+#endif
 		uint32_t recvret = 0;
 		roadBytes        = 0;
 		roadBytes_peak   = 0;
@@ -122,7 +125,7 @@ int main(int argc, char **argv)
 			}
 
 #endif
-
+#ifdef STDOUTPUT
 			if (i == PEAK_FRACTION_DOWN / RRNODES) {
 				gettimeofday(&startPeak, 0);
 				roadBytes_peak = roadBytes;
@@ -132,8 +135,9 @@ int main(int argc, char **argv)
 				gettimeofday(&endPeak, 0);
 				roadBytes_peak = roadBytes - roadBytes_peak;
 			}
+#endif
 		}
-
+#ifdef STDOUTPUT
 		gettimeofday(&end, 0);
 		fprintf(stderr,
 		        "%lf gbps. Pico: %lf gpbs\n",
@@ -141,6 +145,7 @@ int main(int argc, char **argv)
 		            (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
 		        ((((double)roadBytes_peak) * 8) / 1000) /
 		            (((double)endPeak.tv_sec - startPeak.tv_sec) * 1000000 + (endPeak.tv_usec - startPeak.tv_usec)));
+#endif
 	}
 
 	return WH_halt();

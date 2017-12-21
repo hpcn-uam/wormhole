@@ -19,6 +19,7 @@
 #define RRNODES 1  // Min value=1
 
 //#define CHECKMSG
+//#define STDOUTPUT
 
 int main(int argc, char **argv)
 {
@@ -90,7 +91,9 @@ int main(int argc, char **argv)
 	uint8_t *buffer = calloc(msgSize, 1);
 
 	for (;;) {
+#ifdef STDOUTPUT
 		gettimeofday(&start, 0);
+#endif
 
 		for (int i = 0; i < NUM_BIG_MESSAGES; i++) {
 #ifdef CHECKMSG
@@ -98,6 +101,7 @@ int main(int argc, char **argv)
 #endif
 			WH_send((void *)buffer, &mi);
 
+#ifdef STDOUTPUT
 			if (i == PEAK_FRACTION_DOWN) {
 				gettimeofday(&startPeak, 0);
 			}
@@ -105,10 +109,11 @@ int main(int argc, char **argv)
 			if (i == PEAK_FRACTION_UP) {
 				gettimeofday(&endPeak, 0);
 			}
+#endif
 		}
 
 		// WH_flushIO();
-
+#ifdef STDOUTPUT
 		gettimeofday(&end, 0);
 		fprintf(stderr,
 		        "%lf gbps. Pico: %lf gpbs\n",
@@ -116,6 +121,7 @@ int main(int argc, char **argv)
 		            (((double)end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec)),
 		        NUMNODES * (((double)(PEAK_FRACTION_UP - PEAK_FRACTION_DOWN) * msgSize * 8) / 1000) /
 		            (((double)endPeak.tv_sec - startPeak.tv_sec) * 1000000 + (endPeak.tv_usec - startPeak.tv_usec)));
+#endif
 	}
 
 	return WH_halt();
