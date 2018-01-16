@@ -50,6 +50,7 @@ struct Worm {
 	static string expandCDescription(string cd);
 
 	int64_t ping();                     // returns the ms passed from the ping. If negative, timeout reached
+	int64_t kill();                     // returns 0 if killed, and 1 if not
 	uint64_t chroute(string newRoute);  // returns 0 if changed, and 1 if not
 #ifdef WH_STATISTICS
 	vector<ConnectionStatistics> getStatistics(

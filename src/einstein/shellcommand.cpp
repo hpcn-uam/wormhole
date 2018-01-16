@@ -145,6 +145,13 @@ set<ShellCommand> ShellCommand::getCommandList()
 	ret.insert(ShellCommand(
 	    "ping", cmdPing, "Pings a worm", "Send a Ping command to a worm, waiting for a pong response.", "<worm id/all>"));
 
+	ret.insert(ShellCommand(
+	    "kill",
+	    cmdKill,
+	    "Kills a worm",
+	    "Send a HALT command to a worm. The worm would not be automatically reinstantiated anymore (usefull to debug)",
+	    "<worm id/all>"));
+
 	ret.insert(ShellCommand("chRoute",
 	                        cmdChRoute,
 	                        "Changes the route of one or all worms",
@@ -242,6 +249,23 @@ int ShellCommand::cmdPing(string cmd)
 		else {
 			cout << "Timeout! " << us / -1000 << "," << 0 - (us - (us / 1000) * 1000) << " us" << endl;
 		}
+		return 0;
+	});
+}
+
+int ShellCommand::cmdKill(string cmd)
+{
+	return forWorm(cmd, [](shared_ptr<Worm> elem, string param) -> int {
+		UNUSED(param);
+
+		cout << "Killing Worm ID=" << elem->ws.id << "..." << flush;
+		int64_t us = elem->kill();
+
+		if (us)
+			cout << "Survived!" << endl;
+		else
+			cout << "Killed!" << endl;
+
 		return 0;
 	});
 }

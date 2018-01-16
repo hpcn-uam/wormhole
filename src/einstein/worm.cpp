@@ -164,6 +164,20 @@ string Worm::expandCDescription(string cd)
 	return ret;
 }
 
+int64_t Worm::kill()
+{
+	if (this->socket == nullptr) {
+		return 0;
+	}
+
+	this->halting = true;
+
+	ctrlMsgType msg = HALT;
+	this->socket->send(&msg, sizeof(msg));
+
+	return 0;
+}
+
 int64_t Worm::ping()
 {
 	if (this->socket == nullptr) {

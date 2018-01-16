@@ -63,9 +63,10 @@ if (WH_EXAMPLES)
 
             if(EXISTS ${clone_dir})
                 execute_process (COMMAND ${GIT_EXECUTABLE} -C "${clone_dir}" pull RESULT_VARIABLE gitstatus) 
+                execute_process (COMMAND ${GIT_EXECUTABLE} -C "${clone_dir}" checkout -f ${gittag} RESULT_VARIABLE gitstatus) 
             else()
                 execute_process (COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/appsANDexamples/sources/)
-                execute_process (COMMAND ${GIT_EXECUTABLE} clone -b "${gittag}" "${giturl}" "${clone_dir}" RESULT_VARIABLE gitstatus) 
+                execute_process (COMMAND ${GIT_EXECUTABLE} clone --recursive -j8 -b "${gittag}" "${giturl}" "${clone_dir}" RESULT_VARIABLE gitstatus) 
             endif()
             
             if(NOT ${gitstatus})

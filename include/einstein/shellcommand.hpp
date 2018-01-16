@@ -59,6 +59,7 @@ class ShellCommand
 	static int cmdQuit(string cmd);
 	static int cmdList(string cmd);
 	static int cmdPing(string cmd);
+	static int cmdKill(string cmd);
 	static int cmdChRoute(string cmd);
 	static int cmdVersion(string cmd);
 	static int cmdStatistics(string cmd);

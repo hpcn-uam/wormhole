@@ -220,7 +220,9 @@ void Connection::deployWorm(Worm &wc)
 	// Check if alredy deployed
 	auto v        = deployedWorms.find(wc.host);
 	bool copyData = true;
-	;
+
+	if (wc.halting)  // if halting, do not try to re-deploy
+		return;
 
 	if (v == deployedWorms.end()) {
 		set<string> tmpset;
