@@ -137,6 +137,12 @@ void Einstein::readConfig(const string configFileName)
 				wc->ws.isSSLNode = 1;
 			}
 
+			/*Manual Deploy*/
+			if (sconfline.find("MANUAL") != string::npos) {
+				wc->deployed = true;
+				wc->halting  = true;
+			}
+
 			/*PARAMS*/
 
 			while (sconfline.find("PARAM=") != string::npos) {

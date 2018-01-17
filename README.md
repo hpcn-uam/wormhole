@@ -39,7 +39,7 @@ If present, the second line must has a tab. in the begining. Then a S-Expression
 
 A configuration file looks like:
 ```
-<ID> <Program_Name> <Deploy_IP> <Affinity_hex_mask (-1 means no affinity)> [SSL]
+<ID> <Program_Name> <Deploy_IP> <Affinity_hex_mask (-1 means no affinity)> [SSL] [MANUAL] [PARAM=[..] ..]
 	(Cat (1.(DUP 1 2 3)) (2.(RR 1 2 (HASH 3 4))))
 ```
 
@@ -59,6 +59,8 @@ Each worm:
 - Is identified by an `ID`.
 - Is deployed in a `IP` thought ssh/scp connection.
 - Can encrypt thought TLS1.2 any income and output message.
+- If MANUAL flag is specified, the worm won't be deployed. User should.
+- One or more PARAM flags may be specified. If so, each param would be passed to the worm's starter script.
 
 ### Security and Certificates
 
