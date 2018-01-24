@@ -139,12 +139,10 @@ void Einstein::readConfig(const string configFileName)
 
 			/*Manual Deploy*/
 			if (sconfline.find("MANUAL") != string::npos) {
-				wc->deployed = true;
-				wc->halting  = true;
+				wc->halting = true;
 			}
 
 			/*PARAMS*/
-
 			while (sconfline.find("PARAM=") != string::npos) {
 				auto pos  = sconfline.find("PARAM=");
 				sconfline = sconfline.substr(pos + 6);

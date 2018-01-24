@@ -13,6 +13,7 @@ int main(int argc, char **argv)
 	shared_ptr<Einstein> eins;
 
 	hptl_init(NULL);
+	netlib_init(1, argv);
 
 	if (argc == 3) {
 		try {
