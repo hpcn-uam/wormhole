@@ -104,7 +104,6 @@ typedef struct {  //__attribute__(packet)??
 typedef struct {
 	uint16_t id;
 } PongStats;
-#define WH_PREFETCHING
 #ifdef WH_PREFETCHING  // default: nope
 /**
 * Prefetch a cache line into all cache levels.

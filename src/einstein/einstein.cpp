@@ -135,6 +135,9 @@ void Einstein::readConfig(const string configFileName)
 			/*SSL*/
 			if (sconfline.find("SSL") != string::npos) {
 				wc->ws.isSSLNode = 1;
+#ifndef WH_SSL
+				fprintf(stderr, "[WARNING] SSL is disabled by config. SSL connections may fail if not supported in worms\n");
+#endif
 			}
 
 			/*Manual Deploy*/

@@ -38,7 +38,13 @@ file(GLOB libworm_SRC
     "src/libworm/*.cpp"
 )
 
+#################################
+# CONFIG FILES
+#################################
+# Read files
 include(Config.cmake)
+# Check them
+include(mk/_conf.cmake)
 
 # Dependencies
 

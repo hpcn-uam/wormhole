@@ -86,7 +86,7 @@ uint8_t WH_init(void)
 	int EinsteinSocket = tcp_connect_to(getenv("EINSTEIN_IP"), WH_einsConn.Port);
 
 	if (EinsteinSocket == -1) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		perror("[WH]: Error connecting to Einstein");
 #endif
 		return 1;
@@ -95,7 +95,7 @@ uint8_t WH_init(void)
 	WH_einsConn.socket = tcp_upgrade2syncSocket(EinsteinSocket, NOSSL, NULL);
 
 	if (WH_einsConn.socket == NULL) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		perror("[WH]: Error connecting to Einstein");
 #endif
 		close(EinsteinSocket);
@@ -103,7 +103,7 @@ uint8_t WH_init(void)
 	}
 
 	if (hptl_init(NULL)) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		perror("[WH]: Error Initializing hptl");
 #endif
 		tcp_sclose(WH_einsConn.socket);
@@ -119,7 +119,7 @@ uint8_t WH_init(void)
 
 	// Send hello message
 	if (tcp_message_ssend(WH_einsConn.socket, hellomsg, hellomsgSize) != 0) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		perror("[WH]: Error sending HELLO to Einstein");
 #endif
 		return 1;
@@ -129,7 +129,7 @@ uint8_t WH_init(void)
 
 	// Check ctrl msg
 	if (tcp_message_srecv(WH_einsConn.socket, msgType, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		perror("[WH]: Error recv myconfig.response from Einstein");
 #endif
 		return 1;
@@ -137,14 +137,14 @@ uint8_t WH_init(void)
 
 	if (*msgType == STARTSSL) {
 		if (syncSocketStartSSL(WH_einsConn.socket, CLISSL, NULL)) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 			perror("[WH]: Error stablishing SSL with Einstein");
 #endif
 			return 1;
 		}
 
 		if (tcp_message_srecv(WH_einsConn.socket, msgType, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 			perror("[WH]: Error recv myconfig.response from Einstein");
 #endif
 			return 1;
@@ -152,7 +152,7 @@ uint8_t WH_init(void)
 	}
 
 	if (*msgType != SETUP) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		perror("[WH]: Unexpected message from einstein");
 #endif
 		return 1;
@@ -161,7 +161,7 @@ uint8_t WH_init(void)
 	uint8_t *wormSetupMsg = (uint8_t *)&WH_mySetup;
 
 	if (tcp_message_srecv(WH_einsConn.socket, wormSetupMsg, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		perror("[WH]: Error recv myconfig from Einstein");
 #endif
 		return 1;
@@ -174,7 +174,7 @@ uint8_t WH_init(void)
 		if (tcp_message_srecv(
 		        WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) !=
 		    WH_mySetup.connectionDescriptionLength) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 			perror("[WH]: Error recv connectionDescription from Einstein");
 #endif
 			return 1;
@@ -198,7 +198,7 @@ uint8_t WH_init(void)
 	WH_bussy = 1;
 
 	if (pthread_create(&WH_wormThread, NULL, WH_thread, NULL)) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		perror("[WH]: Error creating thread");
 #endif
 		return 1;
@@ -206,7 +206,7 @@ uint8_t WH_init(void)
 
 	// Creamos el enrutado dinámico
 	if (WH_DymRoute_init(WH_mySetup.connectionDescription, &WH_myDstWorms)) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		fprintf(stderr, "[WH]: Error creating DymRoute\n");
 #endif
 		return 1;
@@ -253,7 +253,7 @@ uint8_t WH_halt(void)
 	size_t numworms = WH_myDstWorms.numberOfWorms;
 
 	for (size_t i = 0; i < numworms; i++) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		fprintf(stderr, "[WH]: asking for free worm data...%lu %lu\n", WH_myDstWorms.numberOfWorms, i);
 #endif
 
@@ -510,7 +510,7 @@ int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 			return 1;
 
 		case SSLSTART:
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 			fprintf(stderr, "[WH]: Starting SSL session\n");
 #endif
 			ret = syncSocketStartSSL(socket, SRVSSL, NULL);
@@ -599,7 +599,7 @@ inline void WH_TH_setupworm(SyncSocket *socket)
 	socket_sync_to_async_recv(&(tmpDestWormPtr->conns[tmpDestWormPtr->numberOfTypes]->socket), socket);
 
 	tmpDestWormPtr->numberOfTypes++;
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 	fprintf(stderr, "[WORM] Input Connection: %d\n", tmpDestWormPtr->id);
 #endif
 }
@@ -797,7 +797,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	if (WH_mySetup.isSSLNode) {
 		enum wormMsgType msgtype = SSLSTART;  // Con Worm config
 
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		fprintf(stderr, "[WH]: Sending SSLSTART to worm\n");
 #endif
 
@@ -812,7 +812,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		}
 	}
 
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 	fprintf(stderr, "[WH]: Connection established with worm.id=%d\n", dw->id);
 #endif
 
@@ -826,7 +826,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	}
 
 	if (!flag) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		fprintf(stderr, "No se puede abrir un socket con el datatype solicitado!\n");
 #endif
 		tcp_sclose(socket);
@@ -890,7 +890,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		return 1;
 	}
 
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 	fprintf(stderr, "[WORM] Output Connection: %d\n", dw->id);
 #endif
 
@@ -1229,7 +1229,7 @@ uint8_t WH_send(const void *restrict const data, const MessageInfo *restrict con
 uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 {
 // int pollCnt = 0;
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 	fprintf(stderr, "ROUTEDEBUG: Polling...\n");
 #endif
 	Connection *c = NULL;
@@ -1244,7 +1244,7 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 		return 0;
 	}
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 	fprintf(stderr, "ROUTEDEBUG: Msg found!...\n");
 #endif
 
@@ -1291,7 +1291,7 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 		case STRING:
 		case ARRAY: {
 			if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp))) {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Array of %lu elements\n", tmp);
 #endif
 				if (mi->size < tmp) {
@@ -1344,7 +1344,7 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 				}
 
 			} else {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Error recvArray\n");
 #endif
 			}
@@ -1357,7 +1357,7 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 			break;
 	}
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 	fprintf(stderr, "ROUTEDEBUG: Recv %dB\n", ret);
 #endif
 #ifdef WH_STATISTICS
@@ -1434,7 +1434,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 	char *errorString;
 
 	if (!cString || !soString || !gccString) {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 		perror("ROUTEDEBUG: Error in Malloc");
 #endif
 		return 1;
@@ -1448,7 +1448,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 		free(cString);
 		free(soString);
 		free(gccString);
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 		perror("ROUTEDEBUG: Error creating tmp.c");
 #endif
 		return 2;
@@ -1467,13 +1467,13 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 	if (!ret) {
 		sprintf(gccString, "gcc -O3 -Wall %s -o %s -shared -Llib -lworm -lpthread -fPIC -pipe ", cString, soString);
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 		fprintf(stderr, "ROUTEDEBUG: Calling %s\n", gccString);
 #endif
 
 		ret = system(gccString);
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 
 		if (ret) {
 			fprintf(stderr, "ROUTEDEBUG: Error calling gcc\n");
@@ -1487,7 +1487,7 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 		void *tmplibHandle = dlopen(soString, RTLD_NOW);
 
 		if (!tmplibHandle) {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 			fprintf(stderr, "ROUTEDEBUG: %s\n", dlerror());
 #endif
 			free(cString);
@@ -1535,7 +1535,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, De
 			// tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
 			if (!dw->conns[i]) {
 				if (WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 					fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL-SETUP]\n", dw->id);
 #endif
 					return 1;
@@ -1563,13 +1563,13 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, De
 #endif
 
 			if (mi->type->type == ARRAY) {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "[ARRAY %luB] ", mi->size);
 #endif
 				tcp_message_send_async(&(dw->conns[i]->socket), &(mi->size), sizeof(mi->size));
 			}
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 			fprintf(stderr, "ROUTEDEBUG: sending data (%luB) to worm: %d\n", mi->size, dw->id);
 #endif
 #ifdef WH_STATISTICS
@@ -1580,7 +1580,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, De
 		}
 	}
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 	fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL]\n", dw->id);
 #endif
 
@@ -1615,7 +1615,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 			case 'd':
 			case 'D':
 // DUP Function
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Calling DUP...\n");
 #endif
 				return WH_DymRoute_route_createFuncDUP(f, routeDescription + i, wms);
@@ -1623,7 +1623,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 			case 'r':
 			case 'R':
 // Round Robin Function
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Calling RR...\n");
 #endif
 				return WH_DymRoute_route_createFuncRR(f, routeDescription + i, wms);
@@ -1631,7 +1631,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 			case 'c':
 			case 'C':
 // Category Function
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Calling CAT...\n");
 #endif
 				return WH_DymRoute_route_createFuncCat(f, routeDescription + i, wms);
@@ -1639,7 +1639,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 			case 'h':
 			case 'H':
 // Hash Function
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Calling HASH...\n");
 #endif
 				return WH_DymRoute_route_createFuncHash(f, routeDescription + i, wms);
@@ -1647,7 +1647,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 			case 'i':
 			case 'I':
 // Ignore Function
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Calling IGNORE...\n");
 #endif
 				return WH_DymRoute_route_createFuncIgnore(f, routeDescription + i, wms);
@@ -1664,7 +1664,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
 				break;
 
 			default:
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Unexpected routing function.");
 #endif
 				return -1;
@@ -1699,7 +1699,7 @@ uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescr
 			parentesys++;
 
 			if (parentesys == 1) {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
 				ret += WH_DymRoute_route_create(f, routeDescription + i, wms);
@@ -1712,7 +1712,7 @@ uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescr
 				i++;
 			}
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 			fprintf(stderr, "ROUTEDEBUG: Sending to %d\n", nextNode);
 #endif
 
@@ -1771,7 +1771,7 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 			if (parentesys == 0) {
 				fprintf(f, _WH_DymRoute_CC_RRcase, rrCaseId);
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
 				ret += WH_DymRoute_route_create(f, routeDescription + i, wms);
@@ -1797,7 +1797,7 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
 				fprintf(f, "%s", _WH_DymRoute_CC_send);
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: %d in RR list\n", nextNode);
 #endif
 
@@ -1853,13 +1853,13 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
 					return -1;
 				}
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Category switching: %d\n", myCat);
 #endif
 				fprintf(f, _WH_DymRoute_CC_Catcase, myCat);
 
 			} else if (parentesys == 1) {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
 				ret += WH_DymRoute_route_create(f, routeDescription + i, wms);
@@ -1908,7 +1908,7 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 			if (parentesys == 0) {
 				fprintf(f, _WH_DymRoute_CC_Hashcase, myHash);
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Hash switching: %d\n", myHash);
 				fprintf(stderr, "ROUTEDEBUG: Function Evaluation: |%s|\n", routeDescription + i);
 #endif
@@ -1935,7 +1935,7 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
 				fprintf(f, "%s", _WH_DymRoute_CC_send);
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: %d in Hash switch %d\n", nextNode, myHash);
 #endif
 				fprintf(f, "%s", _WH_DymRoute_CC_Hashbreak);
@@ -1969,7 +1969,7 @@ uint8_t WH_DymRoute_route_createFuncIgnore(FILE *f, const uint8_t *const routeDe
 
 	UNUSED(wms);
 
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 	fprintf(stderr, "ROUTEDEBUG: Ignoring messages until the end of this context\n");
 #endif
 	fprintf(f, "%s", _WH_DymRoute_CC_Ignoreunused);
@@ -2132,7 +2132,7 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
 		WormSetup wSetup;
 
 		if (WH_getWormData(&wSetup, wormId)) {
-#ifdef _DYM_ROUTE_DEBUG_
+#ifdef LIBWORM_ROUTE_DEBUG
 			fprintf(stderr, "ROUTEaddworm: Worm %d no data retrived\n", wormId);
 #endif
 			return NULL;
@@ -2168,13 +2168,13 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
  */
 void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 	fprintf(stderr, "[WH]: Removing worm id=%d...\n", wormId);
 #endif
 
 	/*if wms is destworm, route table must be disabled*/
 	if (wms == &WH_myDstWorms) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		fprintf(stderr, "[WH]: Invalidating route table...\n");
 #endif
 		WH_DymRoute_invalidate();
@@ -2186,14 +2186,14 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 	wms->numberOfWorms--;
 
 	if (index == -1) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		fprintf(stderr, "[WH]: worm not found! %d (%ld)\n", wormId, index);
 #endif
 		return;
 	}
 
 	if ((wms->numberOfWorms - index) > 0) {
-#ifdef _WORMLIB_DEBUG_
+#ifdef LIBWORM_DEBUG
 		fprintf(stderr, "[WH]: memmoving...(index=%ld, nworms=%lu)\n", index, wms->numberOfWorms);
 #endif
 		memmove(wms->worms + index, wms->worms + index + 1, (wms->numberOfWorms - index) * sizeof(DestinationWorm *));

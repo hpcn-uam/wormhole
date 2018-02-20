@@ -1,11 +1,16 @@
 #ifndef __WH_CONF__H__
 #define __WH_CONF__H__
 
-//Is debug on?
+// Features
+#cmakedefine WH_STATISTICS
+#cmakedefine WH_SSL
+
+// Is debug on?
 #cmakedefine EINSTEIN_DEBUG
 #cmakedefine LIBWORM_DEBUG
+#cmakedefine LIBWORM_ROUTE_DEBUG
 
-//Statistics
-#cmakedefine WH_STATISTICS
+// Devel configs
+#cmakedefine WH_PREFETCHING
 
 #endif
