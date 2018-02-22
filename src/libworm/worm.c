@@ -1290,20 +1290,15 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 
 		case STRING:
 		case ARRAY: {
-			if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp))) {
+			if (!tcp_message_peak_async(&(c->socket), &tmp, sizeof(tmp))) {
 #ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Array of %lu elements\n", tmp);
 #endif
 				if (mi->size < tmp) {
-					MessageInfo mtmp;
-					// Size in output array is not enough
-					mtmp.size = tmp;
-					mtmp.type = &c->type;
-					mtmp.hash = (uint64_t)(&(c->socket));  // Hack for passing the sock id
-					WH_recv_complete(NULL, &mtmp);
 					errno = EMSGSIZE;
 					return 0;
 				}
+				tcp_message_forward_async(&(c->socket), sizeof(tmp));
 
 				switch (c->type.ext.arrayType) {
 					case INT8:
@@ -1370,39 +1365,6 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 	}
 	c->stats.totalIO += ret;
 #endif
-	return ret;
-}
-
-/** WH_recv_complete
- * Complete a previous data transfer
- * @return the number of bytes readed, 0 if ERROR or none.
- */
-uint32_t WH_recv_complete(void *restrict data, MessageInfo *restrict mi)
-{
-	static MessageInfo lastmi;
-	static uint8_t isSet = 0;
-	uint32_t ret         = 0;
-
-	if (!data) {
-		if (isSet) {
-			uint64_t i;
-			for (i = 0; i < WH_typesize(lastmi.type) * lastmi.size; i++)
-				tcp_message_recv_async((AsyncSocket *)lastmi.hash, data, 1);
-		}
-		isSet  = 1;
-		lastmi = *mi;
-		return 0;
-
-	} else if (!isSet) {
-		return 0;
-	}
-
-	if (!tcp_message_recv_async((AsyncSocket *)lastmi.hash, data, WH_typesize(lastmi.type) * lastmi.size)) {
-		ret   = 1 * WH_typesize(lastmi.type);
-		errno = 0;
-	}
-
-	isSet = 0;
 	return ret;
 }
 

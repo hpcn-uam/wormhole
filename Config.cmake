@@ -12,7 +12,7 @@ option(WH_SSLCERTS "Enable the autogeneration of certs" ON)
 #################################
 
 option(WH_STATISTICS "Enable transfer statistics on each connection" ON)
-option(WH_SSL "Enable SSL support" OFF)
+option(WH_SSL "Enable SSL support" ON)
 
 #################################
 # WORMHOLE DEVEL-CONFIG

@@ -77,7 +77,7 @@ if (WH_EXAMPLES)
                 file(GLOB final_app_sources ${concat_app_sources})
                 file(GLOB final_app_includes ${concat_app_includes})
 
-                add_wormhole_application(${appName} ${app_runscript} "${final_app_sources}" "${final_app_includes}" ${app_libs} ${final_app_includeDir})
+                add_wormhole_application(${appName} ${app_runscript} "${final_app_sources}" "${final_app_includes}" "${app_libs}" ${final_app_includeDir})
             else()
                 MESSAGE(WARNING "Can't add nor download example " ${appName} ". Probably, you dont have enough permissions to download it")            
             endif()
