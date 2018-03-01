@@ -19,6 +19,9 @@ if (WH_EXAMPLES)
         # Location
         set_target_properties(${appName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ex_out_bin_dir})
 
+        if(WH_SSLCERTS)
+            set(certificatesDep "certificates")
+        endif(WH_SSLCERTS)
 
         # Command to create the tar
         add_custom_command(
@@ -36,7 +39,7 @@ if (WH_EXAMPLES)
             COMMAND ${CMAKE_COMMAND} -E remove ${tmp_dir}/certs/prv/ca.key.pem
 
             COMMAND tar -czf "${ex_out_dir}/${appName}.tgz" -C "${tmp_dir}/.." "${appName}"
-            DEPENDS ${appName} libworm certificates ${app_runscript}  #${app_libs}
+            DEPENDS ${appName} libworm ${certificatesDep} ${app_runscript}  #${app_libs}
             VERBATIM
         )
 

@@ -5,7 +5,11 @@ set(_confcmake PROCESSED)
 set(NETLIB_SSL ${WH_SSL} CACHE BOOL "FORCED NETLIB_SSL==WH_SSL" FORCE)
 
 if(NOT WH_SSL)
-    message(FATAL_ERROR "SSL DISABLE NOT SUPPORTED")
+    message(WARNING "SSL DISABLE NOT FULLY--SUPPORTED")
+    if(WH_SSLCERTS)
+        message(WARNING "SSL Certs enabled. Should not when SSL is disabled. Forcing disable.")
+        set(WH_SSLCERTS OFF CACHE BOOL "FORCED WH_SSLCERTS==WH_SSL" FORCE)
+    endif(WH_SSLCERTS)
 endif(NOT WH_SSL)
 
 # Write confs

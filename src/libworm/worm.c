@@ -135,6 +135,7 @@ uint8_t WH_init(void)
 		return 1;
 	}
 
+#ifdef WH_SSL
 	if (*msgType == STARTSSL) {
 		if (syncSocketStartSSL(WH_einsConn.socket, CLISSL, NULL)) {
 #ifdef LIBWORM_DEBUG
@@ -150,6 +151,7 @@ uint8_t WH_init(void)
 			return 1;
 		}
 	}
+#endif
 
 	if (*msgType != SETUP) {
 #ifdef LIBWORM_DEBUG
@@ -513,7 +515,11 @@ int WH_TH_checkMsgType(enum wormMsgType type, SyncSocket *socket)
 #ifdef LIBWORM_DEBUG
 			fprintf(stderr, "[WH]: Starting SSL session\n");
 #endif
+#ifdef WH_SSL
 			ret = syncSocketStartSSL(socket, SRVSSL, NULL);
+#else
+			WH_abort("Can't Handle SSL session. I'm not compiled for it!");
+#endif
 			break;
 	}
 
@@ -793,7 +799,8 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 
 	SyncSocket *socket = tcp_upgrade2syncSocket(tmpsock, NOSSL, NULL);
 
-	// setup SSL
+// setup SSL
+#ifdef WH_SSL
 	if (WH_mySetup.isSSLNode) {
 		enum wormMsgType msgtype = SSLSTART;  // Con Worm config
 
@@ -811,6 +818,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 			return 1;
 		}
 	}
+#endif
 
 #ifdef LIBWORM_DEBUG
 	fprintf(stderr, "[WH]: Connection established with worm.id=%d\n", dw->id);
