@@ -684,7 +684,7 @@ int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
 		return 0;
 	}
 
-	if (mi->type && mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type) * tcp_async_peakInt(sock)) {
+	if (mi->type && mi->type->type == ARRAY && availableBytes < WH_typesize(mi->type) * tcp_async_peakInt64(sock)) {
 		return 0;
 	}
 
@@ -1290,16 +1290,15 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 
 		case STRING:
 		case ARRAY: {
-			if (!tcp_message_peak_async(&(c->socket), &tmp, sizeof(tmp))) {
+			if (mi->size < tcp_async_peakInt64(&(c->socket))) {  // TODO: it wont work everytime
+				errno = EMSGSIZE;
+				return 0;
+			}
+
+			if (!tcp_message_recv_async(&(c->socket), &tmp, sizeof(tmp))) {
 #ifdef LIBWORM_ROUTE_DEBUG
 				fprintf(stderr, "ROUTEDEBUG: Array of %lu elements\n", tmp);
 #endif
-				if (mi->size < tmp) {
-					errno = EMSGSIZE;
-					return 0;
-				}
-				tcp_message_forward_async(&(c->socket), sizeof(tmp));
-
 				switch (c->type.ext.arrayType) {
 					case INT8:
 					case UINT8:
