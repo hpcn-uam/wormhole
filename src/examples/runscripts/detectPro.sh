@@ -16,6 +16,10 @@ done
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib
 echo "LIBPATH = " $LD_LIBRARY_PATH &>> /tmp/detectPro.$OUTFILE.out
 
+mkdir -p /root/detectPro/extra/data
+mkdir -p /root/detectPro/extra/capture
+mkdir -p /root/detectPro/extra/flows
+
 date &> /tmp/detectPro.time
 #valgrind --vgdb=yes --vgdb-error=0 --track-origins=yes \
 ./detectPro extra/cfg/global.cfg &>> /tmp/detectPro.$OUTFILE.out
