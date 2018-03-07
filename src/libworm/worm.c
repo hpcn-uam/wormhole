@@ -68,10 +68,6 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
 */
 uint8_t WH_init(void)
 {
-	// start NetLib
-	char *argv[] = {"worm", "--conf", "netlib.conf", "--proc-type=primary", "--proc-id=0"};
-	netlib_init(5, argv);
-
 	WH_myDstWorms.numberOfWorms = 0;
 	WH_myDstWorms.worms         = malloc(sizeof(DestinationWorm));
 

@@ -23,6 +23,13 @@ if (WH_EXAMPLES)
             set(certificatesDep "certificates")
         endif(WH_SSLCERTS)
 
+        if(APP_EXTRADIRS)
+            foreach (extradir IN ITEMS ${APP_EXTRADIRS})
+                set(APP_EXTRACOMMANDS ${APP_EXTRACOMMANDS} COMMAND ${CMAKE_COMMAND} -E copy_directory ${extradir} ${tmp_dir}/extra)
+            endforeach(extradir)
+            unset(APP_EXTRADIRS PARENT_SCOPE)
+        endif(APP_EXTRADIRS)
+
         # Command to create the tar
         add_custom_command(
             OUTPUT "${ex_out_dir}/${appName}.tgz"
@@ -37,6 +44,9 @@ if (WH_EXAMPLES)
             # Certificates
             COMMAND ${CMAKE_COMMAND} -E copy_directory ${certs_dir} ${tmp_dir}/certs
             COMMAND ${CMAKE_COMMAND} -E remove ${tmp_dir}/certs/prv/ca.key.pem
+
+            # Extra Directories 
+            ${APP_EXTRACOMMANDS}
 
             COMMAND tar -czf "${ex_out_dir}/${appName}.tgz" -C "${tmp_dir}/.." "${appName}"
             DEPENDS ${appName} libworm ${certificatesDep} ${app_runscript}  #${app_libs}
@@ -64,6 +74,13 @@ if (WH_EXAMPLES)
             MESSAGE (STATUS "Downloading example app: " ${appName})
             set(clone_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/appsANDexamples/sources/${appName}")
 
+            if(APP_EXTRADIRS)
+                foreach (extradir IN ITEMS ${APP_EXTRADIRS})
+                    set(TMPVAR ${TMPVAR} "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/appsANDexamples/sources/${appName}/${extradir}")
+                endforeach(extradir)
+                set(APP_EXTRADIRS "${TMPVAR}")
+            endif(APP_EXTRADIRS)
+
             if(EXISTS ${clone_dir})
                 execute_process (COMMAND ${GIT_EXECUTABLE} -C "${clone_dir}" pull RESULT_VARIABLE gitstatus) 
                 execute_process (COMMAND ${GIT_EXECUTABLE} -C "${clone_dir}" checkout -f ${gittag} RESULT_VARIABLE gitstatus) 
@@ -82,8 +99,9 @@ if (WH_EXAMPLES)
 
                 add_wormhole_application(${appName} ${app_runscript} "${final_app_sources}" "${final_app_includes}" "${app_libs}" ${final_app_includeDir})
             else()
-                MESSAGE(WARNING "Can't add nor download example " ${appName} ". Probably, you dont have enough permissions to download it")            
+                MESSAGE(WARNING "Can't add nor download example " ${appName} ". Probably, you dont have enough permissions to download it")
             endif()
+            unset(APP_EXTRADIRS PARENT_SCOPE)
 
         endfunction(add_wormhole_remote_application)    
     else()
