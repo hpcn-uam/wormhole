@@ -22,7 +22,7 @@ mkdir -p /root/detectPro/instance/$WORM_ID/flows
 mkdir -p /root/detectPro/instance/$WORM_ID/cfg
 
 
-cp /root/detectPro/extra/cfg/{alarms.cfg,networks.cfg,ordenMenuRedes.cfg,supernetworks.cfg /root/detectPro/instance/$WORM_ID/cfg/.
+cp /root/detectPro/extra/cfg/{alarms.cfg,networks.cfg,ordenMenuRedes.cfg,supernetworks.cfg} /root/detectPro/instance/$WORM_ID/cfg/.
 sed -e 's/detectPro\/extra/detectPro\/instance\/'$WORM_ID'/g' extra/cfg/global.cfg > /root/detectPro/instance/$WORM_ID/cfg/global.cfg
 
 date &> /tmp/detectPro.time
