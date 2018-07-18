@@ -1,21 +1,21 @@
-#include <einstein/einstein.hpp>
+#include <zeus/zeus.hpp>
 
-using namespace einstein;
+using namespace zeus;
 
-Einstein::Einstein(const string configFileName, string listenIp, uint16_t listenPort)
-    : Einstein(configFileName, listenIp, listenPort, true)
+Zeus::Zeus(const string configFileName, string listenIp, uint16_t listenPort)
+    : Zeus(configFileName, listenIp, listenPort, true)
 {
 }
 
-Einstein::Einstein(const string configFileName, const string listenIp, const uint16_t listenPort, bool autoDeployWorms)
-    : ec(listenIp, listenPort, autoDeployWorms)
+Zeus::Zeus(const string configFileName, const string listenIp, const uint16_t listenPort, bool autoDeployHoles)
+    : ec(listenIp, listenPort, autoDeployHoles)
 {
 	this->readConfig(configFileName);
 }
 
-Einstein::~Einstein()
+Zeus::~Zeus()
 {
-	cerr << "Deleting Einstein..." << endl;
+	cerr << "Deleting Zeus..." << endl;
 	this->ec.keepRunning = false;
 
 	if (this->thr.joinable()) {
@@ -23,17 +23,17 @@ Einstein::~Einstein()
 	}
 }
 
-void Einstein::openHoles()
+void Zeus::openHoles()
 {
 	ec.run();
 }
 
-void Einstein::openThreadedHoles()
+void Zeus::openThreadedHoles()
 {
 	this->thr = thread([this] { this->openHoles(); });  // Lambda
 }
 
-void Einstein::readConfig(const string configFileName)
+void Zeus::readConfig(const string configFileName)
 {
 	// TODO: Leer realmente el fichero
 	uint16_t id             = 0;
@@ -54,7 +54,7 @@ void Einstein::readConfig(const string configFileName)
 	char connectionDescription[4096];  // TODO FIX POSIBLE OVERFLOW
 
 	while (!feof(configFile)) {
-		bool createAnotherWorm;
+		bool createAnotherHole;
 
 		if (fgets(configLine, 4096, configFile) == 0) {
 			break;
@@ -76,7 +76,7 @@ void Einstein::readConfig(const string configFileName)
 
 		connectionDescription[strlen(connectionDescription) - 1] = 0;
 
-		createAnotherWorm = false;
+		createAnotherHole = false;
 
 		do {
 			int firstId = 0, lastId = 0;
@@ -90,16 +90,16 @@ void Einstein::readConfig(const string configFileName)
 				}
 
 				id                = firstId;
-				createAnotherWorm = true;
+				createAnotherHole = true;
 
-			} else if (createAnotherWorm) {
+			} else if (createAnotherHole) {
 				if (id >= firstId && id < (lastId - 1)) {
 					id++;
-					createAnotherWorm = true;
+					createAnotherHole = true;
 
 				} else {
 					id++;
-					createAnotherWorm = false;
+					createAnotherHole = false;
 				}
 
 			} else {
@@ -121,12 +121,12 @@ void Einstein::readConfig(const string configFileName)
 				conndesc = "";
 			}
 
-			cerr << "\tDescription: |" << Worm::expandCDescription(conndesc) << "|" << endl;
+			cerr << "\tDescription: |" << Hole::expandCDescription(conndesc) << "|" << endl;
 
 			vector<string> runParams;
 
-			unique_ptr<Worm> wc(
-			    new Worm(id, baseListenPort + id, core, conndesc, string(host), string(programName), runParams));
+			unique_ptr<Hole> wc(
+			    new Hole(id, baseListenPort + id, core, conndesc, string(host), string(programName), runParams));
 
 			/*Check for advanced options*/
 			string sconfline = string(configLine);
@@ -136,7 +136,7 @@ void Einstein::readConfig(const string configFileName)
 			if (sconfline.find("SSL") != string::npos) {
 				wc->ws.isSSLNode = 1;
 #ifndef WH_SSL
-				fprintf(stderr, "[WARNING] SSL is disabled by config. SSL connections may fail if not supported in worms\n");
+				fprintf(stderr, "[WARNING] SSL is disabled by config. SSL connections may fail if not supported in holes\n");
 #endif
 			}
 
@@ -169,20 +169,20 @@ void Einstein::readConfig(const string configFileName)
 				cerr << endl;
 			}
 
-			this->ec.createWorm(std::move(wc));
-		} while (createAnotherWorm);
+			this->ec.createHole(std::move(wc));
+		} while (createAnotherHole);
 	}
 
-	cerr << "Launched all worms" << endl;
+	cerr << "Launched all holes" << endl;
 
 	fclose(configFile);
 }
 
-void Einstein::mutex_lock()
+void Zeus::mutex_lock()
 {
 	ec.mutex_lock();
 }
-void Einstein::mutex_unlock()
+void Zeus::mutex_unlock()
 {
 	ec.mutex_unlock();
 }

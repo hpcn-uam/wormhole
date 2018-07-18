@@ -4,11 +4,11 @@
 
 #include <wh_config.h>
 #include <wh_version.h>
-#include <einstein/shellcommand.hpp>
+#include <zeus/shellcommand.hpp>
 
-using namespace einstein;
+using namespace zeus;
 
-shared_ptr<Einstein> ShellCommand::eins;
+shared_ptr<Zeus> ShellCommand::zeus;
 
 ShellCommand::ShellCommand(string cmd)
 {
@@ -45,9 +45,9 @@ string ShellCommand::normalize(string str, int length)
 	return normalize(tmp);
 }
 
-int ShellCommand::forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn)
+int ShellCommand::forHole(string cmd, function<int(shared_ptr<Hole>, string)> fn)
 {
-	// all worms
+	// all holes
 	int ret = 0;
 
 	auto pos = normalize(cmd).find(normalize("all"));
@@ -62,13 +62,13 @@ int ShellCommand::forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn
 			param = "";
 		}
 
-		for (auto elem : eins->ec.connections) {
+		for (auto elem : zeus->ec.connections) {
 			ret += fn(elem.second, param);
 		}
 
 	} else {
 		try {
-			auto elem    = eins->ec.connections.at(stoi(cmd.substr(cmd.find(' ') + 1, cmd.length())));
+			auto elem    = zeus->ec.connections.at(stoi(cmd.substr(cmd.find(' ') + 1, cmd.length())));
 			string param = cmd.substr(cmd.find(' ') + 1, cmd.length());
 
 			auto parampos = param.find(' ');
@@ -90,7 +90,7 @@ int ShellCommand::forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn
 			ret += fn(elem, param);
 
 		} catch (exception) {
-			cout << "Worm with ID=\"" << cmd.substr(cmd.find(' ') + 1, cmd.length()) << "\" does not exists." << endl;
+			cout << "Hole with ID=\"" << cmd.substr(cmd.find(' ') + 1, cmd.length()) << "\" does not exists." << endl;
 		}
 	}
 
@@ -127,44 +127,44 @@ set<ShellCommand> ShellCommand::getCommandList()
 
 	ret.insert(ShellCommand("halt",
 	                        cmdHalt,
-	                        "Stops all worms and closes einstein",
-	                        "Stops all worms sending a special HALT message and closes einstein"));
+	                        "Stops all holes and closes zeus",
+	                        "Stops all holes sending a special HALT message and closes zeus"));
 
 	ret.insert(ShellCommand("quit",
 	                        cmdQuit,
-	                        "Stops all worms and then closes einstein",
-	                        "Send HALT to all worms and then exites Einstein. At this time this command is equivalent to "
-	                        "HALT, in future, halt wont close einstein"));
+	                        "Stops all holes and then closes zeus",
+	                        "Send HALT to all holes and then exites Zeus. At this time this command is equivalent to "
+	                        "HALT, in future, halt wont close zeus"));
 
 	ret.insert(ShellCommand("list",
 	                        cmdList,
 	                        "Lists information about many things",
-	                        "Lists information about many internal thigs, such as worms, etc.",
-	                        "[worms]"));
+	                        "Lists information about many internal thigs, such as holes, etc.",
+	                        "[holes]"));
 
 	ret.insert(ShellCommand(
-	    "ping", cmdPing, "Pings a worm", "Send a Ping command to a worm, waiting for a pong response.", "<worm id/all>"));
+	    "ping", cmdPing, "Pings a hole", "Send a Ping command to a hole, waiting for a pong response.", "<hole id/all>"));
 
 	ret.insert(ShellCommand(
 	    "kill",
 	    cmdKill,
-	    "Kills a worm",
-	    "Send a HALT command to a worm. The worm would not be automatically reinstantiated anymore (usefull to debug)",
-	    "<worm id/all>"));
+	    "Kills a hole",
+	    "Send a HALT command to a hole. The hole would not be automatically rzeustantiated anymore (usefull to debug)",
+	    "<hole id/all>"));
 
 	ret.insert(ShellCommand("chRoute",
 	                        cmdChRoute,
-	                        "Changes the route of one or all worms",
-	                        "Changes the route of one or all worms",
-	                        "<worm id/all> <new route>"));
+	                        "Changes the route of one or all holes",
+	                        "Changes the route of one or all holes",
+	                        "<hole id/all> <new route>"));
 
 	ret.insert(ShellCommand("version", cmdVersion, "Show libraries's version", "Show libraries's version"));
 
 	ret.insert(ShellCommand("statistics",
 	                        cmdStatistics,
-	                        "Show worm connection statistics",
-	                        "Retrieve from specific (or every) connected worm each connection statistics.",
-	                        "<worm id/all>"));
+	                        "Show hole connection statistics",
+	                        "Retrieve from specific (or every) connected hole each connection statistics.",
+	                        "<hole id/all>"));
 
 	return ret;
 }
@@ -175,7 +175,7 @@ int ShellCommand::cmdHelp(string cmd)
 
 	// No second parameter
 	if (cmd.length() < 6 || cmd.find(' ') == string::npos) {
-		cout << "Welcome to Einstein!" << endl;
+		cout << "Welcome to Zeus!" << endl;
 		cout << endl;
 		cout << "Available commands are:" << endl;
 
@@ -203,8 +203,8 @@ int ShellCommand::cmdHalt(string cmd)
 {
 	UNUSED(cmd);
 
-	cout << "Halting Einstein and all worms..." << endl;
-	eins->ec.keepRunning = false;
+	cout << "Halting Zeus and all holes..." << endl;
+	zeus->ec.keepRunning = false;
 
 	return 1;
 }
@@ -213,8 +213,8 @@ int ShellCommand::cmdQuit(string cmd)
 {
 	UNUSED(cmd);
 
-	cout << "Exiting einstein..." << endl;
-	eins->ec.keepRunning = false;
+	cout << "Exiting zeus..." << endl;
+	zeus->ec.keepRunning = false;
 	ShellCommand::cmdHalt(cmd);
 
 	return 1;  // for efectively halt
@@ -222,10 +222,10 @@ int ShellCommand::cmdQuit(string cmd)
 
 int ShellCommand::cmdList(string cmd)
 {
-	if (normalize(cmd).find(normalize("worms")) != string::npos) {
-		cout << "Listing all worms:" << endl;
+	if (normalize(cmd).find(normalize("holes")) != string::npos) {
+		cout << "Listing all holes:" << endl;
 
-		for (auto elem : eins->ec.connections) {
+		for (auto elem : zeus->ec.connections) {
 			cout << *elem.second << endl;
 		}
 
@@ -238,10 +238,10 @@ int ShellCommand::cmdList(string cmd)
 
 int ShellCommand::cmdPing(string cmd)
 {
-	return forWorm(cmd, [](shared_ptr<Worm> elem, string param) -> int {
+	return forHole(cmd, [](shared_ptr<Hole> elem, string param) -> int {
 		UNUSED(param);
 
-		cout << "Pinging Worm ID=" << elem->ws.id << "..." << flush;
+		cout << "Pinging Hole ID=" << elem->ws.id << "..." << flush;
 		int64_t us = elem->ping();
 
 		if (us > 0)
@@ -255,10 +255,10 @@ int ShellCommand::cmdPing(string cmd)
 
 int ShellCommand::cmdKill(string cmd)
 {
-	return forWorm(cmd, [](shared_ptr<Worm> elem, string param) -> int {
+	return forHole(cmd, [](shared_ptr<Hole> elem, string param) -> int {
 		UNUSED(param);
 
-		cout << "Killing Worm ID=" << elem->ws.id << "..." << flush;
+		cout << "Killing Hole ID=" << elem->ws.id << "..." << flush;
 		int64_t us = elem->kill();
 
 		if (us)
@@ -272,9 +272,9 @@ int ShellCommand::cmdKill(string cmd)
 
 int ShellCommand::cmdChRoute(string cmd)
 {
-	return forWorm(cmd, [](shared_ptr<Worm> elem, string param) -> int {
+	return forHole(cmd, [](shared_ptr<Hole> elem, string param) -> int {
 
-		cout << "Changing worm " << elem->ws.id << " route into: \"" << Worm::expandCDescription(param) << "\"" << endl;
+		cout << "Changing hole " << elem->ws.id << " route into: \"" << Hole::expandCDescription(param) << "\"" << endl;
 
 		elem->chroute(param);
 
@@ -285,7 +285,7 @@ int ShellCommand::cmdChRoute(string cmd)
 int ShellCommand::cmdVersion(string cmd)
 {
 	UNUSED(cmd);
-	cout << "Libworm version: " << wh_VERSION << endl;
+	cout << "Libhole version: " << wh_VERSION << endl;
 	cout << "Netlib version: " << netlib_VERSION << endl;
 	cout << "Hptl version: " << hptl_VERSION << endl;
 #ifdef WH_SSL
@@ -325,16 +325,16 @@ int ShellCommand::cmdStatistics(string cmd)
 {
 #ifdef WH_STATISTICS
 
-	return forWorm(cmd, [](shared_ptr<Worm> elem, string param) -> int {
+	return forHole(cmd, [](shared_ptr<Hole> elem, string param) -> int {
 		vector<ConnectionStatistics> stats;
 		ConnectionStatistics total;
 
-		cout << "== Worm " << elem->ws.id << " ==" << endl;
+		cout << "== Hole " << elem->ws.id << " ==" << endl;
 		cout << "Input: " << endl;
 		stats = elem->getStatistics(true);
 		total = {0};
 		for (ConnectionStatistics stat : stats) {
-			cout << "\t" << stat.wormId << ": ";
+			cout << "\t" << stat.holeId << ": ";
 			cout << humanReadableSize(stat.lastMinIO_tmp) << " in current minute \t";
 			cout << humanReadableSpeed(stat.lastMinIO * 8 / 60) << " last minute \t";
 			cout << humanReadableSize(stat.totalIO) << " in total.\t";
@@ -348,7 +348,7 @@ int ShellCommand::cmdStatistics(string cmd)
 		stats = elem->getStatistics(false);
 		total = {0};
 		for (ConnectionStatistics stat : stats) {
-			cout << "\t" << stat.wormId << ": ";
+			cout << "\t" << stat.holeId << ": ";
 			cout << humanReadableSize(stat.lastMinIO_tmp) << " in current minute \t";
 			cout << humanReadableSpeed(stat.lastMinIO * 8 / 60) << " last minute \t";
 			cout << humanReadableSize(stat.totalIO) << " in total.\t";

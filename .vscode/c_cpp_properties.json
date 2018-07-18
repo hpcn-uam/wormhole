@@ -32,11 +32,13 @@
                 "/usr/include/linux",
                 "/usr/local/include",
                 "${workspaceRoot}/include",
+                "${workspaceRoot}/include/libworm",
                 "${workspaceRoot}/dependencies/repos/hptimelib/include",
                 "${workspaceRoot}/dependencies/repos/netlib/include",
                 "${workspaceRoot}/dependencies/repos/netlib/src",
                 "${workspaceRoot}/dependencies/repos/netlib/dependencies/libressl/include",
-                "${workspaceRoot}/dependencies/repos/linenoise"
+                "${workspaceRoot}/dependencies/repos/linenoise",
+                "/usr/lib64/gcc/x86_64-pc-linux-gnu/6.4.0/include/g++-v6/x86_64-pc-linux-gnu"
             ],
             "defines": [
                 "WH_STATISTICS",
@@ -51,6 +53,7 @@
                     "/usr/include/linux",
                     "/usr/local/include",
                     "${workspaceRoot}/include",
+                    "${workspaceRoot}/include/libworm",
                     "${workspaceRoot}/dependencies/repos/hptimelib/include",
                     "${workspaceRoot}/dependencies/repos/netlib/include",
                     "${workspaceRoot}/dependencies/repos/netlib/src",
@@ -82,5 +85,5 @@
             }
         }
     ],
-    "version": 3
+    "version": 4
 }

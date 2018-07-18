@@ -1,13 +1,13 @@
-#include <einstein/worm.hpp>
+#include <zeus/hole.hpp>
 
-using namespace einstein;
+using namespace zeus;
 
-Worm::Worm(uint16_t id, uint16_t listenPort, int16_t core, string connectionDescription, string host, string programName)
-    : Worm(id, listenPort, core, connectionDescription, host, programName, vector<string>())
+Hole::Hole(uint16_t id, uint16_t listenPort, int16_t core, string connectionDescription, string host, string programName)
+    : Hole(id, listenPort, core, connectionDescription, host, programName, vector<string>())
 {
 }
 
-Worm::Worm(uint16_t id,
+Hole::Hole(uint16_t id,
            uint16_t listenPort,
            int16_t core,
            string connectionDescription,
@@ -15,7 +15,7 @@ Worm::Worm(uint16_t id,
            string programName,
            vector<string> runParams)
 {
-	connectionDescription = Worm::expandCDescription(connectionDescription);
+	connectionDescription = Hole::expandCDescription(connectionDescription);
 	memset(&this->ws, 0, sizeof(this->ws));
 
 	this->ws.id                          = id;
@@ -25,13 +25,13 @@ Worm::Worm(uint16_t id,
 	this->ws.core                        = core;
 
 	// flags
-	this->ws.isSSLNode   = 0;  // false
-	this->ws.isIPv6      = 0;
-	this->ws.einsteinSSL = 0;
+	this->ws.isSSLNode = 0;  // false
+	this->ws.isIPv6    = 0;
+	this->ws.zeusSSL   = 0;
 
 	// version
-	this->ws.einsteinVersion = EINSTEINVERSION;
-	this->ws.wormVersion     = WORMVERSION;
+	this->ws.zeusVersion = ZEUSVERSION;
+	this->ws.holeVersion = WORMVERSION;
 
 	this->host        = host;
 	this->programName = programName;
@@ -44,24 +44,24 @@ Worm::Worm(uint16_t id,
 	this->setTimeoutResponse(2);  // default timeout set to 2
 }
 
-Worm::~Worm() noexcept(false)
+Hole::~Hole() noexcept(false)
 {
 	free(this->ws.connectionDescription);
 
 	if (this->deployed) {
 		ctrlMsgType msg = HALT;
-		cerr << "Worm id = " << this->ws.id << " HALTED" << endl;
+		cerr << "Hole id = " << this->ws.id << " HALTED" << endl;
 
 		if (this->socket->send(&msg, sizeof(msg)) != 0) {
 			throw std::runtime_error("Error sending HALT");
 		}
 
 	} else {
-		cerr << "Worm with id = " << this->ws.id << " has not alredy been deployed (UNHALTED)..." << endl;
+		cerr << "Hole with id = " << this->ws.id << " has not alredy been deployed (UNHALTED)..." << endl;
 	}
 }
 
-void Worm::setIP(string iphostname)
+void Hole::setIP(string iphostname)
 {
 	// check if ipaddr or name
 	int result4 = 0, result6 = 0;
@@ -111,7 +111,7 @@ void Worm::setIP(string iphostname)
 	}
 }
 
-bool Worm::setTimeoutResponse(time_t seconds)
+bool Hole::setTimeoutResponse(time_t seconds)
 {
 	if (this->socket == nullptr) {
 		return false;
@@ -128,7 +128,7 @@ bool Worm::setTimeoutResponse(time_t seconds)
 	}
 }
 
-ostream &einstein::operator<<(ostream &os, Worm const &obj)
+ostream &zeus::operator<<(ostream &os, Hole const &obj)
 {
 	os << "ID: " << obj.ws.id << " ADDR: " << obj.host << ":" << obj.ws.listenPort << (obj.ws.isSSLNode ? " [SSL]" : "")
 	   << " | " << obj.programName << " " << endl
@@ -146,7 +146,7 @@ ostream &einstein::operator<<(ostream &os, Worm const &obj)
 	return os;
 }
 
-string Worm::expandCDescription(string cd)
+string Hole::expandCDescription(string cd)
 {
 	string ret = cd;
 
@@ -164,7 +164,7 @@ string Worm::expandCDescription(string cd)
 	return ret;
 }
 
-int64_t Worm::kill()
+int64_t Hole::kill()
 {
 	if (this->socket == nullptr) {
 		return 0;
@@ -178,7 +178,7 @@ int64_t Worm::kill()
 	return 0;
 }
 
-int64_t Worm::ping()
+int64_t Hole::ping()
 {
 	if (this->socket == nullptr) {
 		return 0;
@@ -208,13 +208,13 @@ int64_t Worm::ping()
 	return hptl_ntimestamp(end - begin) / 1000;
 }
 
-uint64_t Worm::chroute(string newRoute)
+uint64_t Hole::chroute(string newRoute)
 {
 	if (this->socket == nullptr) {
 		return 1;
 	}
 
-	newRoute = Worm::expandCDescription(newRoute);
+	newRoute = Hole::expandCDescription(newRoute);
 
 	ctrlMsgType msg = CHANGEROUTE;
 	uint32_t length = newRoute.length() + 1;
@@ -230,7 +230,7 @@ uint64_t Worm::chroute(string newRoute)
 }
 
 #ifdef WH_STATISTICS
-vector<ConnectionStatistics> Worm::getStatistics(bool inout)
+vector<ConnectionStatistics> Hole::getStatistics(bool inout)
 {
 	ctrlMsgType msg = QUERYID;
 	vector<ConnectionStatistics> ret;

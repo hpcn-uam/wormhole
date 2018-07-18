@@ -3,8 +3,8 @@
 char *ctrlMsgType2str(enum ctrlMsgType msg)
 {
 	switch (msg) {
-		case HELLOEINSTEIN:
-			return "HELLOEINSTEIN";
+		case HELLOZEUS:
+			return "HELLOZEUS";
 
 		case STARTSSL:
 			return "STARTSSL";

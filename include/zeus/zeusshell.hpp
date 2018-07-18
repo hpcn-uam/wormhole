@@ -1,8 +1,8 @@
 #pragma once
 
 #include <common.h>
-#include <einstein/einstein.hpp>
-#include <einstein/shellcommand.hpp>
+#include <zeus/zeus.hpp>
+#include <zeus/shellcommand.hpp>
 
 #include <linenoise.h>
 
@@ -21,13 +21,13 @@
 
 using namespace std;
 
-namespace einstein
+namespace zeus
 {
-class EinsShell
+class ZeusShell
 {
    public:
 	// variables
-	shared_ptr<Einstein> eins;
+	shared_ptr<Zeus> zeus;
 	static set<ShellCommand> commands;
 
 	string prompt;
@@ -36,19 +36,19 @@ class EinsShell
 	bool continueShell;
 
 	// methods
-	EinsShell(shared_ptr<Einstein> eins);
-	~EinsShell();
+	ZeusShell(shared_ptr<Zeus> zeus);
+	~ZeusShell();
 
 	/*
-	 * Starts the Einstein's Shell
+	 * Starts the Zeus's Shell
 	 * @return 0 if normal exit. Other or exception, if some error.
 	 */
 	int startShell();
 
 	/*
-	 * Waits until einstein successfully starts
+	 * Waits until zeus successfully starts
 	 */
-	void waitForEinstein();
+	void waitForZeus();
 
    private:
 	int executeCmd(string cmd);

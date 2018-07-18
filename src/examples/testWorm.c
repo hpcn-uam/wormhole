@@ -10,7 +10,7 @@
 
 extern Worm2EinsConn WH_einsConn;
 extern uint16_t WH_myId;
-extern WormSetup WH_mySetup;
+extern HoleSetup WH_mySetup;
 
 #define TESTLIST "1"
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 	assert(!memcmp(WH_mySetup.connectionDescription, TESTLIST, strlen(TESTLIST)));
 	fprintf(stderr, "Éxito setup\n");
 
-	WormSetup otherWorm;
+	HoleSetup otherWorm;
 
 	for (int i = 0; i < 1; i++) {
 		int id = (i % 3) + 1;

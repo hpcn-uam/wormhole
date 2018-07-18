@@ -1,5 +1,5 @@
 export INCLUDES := $(wildcard include/*.h include/*hpp)
-export SRCS := $(wildcard src/*.c src/*.cpp src/einstein/*c src/einstein/*cpp src/examples/*.c src/examples/*.cpp)
+export SRCS := $(wildcard src/*.c src/*.cpp src/zeus/*c src/zeus/*cpp src/examples/*.c src/examples/*.cpp)
 
 CMAKE ?= cmake
 

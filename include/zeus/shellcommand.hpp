@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common.h>
-#include <einstein/einstein.hpp>
+#include <zeus/zeus.hpp>
 
 #include <poll.h>
 #include <signal.h>
@@ -21,15 +21,15 @@
 
 using namespace std;
 
-namespace einstein
+namespace zeus
 {
 class ShellCommand
 {
-	friend class EinsShell;
+	friend class ZeusShell;
 
    public:
 	// variables
-	static shared_ptr<Einstein> eins;
+	static shared_ptr<Zeus> zeus;
 	string cmd;
 	function<int(string)> exec;
 
@@ -66,7 +66,7 @@ class ShellCommand
 
    private:
 	ShellCommand(string cmd);
-	static int forWorm(string cmd, function<int(shared_ptr<Worm>, string)> fn);
+	static int forHole(string cmd, function<int(shared_ptr<Hole>, string)> fn);
 	static string normalize(string str);
 	static string normalize(string str, int length);
 };

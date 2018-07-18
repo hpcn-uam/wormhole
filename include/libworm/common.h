@@ -32,7 +32,7 @@
 
 // API VERSION
 #define WORMVERSION 0
-#define EINSTEINVERSION 0
+#define ZEUSVERSION 0
 
 #ifndef uint128_t
 #ifdef __clang__
@@ -44,11 +44,12 @@ typedef unsigned __int128 uint128_t;
 #endif
 
 #ifdef __cplusplus
+#define restrict __restrict__  // to solve some compilation bugs
 extern "C" {
 #endif
 
 enum ctrlMsgType {
-	HELLOEINSTEIN,
+	HELLOZEUS,
 	STARTSSL,
 	SETUP,
 	QUERYID,
@@ -78,7 +79,7 @@ typedef struct {  //__attribute__(packet)??
 	uint16_t id;
 	// 128+32
 	uint8_t isSSLNode : 1;
-	uint8_t einsteinSSL : 1;
+	uint8_t zeusSSL : 1;
 	uint8_t isIPv6 : 1;            // if false, ipv4
 	uint8_t reservedBitFlag0 : 1;  // Prevents valgrind unitialized errors. It is also used for memory alignament. It do not
 	                               // stores anyting (yet)
@@ -92,45 +93,45 @@ typedef struct {  //__attribute__(packet)??
 	                               // stores anyting (yet)
 	uint8_t reservedFlag1;  // Prevents valgrind unitialized errors. It is also used for memory alignament. It do not stores
 	                        // anyting (yet)
-	uint8_t einsteinVersion;
-	uint8_t wormVersion;
+	uint8_t zeusVersion;
+	uint8_t holeVersion;
 	// 128+64
 	int64_t core;  // affinity
 	// 128+128
 	uint8_t *connectionDescription;  // (LISP connection description)
 	uint32_t connectionDescriptionLength;
-} WormSetup;
+} HoleSetup;
 
 typedef struct {
 	uint16_t id;
 } PongStats;
 #ifdef WH_PREFETCHING  // default: nope
 /**
-* Prefetch a cache line into all cache levels.
-* @param p
-*   Address to prefetch
-*/
+ * Prefetch a cache line into all cache levels.
+ * @param p
+ *   Address to prefetch
+ */
 static inline void WH_prefetch0(volatile void *p)
 {
 	asm volatile("prefetcht0 %[p]" : [p] "+m"(*(volatile char *)p));
 }
 
 /**
-* Prefetch a cache line into all cache levels except the 0th cache level.
-* @param p
-*   Address to prefetch
-*/
+ * Prefetch a cache line into all cache levels except the 0th cache level.
+ * @param p
+ *   Address to prefetch
+ */
 static inline void WH_prefetch1(volatile void *p)
 {
 	asm volatile("prefetcht1 %[p]" : [p] "+m"(*(volatile char *)p));
 }
 
 /**
-* Prefetch a cache line into all cache levels except the 0th and 1th cache
-* levels.
-* @param p
-*   Address to prefetch
-*/
+ * Prefetch a cache line into all cache levels except the 0th and 1th cache
+ * levels.
+ * @param p
+ *   Address to prefetch
+ */
 static inline void WH_prefetch2(volatile void *p)
 {
 	asm volatile("prefetcht2 %[p]" : [p] "+m"(*(volatile char *)p));
@@ -139,7 +140,7 @@ static inline void WH_prefetch2(volatile void *p)
 
 #ifdef WH_STATISTICS
 typedef struct {
-	uint64_t wormId;
+	uint64_t holeId;
 	uint64_t totalIO;
 	uint64_t lastMinIO_tmp;
 	uint64_t lastMinIO;

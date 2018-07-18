@@ -6,7 +6,7 @@
 #cmakedefine WH_SSL
 
 // Is debug on?
-#cmakedefine EINSTEIN_DEBUG
+#cmakedefine ZEUS_DEBUG
 #cmakedefine LIBWORM_DEBUG
 #cmakedefine LIBWORM_ROUTE_DEBUG
 

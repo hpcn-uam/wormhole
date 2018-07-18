@@ -12,8 +12,8 @@
 
 extern Worm2EinsConn WH_einsConn;
 extern uint16_t WH_myId;
-extern WormSetup WH_mySetup;
-extern DestinationWorms WH_myDstWorms;
+extern HoleSetup WH_mySetup;
+extern DestinationHoles WH_myDstWorms;
 
 #define TESTLIST "(Cat (1.(DUP 1 2 3)) (2.(RR 1 2 3)))"
 #define TESTDATA "1234567890"

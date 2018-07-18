@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common.h>
-#include <einstein/connection.hpp>
+#include <zeus/connection.hpp>
 
 #include <cstdio>
 #include <cstdlib>
@@ -16,20 +16,20 @@
 
 using namespace std;
 
-namespace einstein
+namespace zeus
 {
-class Einstein
+class Zeus
 {
 	friend class Connection;
-	friend class EinsShell;
+	friend class ZeusShell;
 	friend class ShellCommand;
 	Connection ec;
 	thread thr;
 
    public:
-	Einstein(const string configFileName, string listenIp, uint16_t listenPort);
-	Einstein(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployWorms);
-	~Einstein();
+	Zeus(const string configFileName, string listenIp, uint16_t listenPort);
+	Zeus(const string configFileName, string listenIp, uint16_t listenPort, bool autoDeployHoles);
+	~Zeus();
 
 	/*
 	 *Starts everything SYNCRONIOUSLY

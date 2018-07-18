@@ -1,3 +1,0 @@
-id nombreprograma host core
-                       -1 si da igual
-    (Configuración lisp ruta)

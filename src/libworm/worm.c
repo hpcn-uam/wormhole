@@ -7,14 +7,14 @@
 
 #include <netlib_inline.c>
 /*
-*Global variables
-*/
+ *Global variables
+ */
 Worm2EinsConn WH_einsConn;
 uint16_t WH_myId;
-WormSetup WH_mySetup;
+HoleSetup WH_mySetup;
 
-DestinationWorms WH_myDstWorms = {0, 0};
-DestinationWorms WH_myRcvWorms = {0, 0};
+DestinationHoles WH_myDstWorms = {0, 0};
+DestinationHoles WH_myRcvWorms = {0, 0};
 
 WormConfig WH_myConfig = {0, 0};
 
@@ -26,8 +26,8 @@ volatile uint8_t WH_bussy   = 0;
 volatile uint8_t WH_halting = 0;
 extern uint32_t WH_load;
 /*
-*===============
-*/
+ *===============
+ */
 
 /* Name WH_setup_types
  * Setups the available types of this Worm.
@@ -63,38 +63,38 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
 }
 
 /* Name WH_init
-* Starts the WormHole Library
-* Return 0 if OK, something else if error.
-*/
+ * Starts the WormHole Library
+ * Return 0 if OK, something else if error.
+ */
 uint8_t WH_init(void)
 {
 	WH_myDstWorms.numberOfWorms = 0;
-	WH_myDstWorms.worms         = malloc(sizeof(DestinationWorm));
+	WH_myDstWorms.worms         = malloc(sizeof(DestinationHole));
 
 	WH_myRcvWorms.numberOfWorms = 0;
-	WH_myRcvWorms.worms         = malloc(sizeof(DestinationWorm));
+	WH_myRcvWorms.worms         = malloc(sizeof(DestinationHole));
 
 	WH_myId = atoi(getenv("WORM_ID"));
 
-	WH_einsConn.Port = atoi(getenv("EINSTEIN_PORT"));
-	WH_einsConn.ip   = strdup(getenv("EINSTEIN_IP"));
+	WH_einsConn.Port = atoi(getenv("ZEUS_PORT"));
+	WH_einsConn.ip   = strdup(getenv("ZEUS_IP"));
 
-	int EinsteinSocket = tcp_connect_to(getenv("EINSTEIN_IP"), WH_einsConn.Port);
+	int ZeusSocket = tcp_connect_to(getenv("ZEUS_IP"), WH_einsConn.Port);
 
-	if (EinsteinSocket == -1) {
+	if (ZeusSocket == -1) {
 #ifdef LIBWORM_DEBUG
-		perror("[WH]: Error connecting to Einstein");
+		perror("[WH]: Error connecting to Zeus");
 #endif
 		return 1;
 	}
 
-	WH_einsConn.socket = tcp_upgrade2syncSocket(EinsteinSocket, NOSSL, NULL);
+	WH_einsConn.socket = tcp_upgrade2syncSocket(ZeusSocket, NOSSL, NULL);
 
 	if (WH_einsConn.socket == NULL) {
 #ifdef LIBWORM_DEBUG
-		perror("[WH]: Error connecting to Einstein");
+		perror("[WH]: Error connecting to Zeus");
 #endif
-		close(EinsteinSocket);
+		close(ZeusSocket);
 		return 1;
 	}
 
@@ -110,23 +110,23 @@ uint8_t WH_init(void)
 	size_t hellomsgSize = sizeof(enum ctrlMsgType) + sizeof(uint16_t);
 	uint8_t hellomsg[hellomsgSize];
 	enum ctrlMsgType *msgType                            = (enum ctrlMsgType *)hellomsg;
-	*msgType                                             = HELLOEINSTEIN;
+	*msgType                                             = HELLOZEUS;
 	*((uint16_t *)(hellomsg + sizeof(enum ctrlMsgType))) = htons(WH_myId);
 
 	// Send hello message
 	if (tcp_message_ssend(WH_einsConn.socket, hellomsg, hellomsgSize) != 0) {
 #ifdef LIBWORM_DEBUG
-		perror("[WH]: Error sending HELLO to Einstein");
+		perror("[WH]: Error sending HELLO to Zeus");
 #endif
 		return 1;
 	}
 
-	// Receive WormSetup
+	// Receive HoleSetup
 
 	// Check ctrl msg
 	if (tcp_message_srecv(WH_einsConn.socket, msgType, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
 #ifdef LIBWORM_DEBUG
-		perror("[WH]: Error recv myconfig.response from Einstein");
+		perror("[WH]: Error recv myconfig.response from Zeus");
 #endif
 		return 1;
 	}
@@ -135,14 +135,14 @@ uint8_t WH_init(void)
 	if (*msgType == STARTSSL) {
 		if (syncSocketStartSSL(WH_einsConn.socket, CLISSL, NULL)) {
 #ifdef LIBWORM_DEBUG
-			perror("[WH]: Error stablishing SSL with Einstein");
+			perror("[WH]: Error stablishing SSL with Zeus");
 #endif
 			return 1;
 		}
 
 		if (tcp_message_srecv(WH_einsConn.socket, msgType, sizeof(enum ctrlMsgType), 1) != sizeof(enum ctrlMsgType)) {
 #ifdef LIBWORM_DEBUG
-			perror("[WH]: Error recv myconfig.response from Einstein");
+			perror("[WH]: Error recv myconfig.response from Zeus");
 #endif
 			return 1;
 		}
@@ -151,16 +151,16 @@ uint8_t WH_init(void)
 
 	if (*msgType != SETUP) {
 #ifdef LIBWORM_DEBUG
-		perror("[WH]: Unexpected message from einstein");
+		perror("[WH]: Unexpected message from zeus");
 #endif
 		return 1;
 	}
 
-	uint8_t *wormSetupMsg = (uint8_t *)&WH_mySetup;
+	uint8_t *HoleSetupMsg = (uint8_t *)&WH_mySetup;
 
-	if (tcp_message_srecv(WH_einsConn.socket, wormSetupMsg, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
+	if (tcp_message_srecv(WH_einsConn.socket, HoleSetupMsg, sizeof(HoleSetup), 1) != sizeof(HoleSetup)) {
 #ifdef LIBWORM_DEBUG
-		perror("[WH]: Error recv myconfig from Einstein");
+		perror("[WH]: Error recv myconfig from Zeus");
 #endif
 		return 1;
 	}
@@ -173,7 +173,7 @@ uint8_t WH_init(void)
 		        WH_einsConn.socket, WH_mySetup.connectionDescription, WH_mySetup.connectionDescriptionLength, 1) !=
 		    WH_mySetup.connectionDescriptionLength) {
 #ifdef LIBWORM_DEBUG
-			perror("[WH]: Error recv connectionDescription from Einstein");
+			perror("[WH]: Error recv connectionDescription from Zeus");
 #endif
 			return 1;
 		}
@@ -224,7 +224,7 @@ uint8_t WH_init(void)
 		fputs("[TH] setsockopt failed [2]\n", stderr);
 	}
 
-	// fprintf(stdout, "[WH] %s Online\n", wh_VERSION);
+	// fprintf(stdout, "[WH]: %s Online\n", wh_VERSION);
 	return 0;
 }
 
@@ -291,14 +291,14 @@ void *WH_thread(void *arg)
 		if (tmpsock < 0) {
 			enum ctrlMsgType type;
 
-			// Lectura desde Einstein
+			// Lectura desde Zeus
 			if (!WH_bussy) {
 				ssize_t ret = tcp_message_srecv(WH_einsConn.socket, &type, sizeof(type), 0);
 
 				if (ret != sizeof(type)) {
 					if (ret == -1) {
-						// TODO: connection lost with Einstein, Reconnect!!
-						fputs("EINSTEIN connection lost...! Forced Shutdown (1)\n", stderr);
+						// TODO: connection lost with Zeus, Reconnect!!
+						fputs("ZEUS connection lost...! Forced Shutdown (1)\n", stderr);
 						exit(1);
 					}
 
@@ -306,8 +306,8 @@ void *WH_thread(void *arg)
 
 				} else {
 					if (WH_TH_checkCtrlMsgType(type, WH_einsConn.socket) > 0) {
-						// TODO: connection lost with Einstein, Reconnect!!
-						fputs("EINSTEIN connection lost...! Forced Shutdown (2)\n", stderr);
+						// TODO: connection lost with Zeus, Reconnect!!
+						fputs("ZEUS connection lost...! Forced Shutdown (2)\n", stderr);
 						exit(1);
 					}
 				}
@@ -336,7 +336,7 @@ void *WH_thread(void *arg)
 }
 
 /** WH_TH_checkCtrlMsgType
- * check a control message type from Einstein
+ * check a control message type from Zeus
  * @return 0 if ok, -1 if error, and 1 if socket wont receive more control data.
  */
 int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
@@ -355,7 +355,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 			break;
 
 		case HALT:
-			fputs("[WH]: Halting Worm by EINSTEIN...\n", stderr);
+			fputs("[WH]: Halting Worm by ZEUS...\n", stderr);
 
 			if (WH_halting) {
 				WH_halting = 0;
@@ -384,7 +384,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 				}
 
 			if (!ret) {
-				fprintf(stderr, "[WH] Setting up new Route: %s\n", newroute);
+				fprintf(stderr, "[WH]: Setting up new Route: %s\n", newroute);
 			}
 
 			fflush(stderr);
@@ -430,7 +430,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 					for (size_t i = 0; i < WH_myRcvWorms.numberOfWorms; i++) {
 						// estadisticas acumuladas
 						ConnectionStatistics stats = {0};
-						stats.wormId               = WH_myRcvWorms.worms[i].id;
+						stats.holeId               = WH_myRcvWorms.worms[i].id;
 						for (size_t j = 0; j < WH_myRcvWorms.worms[i].numberOfTypes; j++) {
 							if (WH_myRcvWorms.worms[i].conns[j]) {
 								stats.totalIO += WH_myRcvWorms.worms[i].conns[j]->stats.totalIO;
@@ -454,7 +454,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 					for (size_t i = 0; i < WH_myDstWorms.numberOfWorms; i++) {
 						// estadisticas acumuladas
 						ConnectionStatistics stats = {0};
-						stats.wormId               = WH_myDstWorms.worms[i].id;
+						stats.holeId               = WH_myDstWorms.worms[i].id;
 						for (size_t j = 0; j < WH_myDstWorms.worms[i].numberOfTypes; j++) {
 							if (WH_myDstWorms.worms[i].conns[j]) {
 								stats.totalIO += WH_myDstWorms.worms[i].conns[j]->stats.totalIO;
@@ -480,7 +480,7 @@ int WH_TH_checkCtrlMsgType(enum ctrlMsgType type, SyncSocket *socket)
 		}
 
 		default:
-			fprintf(stderr, "Unsupported Einstein Message (%d)!\n", (int)type);
+			fprintf(stderr, "Unsupported Zeus Message (%d)!\n", (int)type);
 			ret = 1;  // Error!
 			break;
 	}
@@ -537,7 +537,7 @@ inline void WH_TH_hello(SyncSocket *socket)
 		return;
 	}
 
-	if (tcp_message_ssend(socket, &WH_mySetup, sizeof(WH_mySetup))) {  // Con wormSetup
+	if (tcp_message_ssend(socket, &WH_mySetup, sizeof(WH_mySetup))) {  // Con HoleSetup
 		perror("Error contestando socket [2]\n");
 		return;
 	}
@@ -564,16 +564,16 @@ inline void WH_TH_hello(SyncSocket *socket)
  */
 inline void WH_TH_setupworm(SyncSocket *socket)
 {
-	DestinationWorm tmpDestWorm;
+	DestinationHole tmpDestWorm;
 
-	// Recibimos un destinationWorm
-	if (tcp_message_srecv(socket, &tmpDestWorm, sizeof(DestinationWorm), 1) != sizeof(DestinationWorm)) {
+	// Recibimos un DestinationHole
+	if (tcp_message_srecv(socket, &tmpDestWorm, sizeof(DestinationHole), 1) != sizeof(DestinationHole)) {
 		fputs("Error configurando socket", stderr);
 		tcp_sclose(socket);  // cerramos el socket
 		return;
 	}
 
-	DestinationWorm *tmpDestWormPtr = WH_addWorm(&WH_myRcvWorms, tmpDestWorm.id, 0);
+	DestinationHole *tmpDestWormPtr = WH_addWorm(&WH_myRcvWorms, tmpDestWorm.id, 0);
 
 	strncpy(tmpDestWormPtr->ip, tmpDestWorm.ip, INET6_ADDRSTRLEN);
 	tmpDestWormPtr->port = tmpDestWorm.port;
@@ -602,15 +602,15 @@ inline void WH_TH_setupworm(SyncSocket *socket)
 
 	tmpDestWormPtr->numberOfTypes++;
 #ifdef LIBWORM_DEBUG
-	fprintf(stderr, "[WORM] Input Connection: %d\n", tmpDestWormPtr->id);
+	fprintf(stderr, "[WH]: Input Connection: %d\n", tmpDestWormPtr->id);
 #endif
 }
 
 /* Name WH_connectionPoll
-    * Poll data from some socket
-    * Return some connection with data, NULL if error/timeout.
-    */
-Connection *WH_connectionPoll(DestinationWorms *wms, MessageInfo *mi)
+ * Poll data from some socket
+ * Return some connection with data, NULL if error/timeout.
+ */
+Connection *WH_connectionPoll(DestinationHoles *wms, MessageInfo *mi)
 {
 	static uint32_t wormIndex = 0;
 	static uint32_t connIndex = 0;
@@ -697,39 +697,55 @@ int WH_considerSocket(AsyncSocket *sock, MessageInfo *mi)
  * Connect and fill the socket data.
  * Return 0 if OK, something else if error.
  */
-uint8_t WH_connectWorm(DestinationWorm *c)
+uint8_t WH_connectWorm(DestinationHole *c)
 {
 	int socket = 0;
 
 	// fprintf(stderr, "[DEBUG:%d ; %s:%d]\n", __LINE__, inet_ntoa(ip_addr), c->port);
 
+#ifdef LIBWORM_DEBUG
+	int retryflag = 0;
+#endif
 	do {
 		// Force keep-trying
 		socket = tcp_connect_to(c->ip, c->port);
+		hptl_waitns(100000);
 
-		if (socket < 0) {
-			fprintf(stderr, "%s:%d\t", c->ip, c->port);
-			perror("Error estableciendo conexion volatil con WORM");
+#ifdef LIBWORM_DEBUG
+		if (socket < 0 && retryflag != errno) {
+			fprintf(stderr, "[WH]: Worm connection to %s:%d failed: ", c->ip, c->port);
+			perror("");
+			fprintf(stderr, "[WH]: Keep trying... ");
 			fflush(stderr);
+			retryflag = errno;
 		}
+#endif
 	} while (socket < 0);
+
+#ifdef LIBWORM_DEBUG
+	if (retryflag) {
+		fprintf(stderr, "CONNECTED\n");
+		fflush(stderr);
+	}
+#endif
 
 	// Solicitamos datos...
 	enum wormMsgType type = HELLO;  // Con Worm Info
 
-	WormSetup wormSetup;
+	HoleSetup HoleSetup;
 	WormConfig wormConfig = {0, 0};
 
 	if (tcp_message_send(socket, &type, sizeof(type))) {
-		perror("Error solicitando información del Worm [1]");
+		perror("Error solicitando información del Worm [1.s]");
 		close(socket);
 		return 1;
 	}
 
 	if (tcp_message_recv(socket, &type, sizeof(type), 1) != sizeof(type)) {
-		perror("Error solicitando información del Worm [1]");
+		perror("Error solicitando información del Worm [1.r]");
 		close(socket);
-		return 1;
+		return WH_connectWorm(c);  // retry?
+		                           // return 1;
 	}
 
 	if (type != WORMINFO) {
@@ -738,7 +754,7 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 		return 1;
 	}
 
-	if (tcp_message_recv(socket, &wormSetup, sizeof(wormSetup), 1) != sizeof(wormSetup)) {  // Con wormSetup
+	if (tcp_message_recv(socket, &HoleSetup, sizeof(HoleSetup), 1) != sizeof(HoleSetup)) {  // Con HoleSetup
 		perror("Error solicitando información del Worm [2]");
 		close(socket);
 		return 1;
@@ -764,7 +780,7 @@ uint8_t WH_connectWorm(DestinationWorm *c)
 	close(socket);
 
 	// Rellenamos el worm entrante
-	c->id             = wormSetup.id;
+	c->id             = HoleSetup.id;
 	c->numberOfTypes  = wormConfig.numInputTypes;
 	c->supportedTypes = wormConfig.inputTypes;
 
@@ -783,7 +799,7 @@ uint8_t WH_connectWorm(DestinationWorm *c)
  * Setup connection type
  * Return 0 if OK, something else if error.
  */
-uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *const type)
+uint8_t WH_setupConnectionType(DestinationHole *dw, const ConnectionDataType *const type)
 {
 	WH_connectWorm(dw);
 
@@ -845,7 +861,7 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 		return 1;
 	}
 
-	DestinationWorm dwtmp;
+	DestinationHole dwtmp;
 	bzero(&dwtmp, sizeof(dwtmp));
 	dwtmp.id = WH_mySetup.id;
 
@@ -895,13 +911,13 @@ uint8_t WH_setupConnectionType(DestinationWorm *dw, const ConnectionDataType *co
 	}
 
 #ifdef LIBWORM_DEBUG
-	fprintf(stderr, "[WORM] Output Connection: %d\n", dw->id);
+	fprintf(stderr, "[WH]: Output Connection: %d\n", dw->id);
 #endif
 
 	return 0;
 }
 
-uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
+uint8_t WH_getWormData(HoleSetup *ws, const uint16_t holeId)
 {
 	enum ctrlMsgType ctrlMsg = QUERYID;
 
@@ -909,7 +925,7 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 		return 1;
 	}
 
-	if (tcp_message_ssend(WH_einsConn.socket, (void *)&wormId, sizeof(uint16_t)) != 0) {
+	if (tcp_message_ssend(WH_einsConn.socket, (void *)&holeId, sizeof(uint16_t)) != 0) {
 		return 1;
 	}
 
@@ -922,7 +938,7 @@ uint8_t WH_getWormData(WormSetup *ws, const uint16_t wormId)
 		return 1;
 	}
 
-	if (tcp_message_srecv(WH_einsConn.socket, (uint8_t *)ws, sizeof(WormSetup), 1) != sizeof(WormSetup)) {
+	if (tcp_message_srecv(WH_einsConn.socket, (uint8_t *)ws, sizeof(HoleSetup), 1) != sizeof(HoleSetup)) {
 		return 1;
 	}
 
@@ -1160,9 +1176,9 @@ const char *_WH_DymRoute_CC_FuncStart =
     "\n\n"
     "uint8_t WH_DymRoute_precompiled_route (const void *restrict const data,"
     " const MessageInfo *restrict const mi,"
-    " const DestinationWorms *restrict const cns)\n{\n"
+    " const DestinationHoles *restrict const cns)\n{\n"
     "int ret = 0;\n"
-    "DestinationWorm *dw;\n";
+    "DestinationHole *dw;\n";
 const char *_WH_DymRoute_CC_FuncEnd =
     "\n"
     "return ret;"
@@ -1213,7 +1229,7 @@ void *_WH_DymRoute_libHandle = NULL;
  */
 uint8_t (*WH_DymRoute_precompiled_route)(const void *restrict const data,
                                          const MessageInfo *restrict const mi,
-                                         const DestinationWorms *restrict const cns) = 0;
+                                         const DestinationHoles *restrict const cns) = 0;
 
 /* Name WH_send
  * TODO
@@ -1372,9 +1388,9 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 }
 
 /* Name WH_DymRoute_route
-* Enrute a message
-* Return 0 if OK, something else if error.
-*/
+ * Enrute a message
+ * Return 0 if OK, something else if error.
+ */
 uint8_t WH_DymRoute_route(const void *restrict const data, const MessageInfo *restrict const mi)
 {
 	if (WH_DymRoute_precompiled_route == 0) {
@@ -1390,7 +1406,7 @@ uint8_t WH_DymRoute_route(const void *restrict const data, const MessageInfo *re
  * Also makes connections
  * Return 0 if OK, something else if error.
  */
-uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms *wms)
+uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationHoles *wms)
 {
 	pid_t myPid     = getpid();
 	char *cString   = malloc(1024);
@@ -1490,8 +1506,8 @@ uint8_t WH_DymRoute_init(const uint8_t *const routeDescription, DestinationWorms
 /* Name WH_DymRoute_send
  * Sends a message to the network
  * Return 0 if OK, something else if error.
-  */
-uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, DestinationWorm *const dw)
+ */
+uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, DestinationHole *const dw)
 {
 	// TODO search info
 	// WH_setupConnectionType
@@ -1499,7 +1515,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, De
 		if (!WH_connectionDataTypecmp(dw->supportedTypes + i, mi->type)) {
 			// tcp_message_send_async(AsyncSocket *sock, const void *message, size_t len)
 			if (!dw->conns[i]) {
-				if (WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {
+				if (WH_setupConnectionType((DestinationHole *)dw, mi->type)) {
 #ifdef LIBWORM_ROUTE_DEBUG
 					fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL-SETUP]\n", dw->id);
 #endif
@@ -1549,7 +1565,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, De
 	fprintf(stderr, "ROUTEDEBUG: sending data to worm: %d [FAIL]\n", dw->id);
 #endif
 
-	if (!WH_setupConnectionType((DestinationWorm *)dw, mi->type)) {  // Refresh worm data
+	if (!WH_setupConnectionType((DestinationHole *)dw, mi->type)) {  // Refresh worm data
 		return WH_DymRoute_send(data, mi, dw);                       // Try again if it is possible
 	}
 
@@ -1561,7 +1577,7 @@ uint8_t WH_DymRoute_send(const void *const data, const MessageInfo *const mi, De
  * Searchs for a Function, and calls the correct one.
  * Return 0 if OK, something else if error.
  */
-uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription, DestinationHoles *wms)
 {
 	uint16_t i = 0;
 
@@ -1645,7 +1661,7 @@ uint8_t WH_DymRoute_route_create(FILE *f, const uint8_t *const routeDescription,
  * Used Constants:
     //TODO
  */
-uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescription, DestinationHoles *wms)
 {
 	uint8_t ret        = 0;
 	int16_t parentesys = 0;
@@ -1681,7 +1697,7 @@ uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescr
 			fprintf(stderr, "ROUTEDEBUG: Sending to %d\n", nextNode);
 #endif
 
-			DestinationWorm *worm = WH_addWorm(wms, nextNode, 1);
+			DestinationHole *worm = WH_addWorm(wms, nextNode, 1);
 
 			if (worm) {
 				fprintf(f, _WH_DymRoute_CC_setDw, WH_findWormIndex(wms, nextNode));
@@ -1709,7 +1725,7 @@ uint8_t WH_DymRoute_route_createFuncDUP(FILE *f, const uint8_t *const routeDescr
     _WH_DymRoute_CC_RRbreak
     _WH_DymRoute_CC_RRend %rrid %rrid %ntotal
  */
-uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescription, DestinationHoles *wms)
 {
 	uint8_t ret        = 0;
 	int16_t parentesys = 0;
@@ -1754,7 +1770,7 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
 				i++;
 			}
 
-			DestinationWorm *worm = WH_addWorm(wms, nextNode, 1);
+			DestinationHole *worm = WH_addWorm(wms, nextNode, 1);
 
 			if (worm) {
 				fprintf(f, _WH_DymRoute_CC_RRcase, rrCaseId);
@@ -1793,7 +1809,7 @@ uint8_t WH_DymRoute_route_createFuncRR(FILE *f, const uint8_t *const routeDescri
         _WH_DymRoute_CC_Catbreak
         _WH_DymRoute_CC_Catend
  */
-uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescription, DestinationHoles *wms)
 {
 	uint8_t ret        = 0;
 	int16_t parentesys = 0;
@@ -1848,7 +1864,7 @@ uint8_t WH_DymRoute_route_createFuncCat(FILE *f, const uint8_t *const routeDescr
  * Used Constants:
         TODO
  */
-uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDescription, DestinationHoles *wms)
 {
 	uint8_t ret        = 0;
 	int16_t parentesys = 0;
@@ -1892,7 +1908,7 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
 				i++;
 			}
 
-			DestinationWorm *worm = WH_addWorm(wms, nextNode, 1);
+			DestinationHole *worm = WH_addWorm(wms, nextNode, 1);
 
 			if (worm) {
 				fprintf(f, _WH_DymRoute_CC_Hashcase, myHash);
@@ -1926,7 +1942,7 @@ uint8_t WH_DymRoute_route_createFuncHash(FILE *f, const uint8_t *const routeDesc
  * Used Constants:
         _WH_DymRoute_CC_Ignoreunused
  */
-uint8_t WH_DymRoute_route_createFuncIgnore(FILE *f, const uint8_t *const routeDescription, DestinationWorms *wms)
+uint8_t WH_DymRoute_route_createFuncIgnore(FILE *f, const uint8_t *const routeDescription, DestinationHoles *wms)
 {
 	uint8_t ret        = 0;
 	int16_t parentesys = 0;
@@ -2046,10 +2062,10 @@ void WH_DymRoute_invalidate()
 /* Name WH_findWorm
  * Return the worm mached (if no exists)
  */
-DestinationWorm *WH_findWorm(DestinationWorms *wms, const uint16_t wormId)
+DestinationHole *WH_findWorm(DestinationHoles *wms, const uint16_t holeId)
 {
 	for (size_t i = 0; i < wms->numberOfWorms; i++) {
-		if (wms->worms[i].id == wormId) {
+		if (wms->worms[i].id == holeId) {
 			return wms->worms + i;
 		}
 	}
@@ -2058,12 +2074,12 @@ DestinationWorm *WH_findWorm(DestinationWorms *wms, const uint16_t wormId)
 }
 
 /* Name WH_findWormIndex
-    * Return the worm index in DestinationWorms
-    */
-size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId)
+ * Return the worm index in DestinationHoles
+ */
+size_t WH_findWormIndex(DestinationHoles *wms, const uint16_t holeId)
 {
 	for (size_t i = 0; i < wms->numberOfWorms; i++) {
-		if (wms->worms[i].id == wormId) {
+		if (wms->worms[i].id == holeId) {
 			return i;
 		}
 	}
@@ -2075,30 +2091,30 @@ size_t WH_findWormIndex(DestinationWorms *wms, const uint16_t wormId)
  * @param init Determines if the worm should be initialized or not
  * @return the created connection
  */
-DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const uint8_t init)
+DestinationHole *WH_addWorm(DestinationHoles *wms, const uint16_t holeId, const uint8_t init)
 {
-	DestinationWorm *worm = NULL;
-	worm                  = WH_findWorm(wms, wormId);
+	DestinationHole *worm = NULL;
+	worm                  = WH_findWorm(wms, holeId);
 
 	if (worm) {
 		return worm;
 	}
 
-	if (wormId == WH_myId) {  // It is a check to remove posible loopbacks; //TODO allow loopbacks
+	if (holeId == WH_myId) {  // It is a check to remove posible loopbacks; //TODO allow loopbacks
 		WH_abort("Loopback not allowed");
 	}
 
-	wms->worms = realloc(wms->worms, sizeof(DestinationWorm) * (wms->numberOfWorms + 1));
+	wms->worms = realloc(wms->worms, sizeof(DestinationHole) * (wms->numberOfWorms + 1));
 
-	worm     = calloc(sizeof(DestinationWorm), 1);  // TODO REVISAR
-	worm->id = wormId;
+	worm     = calloc(sizeof(DestinationHole), 1);  // TODO REVISAR
+	worm->id = holeId;
 
 	if (init) {
-		WormSetup wSetup;
+		HoleSetup wSetup;
 
-		if (WH_getWormData(&wSetup, wormId)) {
+		if (WH_getWormData(&wSetup, holeId)) {
 #ifdef LIBWORM_ROUTE_DEBUG
-			fprintf(stderr, "ROUTEaddworm: Worm %d no data retrived\n", wormId);
+			fprintf(stderr, "ROUTEaddworm: Worm %d no data retrived\n", holeId);
 #endif
 			return NULL;
 		}
@@ -2128,13 +2144,27 @@ DestinationWorm *WH_addWorm(DestinationWorms *wms, const uint16_t wormId, const 
 	return wms->worms + (wms->numberOfWorms - 1);
 }
 
+/** WH_disconnectWorm
+ * Disconnect from a worm_id and flushes its contents (or it should...)
+ * @Param flow: if Set to 1, recv routes are disconnected
+ *              if Set to 2, send routes are disconnected
+ *              if Set to 3, both routes are disconnected
+ */
+void WH_disconnectWorm(const uint16_t holeId, int flow)
+{
+	if (flow & 1)
+		WH_removeWorm(&WH_myRcvWorms, holeId);
+	if (flow & 2)
+		WH_removeWorm(&WH_myDstWorms, holeId);
+}
+
 /** WH_removeWorm
  * Removes, close connections and frees all the data related to that worm.
  */
-void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
+void WH_removeWorm(DestinationHoles *wms, const uint16_t holeId)
 {
 #ifdef LIBWORM_DEBUG
-	fprintf(stderr, "[WH]: Removing worm id=%d...\n", wormId);
+	fprintf(stderr, "[WH]: Removing worm id=%d...\n", holeId);
 #endif
 
 	/*if wms is destworm, route table must be disabled*/
@@ -2145,14 +2175,14 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 		WH_DymRoute_invalidate();
 	}
 
-	DestinationWorm *worm = WH_findWorm(wms, wormId);
-	ssize_t index         = WH_findWormIndex(wms, wormId);
+	DestinationHole *worm = WH_findWorm(wms, holeId);
+	ssize_t index         = WH_findWormIndex(wms, holeId);
 
 	wms->numberOfWorms--;
 
 	if (index == -1) {
 #ifdef LIBWORM_DEBUG
-		fprintf(stderr, "[WH]: worm not found! %d (%ld)\n", wormId, index);
+		fprintf(stderr, "[WH]: worm not found! %d (%ld)\n", holeId, index);
 #endif
 		return;
 	}
@@ -2161,23 +2191,23 @@ void WH_removeWorm(DestinationWorms *wms, const uint16_t wormId)
 #ifdef LIBWORM_DEBUG
 		fprintf(stderr, "[WH]: memmoving...(index=%ld, nworms=%lu)\n", index, wms->numberOfWorms);
 #endif
-		memmove(wms->worms + index, wms->worms + index + 1, (wms->numberOfWorms - index) * sizeof(DestinationWorm *));
+		memmove(wms->worms + index, wms->worms + index + 1, (wms->numberOfWorms - index) * sizeof(DestinationHole *));
 	}
 
 	for (size_t i = 0; i < worm->numberOfTypes; i++) {
 		if (worm->conns[i]) {
 			destroy_asyncSocket(&(worm->conns[i]->socket));
-			// fprintf(stderr, "[WH] free conns[%lu]\n",i);
+			// fprintf(stderr, "[WH]: free conns[%lu]\n",i);
 			free(worm->conns[i]);
 			worm->conns[i] = NULL;
 		}
 	}
 
-	// fprintf(stderr, "[WH] free conns\n");
+	// fprintf(stderr, "[WH]: free conns\n");
 	free(worm->conns);
-	// fprintf(stderr, "[WH] free supportedTypes\n");
+	// fprintf(stderr, "[WH]: free supportedTypes\n");
 	free(worm->supportedTypes);
-	// fprintf(stderr, "[WH] free worm\n");
+	// fprintf(stderr, "[WH]: free worm\n");
 	// free(worm); //TODO this causes free corruption... why!?
 }
 

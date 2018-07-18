@@ -1,8 +1,8 @@
-#include <einstein/einsshell.hpp>
+#include <zeus/zeusshell.hpp>
 
-using namespace einstein;
+using namespace zeus;
 
-set<ShellCommand> EinsShell::commands;
+set<ShellCommand> ZeusShell::commands;
 
 extern "C" {
 void completeln(const char *buf, linenoiseCompletions *lc)
@@ -12,7 +12,7 @@ void completeln(const char *buf, linenoiseCompletions *lc)
 
 	transform(temp.begin(), temp.end(), temp.begin(), [](char x) { return toupper(x, locale()); });
 
-	for (auto element : EinsShell::commands) {
+	for (auto element : ZeusShell::commands) {
 		string transfelement = element.cmd.substr(0, temp.length());
 
 		transform(
@@ -31,7 +31,7 @@ char *hintsln(const char *buf, int *color, int *bold)
 
 	transform(temp.begin(), temp.end(), temp.begin(), [](char x) { return toupper(x, locale()); });
 
-	for (auto element : EinsShell::commands) {
+	for (auto element : ZeusShell::commands) {
 		string transfelement = element.cmd;
 
 		transform(
@@ -67,11 +67,11 @@ void hintsFree(void *elem)
 }
 }
 
-EinsShell::EinsShell(shared_ptr<Einstein> eins)
+ZeusShell::ZeusShell(shared_ptr<Zeus> zeus)
 {
-	this->eins          = eins;
-	this->prompt        = "Einstein> ";
-	this->historyPath   = string(getenv("HOME")) + "/.einstein.hist";
+	this->zeus          = zeus;
+	this->prompt        = "Zeus> ";
+	this->historyPath   = string(getenv("HOME")) + "/.zeus.hist";
 	this->historyLength = 500;
 	this->continueShell = true;
 
@@ -86,20 +86,20 @@ EinsShell::EinsShell(shared_ptr<Einstein> eins)
 	linenoiseSetHintsCallback(hintsln);
 	linenoiseSetFreeHintsCallback(hintsFree);
 
-	ShellCommand::eins = eins;
+	ShellCommand::zeus = zeus;
 }
 
-EinsShell::~EinsShell()
+ZeusShell::~ZeusShell()
 {
 	linenoiseHistorySetMaxLen(1);
 	linenoiseHistorySetMaxLen(0);
 }
 
-int EinsShell::startShell()
+int ZeusShell::startShell()
 {
 	int ret = 0;
 
-	while (this->continueShell && this->eins->ec.keepRunning) {
+	while (this->continueShell && this->zeus->ec.keepRunning) {
 		char *tmp = linenoise(this->prompt.c_str());
 
 		if (tmp != NULL && tmp[0] != 0) {
@@ -130,14 +130,14 @@ int EinsShell::startShell()
 	return ret;
 }
 
-void EinsShell::waitForEinstein()
+void ZeusShell::waitForZeus()
 {
-	while (eins->ec.numFilledPolls < eins->ec.numWormSockets && eins->ec.keepRunning) {
+	while (zeus->ec.numFilledPolls < zeus->ec.numHoleSockets && zeus->ec.keepRunning) {
 		hptl_waitns(10 * 1000 * 1000UL);
 	}
 }
 
-int EinsShell::executeCmd(string cmd)
+int ZeusShell::executeCmd(string cmd)
 {
 	auto pos         = cmd.find(' ');
 	string searchcmd = cmd;
@@ -149,9 +149,9 @@ int EinsShell::executeCmd(string cmd)
 	auto found = this->commands.find(ShellCommand(searchcmd));
 
 	if (found != this->commands.end()) {
-		this->eins->mutex_lock();
+		this->zeus->mutex_lock();
 		int ret = found->exec(cmd);
-		this->eins->mutex_unlock();
+		this->zeus->mutex_unlock();
 
 		return ret;
 
