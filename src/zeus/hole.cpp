@@ -36,6 +36,7 @@ Hole::Hole(uint16_t id,
 	this->host        = host;
 	this->programName = programName;
 	this->halting     = false;
+	this->autoDeploy  = true;
 	this->deployed    = false;
 
 	this->runParams = runParams;
@@ -49,11 +50,15 @@ Hole::~Hole() noexcept(false)
 	free(this->ws.connectionDescription);
 
 	if (this->deployed) {
-		ctrlMsgType msg = HALT;
-		cerr << "Hole id = " << this->ws.id << " HALTED" << endl;
+		if (this->socket != nullptr) {
+			ctrlMsgType msg = HALT;
+			cerr << "Hole id = " << this->ws.id << " HALTED" << endl;
 
-		if (this->socket->send(&msg, sizeof(msg)) != 0) {
-			throw std::runtime_error("Error sending HALT");
+			if (this->socket->send(&msg, sizeof(msg)) != 0) {
+				throw std::runtime_error("Error sending HALT");
+			}
+		} else {
+			cerr << "Hole with id = " << this->ws.id << " deployed but never connected to Zeus..." << endl;
 		}
 
 	} else {
@@ -174,6 +179,7 @@ int64_t Hole::kill()
 
 	ctrlMsgType msg = HALT;
 	this->socket->send(&msg, sizeof(msg));
+	this->socket = nullptr;
 
 	return 0;
 }

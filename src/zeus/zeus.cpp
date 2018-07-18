@@ -142,7 +142,7 @@ void Zeus::readConfig(const string configFileName)
 
 			/*Manual Deploy*/
 			if (sconfline.find("MANUAL") != string::npos) {
-				wc->halting = true;
+				wc->autoDeploy = false;
 			}
 
 			/*PARAMS*/

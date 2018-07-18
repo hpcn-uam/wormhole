@@ -31,6 +31,7 @@ struct Hole {
 	string host;
 	string programName;
 	bool halting;
+	bool autoDeploy;
 	bool deployed;
 
 	vector<string> runParams;

@@ -221,6 +221,9 @@ void Connection::deployHole(Hole &wc)
 	auto v        = deployedHoles.find(wc.host);
 	bool copyData = true;
 
+	if (!wc.autoDeploy)  // If not autodeploy skip this
+		return;
+
 	if (wc.halting)  // if halting, do not try to re-deploy
 		return;
 
@@ -421,7 +424,7 @@ void Connection::pollHoles()
 							for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
 								if (it->second->socket == this->holeSockets[i]) {
 									it->second->halting = true;
-									cerr << "El hole " << it->first << " ha finalizado su tarea." << endl;
+									cerr << "Hole's " << it->first << " task ended." << endl;
 									break;
 								}
 							}
@@ -436,7 +439,7 @@ void Connection::pollHoles()
 							}
 
 							if (flag) {
-								cerr << "Cerrando Zeus debido a que todas las tareas han sido completadas" << endl;
+								cerr << "Closing Zeus: All the tasks were completed" << endl;
 								this->deleteAllHoles();
 								exit(0);  // TODO cambiar por un cierre mas ordenado, como por ejemplo, modificando la
 								          // variable de salida utilizada para el cntl+c
@@ -453,7 +456,7 @@ void Connection::pollHoles()
 						// TODO
 						case UNDERLOAD:
 
-						// TODO
+							// TODO
 
 						case CTRL_ERROR:
 
@@ -518,7 +521,7 @@ void Connection::pollHoles()
 								// TODO better implementation
 								for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
 									if (it->second->socket == this->holeSockets[i]) {
-										cerr << "MSG from hole.id " << it->first << ":" << tmpstr << endl;
+										cerr << "MSG from hole.id " << it->first << ": " << tmpstr << endl;
 										break;
 									}
 								}

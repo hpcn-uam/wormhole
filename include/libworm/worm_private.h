@@ -11,6 +11,7 @@ extern "C" {
 enum wormMsgType { HELLO, SSLSTART, WORMINFO, SETUPWORMCONN };
 
 enum wormErrorType { WH_ERRNO_CLEAR = 0, WH_ERRNO_EMPTY = 1, WH_ERRNO_CLOSED = 2 };
+extern __thread enum wormErrorType WH_errno;
 
 typedef struct {
 	SyncSocket *socket;

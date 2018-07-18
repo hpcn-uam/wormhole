@@ -68,18 +68,39 @@ uint8_t WH_setup_types(size_t nTypes, ConnectionDataType *types)
  */
 uint8_t WH_init(void)
 {
+	char *tmpenv;
+
 	WH_myDstWorms.numberOfWorms = 0;
 	WH_myDstWorms.worms         = malloc(sizeof(DestinationHole));
 
 	WH_myRcvWorms.numberOfWorms = 0;
 	WH_myRcvWorms.worms         = malloc(sizeof(DestinationHole));
 
-	WH_myId = atoi(getenv("WORM_ID"));
+	if (!(tmpenv = getenv("HOLE_ID"))) {
+#ifdef LIBWORM_DEBUG
+		fprintf(stderr, "[WH]: ENV \"HOLE_ID\" UNSET\n");
+#endif
+		return -1;
+	}
+	WH_myId = atoi(tmpenv);
 
-	WH_einsConn.Port = atoi(getenv("ZEUS_PORT"));
-	WH_einsConn.ip   = strdup(getenv("ZEUS_IP"));
+	if (!(tmpenv = getenv("ZEUS_PORT"))) {
+#ifdef LIBWORM_DEBUG
+		fprintf(stderr, "[WH]: ENV \"ZEUS_PORT\" UNSET\n");
+#endif
+		return -1;
+	}
 
-	int ZeusSocket = tcp_connect_to(getenv("ZEUS_IP"), WH_einsConn.Port);
+	WH_einsConn.Port = atoi(tmpenv);
+	if (!(tmpenv = getenv("ZEUS_IP"))) {
+#ifdef LIBWORM_DEBUG
+		fprintf(stderr, "[WH]: ENV \"ZEUS_IP\" UNSET\n");
+#endif
+		return -1;
+	}
+	WH_einsConn.ip = strdup(tmpenv);
+
+	int ZeusSocket = tcp_connect_to(WH_einsConn.ip, WH_einsConn.Port);
 
 	if (ZeusSocket == -1) {
 #ifdef LIBWORM_DEBUG
@@ -657,7 +678,7 @@ WH_connectionPoll_loop:
 			wormIndex = 0;               // RST
 			connIndex = 0;               // RST
 			WH_errno  = WH_ERRNO_CLEAR;  // TODO check when this call happens
-			return NULL;
+			goto WH_connectionPoll_loop;
 		}
 
 	} else {
@@ -1245,6 +1266,8 @@ uint8_t WH_send(const void *restrict const data, const MessageInfo *restrict con
  * TODO
  * Params:
  * @return the number of bytes readed, 0 if ERROR or none.
+ *
+ * Special case: If errno == ENOTCONN, there is no reception available.
  */
 uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 {
@@ -1261,6 +1284,7 @@ uint32_t WH_recv(void *restrict data, MessageInfo *restrict mi)
 
 	if (c == NULL) {  // no msg found
 		WH_errno = WH_ERRNO_CLEAR;
+		errno    = ENOTCONN;
 		return 0;
 	}
 
@@ -2178,14 +2202,14 @@ void WH_removeWorm(DestinationHoles *wms, const uint16_t holeId)
 	DestinationHole *worm = WH_findWorm(wms, holeId);
 	ssize_t index         = WH_findWormIndex(wms, holeId);
 
-	wms->numberOfWorms--;
-
 	if (index == -1) {
 #ifdef LIBWORM_DEBUG
 		fprintf(stderr, "[WH]: worm not found! %d (%ld)\n", holeId, index);
 #endif
 		return;
 	}
+
+	wms->numberOfWorms--;
 
 	if ((wms->numberOfWorms - index) > 0) {
 #ifdef LIBWORM_DEBUG

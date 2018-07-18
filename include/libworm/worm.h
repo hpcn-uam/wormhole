@@ -89,6 +89,7 @@ uint8_t WH_halt(void);
  * Receives data from some one of the sources.
  * If data is an array and mi->size is not enougth for writing incomming data,
  * the function would return 0 and set errno to EMSGSIZE (Message too long)
+ * If all the recvrs are disconnected, errno is set to ENOTCONN.
  * Params:
  * @return the number of bytes readed, 0 if ERROR or none.
  */
