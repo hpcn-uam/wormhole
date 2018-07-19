@@ -9,10 +9,10 @@ for FILE in "~/.bashrc" "~/.profile" "/etc/profile"
 do
     if [ -e "$FILE" ]
     then
-        . $FILE &>> /tmp/rtt_client.$OUTFILE.out
+        . $FILE &>> /tmp/throughput_client.$OUTFILE.out
     fi
 done
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib
 
-./perf_rtt_client "$@" &>> /tmp/rtt_client.$OUTFILE.out
+./perf_throughput_client "$@" &>> /tmp/throughput_client.$OUTFILE.out

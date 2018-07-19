@@ -21,9 +21,11 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef WH_SSL
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#endif
 
 #include <hptl.h>
 #include <netlib.h>

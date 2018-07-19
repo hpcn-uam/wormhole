@@ -1,3 +1,4 @@
+#include <stdarg.h>
 
 #include <libworm/worm_private.h>
 

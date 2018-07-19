@@ -63,8 +63,6 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	watch = zmq_stopwatch_start();
-
 	for (i = 0; i != message_count - 1; i++) {
 		rc = zmq_recvmsg(s, &msg, 0);
 		if (rc < 0) {
@@ -75,6 +73,8 @@ int main(int argc, char *argv[])
 			printf("message of incorrect size received\n");
 			return -1;
 		}
+		if (i == 0)
+			watch = zmq_stopwatch_start();
 	}
 
 	elapsed = zmq_stopwatch_stop(watch);

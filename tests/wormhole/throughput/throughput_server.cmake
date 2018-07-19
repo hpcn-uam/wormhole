@@ -1,5 +1,5 @@
-set(app_name "rtt_server")
-set(app_dir  "${perf_dir}/rtt")
+set(app_name "throughput_server")
+set(app_dir  "${perf_dir}/throughput")
 
 # Sources
 file(GLOB app_src

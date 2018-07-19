@@ -19,9 +19,7 @@ int main(int argc, char *argv[])
 	zmq_msg_t msg;
 
 	if (argc != 4) {
-		printf(
-		    "usage: remote_thr <connect-to> <message-size> "
-		    "<message-count>\n");
+		printf("usage: remote_thr <connect-to> <message-size> <message-count>\n");
 		return 1;
 	}
 	connect_to    = argv[1];
