@@ -1,3 +1,5 @@
 #!/bin/bash
 
-javac -cp /usr/hdp/2.4.0.0-169/storm/lib/storm-core-0.10.0.2.4.0.0-169.jar backtype/storm/wh/tests/BandwithMeter.java && jar cf bw.jar backtype
+wget -nc http://central.maven.org/maven2/org/apache/storm/storm-core/1.2.2/storm-core-1.2.2.jar
+
+javac -cp storm-core-1.2.2.jar org/apache/storm/wh/tests/BandwithMeter.java && jar cf bw.jar org

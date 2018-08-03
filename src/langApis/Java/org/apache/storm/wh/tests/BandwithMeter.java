@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package backtype.storm.wh.tests;
+package org.apache.storm.wh.tests;
 
-import backtype.storm.Config;
-import backtype.storm.StormSubmitter;
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
-import backtype.storm.tuple.Values;
+import org.apache.storm.Config;
+import org.apache.storm.StormSubmitter;
+import org.apache.storm.task.OutputCollector;
+import org.apache.storm.task.TopologyContext;
+import org.apache.storm.topology.OutputFieldsDeclarer;
+import org.apache.storm.topology.TopologyBuilder;
+import org.apache.storm.topology.base.BaseRichBolt;
+import org.apache.storm.tuple.Fields;
+import org.apache.storm.tuple.Tuple;
+import org.apache.storm.tuple.Values;
 
-import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.topology.base.BaseRichSpout;
+import org.apache.storm.spout.SpoutOutputCollector;
+import org.apache.storm.topology.base.BaseRichSpout;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -44,55 +44,52 @@ import java.security.SecureRandom;
  */
 public class BandwithMeter
 {
+	private static final long numMsg  = 100000000;
+	private static final long msgSize = 1500;
 
-	private static final long numMsg = 5000;
-	private static final long msgSize = (64 / 2);
-
-	public static class ExclamationBolt extends BaseRichBolt
+	public static class RecvBolt extends BaseRichBolt
 	{
 		OutputCollector _collector;
 
 		private static long printIter = 8000000;
-		private long num = 0;
+		private long num              = 0;
 		private PrintWriter writer;
 		private long startTime;
 
-		@Override
-		public void prepare(Map conf, TopologyContext context, OutputCollector collector)
+		@Override public void prepare(Map conf, TopologyContext context, OutputCollector collector)
 		{
 			_collector = collector;
 
 			try {
-				writer = new PrintWriter("/tmp/bwstorm.txt", "UTF-8");
+				writer    = new PrintWriter("/tmp/bwstorm.txt", "UTF-8");
 				startTime = System.currentTimeMillis() * 1000000;
 
-			} catch (Exception e) {}
+			} catch (Exception e) {
+			}
 		}
 
-		@Override
-		public void execute(Tuple tuple)
+		@Override public void execute(Tuple tuple)
 		{
 			_collector.ack(tuple);
 			num++;
 
 			if (num >= printIter) {
-				synchronized (this) {
+				synchronized (this)
+				{
 					long tmp = System.currentTimeMillis() * 1000000;
-					writer.println("Tasa = " + ((double)(num) * msgSize * 8.) / (tmp - startTime) + " GCharsPS (" + ((double)(num) * msgSize * 16.) / (tmp - startTime) + " gbps)");
+					writer.println("Tasa = " + ((double) (num) *msgSize * 8.) / (tmp - startTime) + " GCharsPS ("
+					               + ((double) (num) *msgSize * 16.) / (tmp - startTime) + " gbps)");
 					writer.flush();
 					startTime = tmp;
-					num = 0;
+					num       = 0;
 				}
 			}
 		}
 
-		@Override
-		public void declareOutputFields(OutputFieldsDeclarer declarer)
+		@Override public void declareOutputFields(OutputFieldsDeclarer declarer)
 		{
 			declarer.declare(new Fields("word"));
 		}
-
-
 	}
 
 	public static class SendSpout extends BaseRichSpout
@@ -105,10 +102,10 @@ public class BandwithMeter
 
 		String randomString(long len)
 		{
-			final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+			final String AB  = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 			SecureRandom rnd = new SecureRandom();
 
-			StringBuilder sb = new StringBuilder((int)len);
+			StringBuilder sb = new StringBuilder((int) len);
 
 			for (long i = 0; i < len; i++) {
 				sb.append(AB.charAt(rnd.nextInt(AB.length())));
@@ -125,8 +122,8 @@ public class BandwithMeter
 		public SendSpout(boolean isDistributed)
 		{
 			_isDistributed = isDistributed;
-			msg = randomString(msgSize);
-			v = new Values(msg);
+			msg            = randomString(msgSize);
+			v              = new Values(msg);
 		}
 
 		public void open(Map conf, TopologyContext context, SpoutOutputCollector collector)
@@ -136,7 +133,6 @@ public class BandwithMeter
 
 		public void close()
 		{
-
 		}
 
 		public void nextTuple()
@@ -146,12 +142,10 @@ public class BandwithMeter
 
 		public void ack(Object msgId)
 		{
-
 		}
 
 		public void fail(Object msgId)
 		{
-
 		}
 
 		public void declareOutputFields(OutputFieldsDeclarer declarer)
@@ -159,8 +153,7 @@ public class BandwithMeter
 			declarer.declare(new Fields("word"));
 		}
 
-		@Override
-		public Map<String, Object> getComponentConfiguration()
+		@Override public Map<String, Object> getComponentConfiguration()
 		{
 			return null;
 		}
@@ -171,19 +164,18 @@ public class BandwithMeter
 		TopologyBuilder builder = new TopologyBuilder();
 
 		builder.setSpout("send", new SendSpout(), 1);
-		builder.setBolt("recv", new ExclamationBolt(), 1).shuffleGrouping("send");
+		builder.setBolt("recv", new RecvBolt(), 1).shuffleGrouping("send");
 
 		Config conf = new Config();
-		//conf.setDebug(true);
+		conf.setNumWorkers(3);
+		conf.setNumAckers(0);
+		// conf.setDebug(true);
 
 		if (args != null && args.length > 0) {
-			conf.setNumWorkers(3);
-
-			StormSubmitter.submitTopologyWithProgressBar(args[0], conf, builder.createTopology());
+			StormSubmitter.submitTopologyWithProgressBar("STORMBWTEST_" + string(argv[1]), conf, builder.createTopology());
 
 		} else {
-
-			System.out.println("arguments necesary");
+			System.out.println("Arguments necesary: <message-size> <message-count>");
 		}
 	}
 }
