@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.storm.wh.tests;
+package wh.tests.throughput;
 
 import org.apache.storm.Config;
 import org.apache.storm.StormSubmitter;
@@ -31,6 +31,9 @@ import org.apache.storm.tuple.Values;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.topology.base.BaseRichSpout;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Random;
 
@@ -42,68 +45,64 @@ import java.security.SecureRandom;
 /**
  * This is a basic example of a Storm topology.
  */
-public class BandwithMeter
-{
-	private static final long numMsg  = 100000000;
-	private static final long msgSize = 1500;
+public class Throughput {
+	private static final long numMsg = 1000000;
+	private static final long msgSize = 60;
 
-	public static class RecvBolt extends BaseRichBolt
-	{
+	public static class RecvBolt extends BaseRichBolt {
+		private static final Logger LOG = LoggerFactory.getLogger(RecvBolt.class);
+
 		OutputCollector _collector;
 
-		private long num              = 0;
+		private long num = 0;
 		private PrintWriter writer;
 		private long startTime;
 
-		@Override public void prepare(Map conf, TopologyContext context, OutputCollector collector)
-		{
+		@Override
+		public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
 			_collector = collector;
 
 			try {
-				writer    = new PrintWriter("/tmp/bwstorm.txt", "UTF-8");
-				startTime = System.currentTimeMillis() * 1000000;
+				startTime = System.nanoTime();
 
 			} catch (Exception e) {
 			}
 		}
 
-		@Override public void execute(Tuple tuple)
-		{
+		@Override
+		public void execute(Tuple tuple) {
 			_collector.ack(tuple);
 			num++;
 
 			if (num >= numMsg) {
-				synchronized (this)
-				{
+				synchronized (this) {
 					if (num >= numMsg) {
-						long tmp = System.currentTimeMillis() * 1000000;
-						writer.println("Tasa = " + ((double) (num) *msgSize * 8.) / (tmp - startTime) + " GCharsPS ("
-									+ ((double) (num) *msgSize * 16.) / (tmp - startTime) + " gbps)");
-						writer.flush();
+						long tmp = System.nanoTime();
+						LOG.info("Tasa = {} GCharsPS && {} gbps", ((double) (num) * msgSize * 8.) / (tmp - startTime),
+								((double) (num) * msgSize * 16.) / (tmp - startTime));
 						startTime = tmp;
-						num       = 0;
+						num = 0;
 					}
 				}
 			}
 		}
 
-		@Override public void declareOutputFields(OutputFieldsDeclarer declarer)
-		{
-			declarer.declare(new Fields("word"));
+		@Override
+		public void declareOutputFields(OutputFieldsDeclarer declarer) {
+			declarer.declare(new Fields("data"));
 		}
 	}
 
-	public static class SendSpout extends BaseRichSpout
-	{
+	public static class SendSpout extends BaseRichSpout {
+		private static final Logger LOG = LoggerFactory.getLogger(SendSpout.class);
 		boolean _isDistributed;
 		SpoutOutputCollector _collector;
 
 		String msg;
 		Values v;
 
-		String randomString(long len)
-		{
-			final String AB  = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		String randomString(long len) {
+			final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 			SecureRandom rnd = new SecureRandom();
 
 			StringBuilder sb = new StringBuilder((int) len);
@@ -115,53 +114,44 @@ public class BandwithMeter
 			return sb.toString();
 		}
 
-		public SendSpout()
-		{
+		public SendSpout() {
 			this(true);
 		}
 
-		public SendSpout(boolean isDistributed)
-		{
+		public SendSpout(boolean isDistributed) {
 			_isDistributed = isDistributed;
-			msg            = randomString(msgSize);
-			v              = new Values(msg);
+			msg = randomString(msgSize);
+			v = new Values(msg);
 		}
 
-		public void open(Map conf, TopologyContext context, SpoutOutputCollector collector)
-		{
+		public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
 			_collector = collector;
 		}
 
-		public void close()
-		{
+		public void close() {
 		}
 
-		public void nextTuple()
-		{
+		public void nextTuple() {
 			_collector.emit(v);
 		}
 
-		public void ack(Object msgId)
-		{
+		public void ack(Object msgId) {
 		}
 
-		public void fail(Object msgId)
-		{
+		public void fail(Object msgId) {
 		}
 
-		public void declareOutputFields(OutputFieldsDeclarer declarer)
-		{
-			declarer.declare(new Fields("word"));
+		public void declareOutputFields(OutputFieldsDeclarer declarer) {
+			declarer.declare(new Fields("data"));
 		}
 
-		@Override public Map<String, Object> getComponentConfiguration()
-		{
+		@Override
+		public Map<String, Object> getComponentConfiguration() {
 			return null;
 		}
 	}
 
-	public static void main(String[] args) throws Exception
-	{
+	public static void main(String[] args) throws Exception {
 		TopologyBuilder builder = new TopologyBuilder();
 
 		builder.setSpout("send", new SendSpout(), 1);

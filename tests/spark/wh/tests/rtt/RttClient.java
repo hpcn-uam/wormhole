@@ -31,8 +31,7 @@ import java.lang.Iterable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class RttClient
-{
+public class RttClient {
 	static OutputStream pw;
 
 	static int batch_size;
@@ -41,8 +40,7 @@ public class RttClient
 	static long measurements[];
 	static int thr_i;
 
-	public static byte[] longToBytes(long l)
-	{
+	public static byte[] longToBytes(long l) {
 		byte[] result = new byte[8];
 		for (int i = 7; i >= 0; i--) {
 			result[i] = (byte) (l & 0xFF);
@@ -51,8 +49,7 @@ public class RttClient
 		return result;
 	}
 
-	public static long bytesToLong(byte[] b)
-	{
+	public static long bytesToLong(byte[] b) {
 		long result = 0;
 		for (int i = 0; i < 8; i++) {
 			result <<= 8;
@@ -61,33 +58,30 @@ public class RttClient
 		return result;
 	}
 
-	public static void main(final String[] args) throws Exception
-	{
+	public static void main(final String[] args) throws Exception {
 		if (args.length != 7) {
 			System.out.println("Params: <hostname> <port:c> <port:l> <message-size> <batch size> <batches> <sleep>");
 		}
 		final String hostname = args[0];
-		final int portc       = Integer.parseInt(args[1]);
-		final int portl       = Integer.parseInt(args[2]);
+		final int portc = Integer.parseInt(args[1]);
+		final int portl = Integer.parseInt(args[2]);
 
 		final int message_size = Integer.parseInt(args[3]);
-		batch_size             = Integer.parseInt(args[4]);
-		batches                = Integer.parseInt(args[5]);
-		final int sleep        = Integer.parseInt(args[6]);
+		batch_size = Integer.parseInt(args[4]);
+		batches = Integer.parseInt(args[5]);
+		final int sleep = Integer.parseInt(args[6]);
 
 		measurements = new long[batches];
 
-		SparkConf sparkConf      = new SparkConf().setAppName("WhRttTestClient");
+		SparkConf sparkConf = new SparkConf().setAppName("WhRttTestClient");
 		JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.milliseconds(100));
 
 		Function byte2byte = new Function<InputStream, Iterable<byte[]>>() {
-			class StreamIterable implements Iterable<byte[]>
-			{
+			class StreamIterable implements Iterable<byte[]> {
 				InputStream is;
 
 				// Constructor that takes a "raw" array and stores it
-				public StreamIterable(InputStream is)
-				{
+				public StreamIterable(InputStream is) {
 					this.is = is;
 				}
 
@@ -95,19 +89,16 @@ public class RttClient
 				// of the list. It is not accessed directly by the user, but is used in
 				// the iterator() method of the Array class. It implements the hasNext()
 				// and next() methods.
-				class StreamIterator implements Iterator<byte[]>
-				{
+				class StreamIterator implements Iterator<byte[]> {
 					// return whether or not there are more elements in the array that
 					// have not been iterated over.
-					public boolean hasNext()
-					{
+					public boolean hasNext() {
 						return true;
 					}
 
 					// return the next element of the iteration and move the current
 					// index to the element after that.
-					public byte[] next()
-					{
+					public byte[] next() {
 						if (!hasNext()) {
 							throw new NoSuchElementException();
 						}
@@ -126,33 +117,32 @@ public class RttClient
 
 				// Return an iterator over the elements in the array. This is generally not
 				// called directly, but is called by Java when used in a "simple" for loop.
-				public Iterator<byte[]> iterator()
-				{
+				public Iterator<byte[]> iterator() {
 					return new StreamIterator();
 				}
 			}
 
-			public Iterable<byte[]> call(InputStream bif)
-			{
+			public Iterable<byte[]> call(InputStream bif) {
 				return new StreamIterable(bif);
 			}
 		};
 
-		JavaReceiverInputDStream<byte[]> messages = ssc.socketStream(hostname, portc, byte2byte, StorageLevels.MEMORY_ONLY);
+		JavaReceiverInputDStream<byte[]> messages = ssc.socketStream(hostname, portc, byte2byte,
+				StorageLevels.MEMORY_ONLY);
 
 		thr_i = 0;
 		messages.foreachRDD(rdd -> {
 			rdd.foreach(msg -> {
-				thr_i++;
 				if (thr_i % batch_size == 0) {
-					measurements[thr_i] = System.nanoTime() - bytesToLong(msg);
+					measurements[thr_i / batch_size] = System.nanoTime() - bytesToLong(msg);
 				}
+				thr_i++;
 			});
 		});
 		ssc.start();
 
 		ServerSocket ss = new ServerSocket(portl);
-		Socket s        = ss.accept();
+		Socket s = ss.accept();
 		OutputStream pw = s.getOutputStream();
 
 		byte[] msg = new byte[message_size];
@@ -160,7 +150,7 @@ public class RttClient
 		for (int i = 0; i != batches; i++) {
 			for (int j = 0; j != batch_size; j++) {
 				if (j == 0) {
-					long ctime    = System.nanoTime();
+					long ctime = System.nanoTime();
 					byte[] ctimeb = longToBytes(ctime);
 					for (int k = 0; k < 8; ++k) {
 						msg[k] = ctimeb[k];
