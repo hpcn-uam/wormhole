@@ -54,7 +54,8 @@ public class ThroughputClient {
 
         final String str = randomString(message_size);
 
-        for (int i = 0; i < message_count; i++) {
+        // for (int i = 0; i < message_count; i++) {
+        while (true) {
             pw.println(str);
         }
 

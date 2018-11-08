@@ -23,9 +23,9 @@ import java.security.SecureRandom;
 public class ThroughputServer {
 
     public static long start;
-    public static int i=0;
-    public static void main(final String[] args)throws Exception
-    {
+    public static int i = 0;
+
+    public static void main(final String[] args) throws Exception {
         if (args.length != 4) {
             System.out.println("Params: <hostname> <port> <message-size> <message-count>");
         }
@@ -38,50 +38,42 @@ public class ThroughputServer {
         SparkConf sparkConf = new SparkConf().setAppName("WhThTest");
         JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.milliseconds(10));
 
-        JavaReceiverInputDStream<String> messages = ssc.socketTextStream(
-            args[0], Integer.parseInt(args[1]), StorageLevels.MEMORY_ONLY);
-        
-        JavaDStream<String> words = messages.flatMap(
-            new FlatMapFunction<String, String>() {
-                public Iterator<String> call(String s) {
-                    i++;
-                    if (i==1){
-                        start = System.currentTimeMillis() * 1000;
-                    }
-                    else if(i>=message_count)
-                    {
-                        long end = System.currentTimeMillis() * 1000;
-                        long elapsed = end - start;
-                
-                        double throughput = ((double) message_count / (double) elapsed * 1000000);
-                        double megabits = ((double) throughput * message_size * 8) / 1000000;
-                
-                        System.out.println("message size: " + message_size + " [B]");
-                        System.out.println("message count: " + message_count + "");
-                        System.out.println("mean throughput: " + throughput + " [msg/s]");
-                        System.out.println("mean throughput: " + megabits + " [Mb/s]");
-                
-                        //ssc.stop(true, true);
-                        System.exit(0);
-                    }
-                    return new ArrayList<String>().iterator();
+        JavaReceiverInputDStream<String> messages = ssc.socketTextStream(args[0], Integer.parseInt(args[1]),
+                StorageLevels.MEMORY_ONLY);
+
+        JavaDStream<String> words = messages.flatMap(new FlatMapFunction<String, String>() {
+            public Iterator<String> call(String s) {
+                i++;
+                if (i == 1) {
+                    start = System.currentTimeMillis() * 1000;
+                } else if (i >= message_count) {
+                    long end = System.currentTimeMillis() * 1000;
+                    long elapsed = end - start;
+
+                    double throughput = ((double) message_count / (double) elapsed * 1000000);
+                    double megabits = ((double) throughput * message_size * 8) / 1000000;
+
+                    System.out.println("message size: " + message_size + " [B]");
+                    System.out.println("message count: " + message_count + "");
+                    System.out.println("mean throughput: " + throughput + " [msg/s]");
+                    System.out.println("mean throughput: " + megabits + " [Mb/s]");
+
+                    // ssc.stop(true, true);
+                    // System.exit(0);
+                    i = 0;
                 }
-              }    
-      );
+                return new ArrayList<String>().iterator();
+            }
+        });
 
-      words.print();
+        words.print();
 
-      ssc.start();
-      while(i<message_count);
-      ssc.stop();
-      
-      ssc.awaitTermination();
+        ssc.start();
+        while (true)
+            ;
+        //ssc.stop();
 
-    }}
+        //ssc.awaitTermination();
 
-    
-
-    
-
-    
-
+    }
+}
