@@ -103,6 +103,7 @@
         "valarray": "cpp",
         "cerrno": "cpp",
         "stdlib.h": "c",
-        "worm_low.h": "c"
+        "worm_low.h": "c",
+        "stdio.h": "c"
     }
 }
