@@ -7,27 +7,27 @@ Also we are working in a Storm-envelope that will allow any storm-application ru
 
 ## How does it works?
 
-WormHole Streaming Library is divided into 2 differnt parts: Einsteins and Worms.
+WormHole Streaming Library is divided into 2 differnt parts: Zeuss and Holes.
 
-#### Einstein
-There is planned that there would be more than Einstein instence.
-The master instance, ensures that the topology described is running at it should do. This means: Deploy new worms, check for worm over/underload, check if a worm has stopped, etc.
-Also, the master Einstein instance "heart-beat" the other instances telling any modification in the deployed topology. So, if something goes wrong with the master Einstein, another instance can take the control of the topology.
+#### Zeus
+There is planned that there would be more than Zeus instence.
+The master instance, ensures that the topology described is running at it should do. This means: Deploy new Holes, check forHole over/underload, check if a Hole has stopped, etc.
+Also, the master Zeus instance "heart-beat" the other instances telling any modification in the deployed topology. So, if something goes wrong with the master Zeus, another instance can take the control of the topology.
 
-To run a topology, we have to start Einstein in the following way:
+To run a topology, we have to start Zeus in the following way:
 
 ```
-einstein <Configuration_File> <Listen_IP>
+Zeus <Configuration_File> <Listen_IP>
 ```
 
-A Topology is defined by a group of worm and their interconnections.
+A Topology is defined by a group of Hole and their interconnections.
 Each worm, is also defined by 2 different lines: a General configuration line and a Output Topology. If no output topology is given, the default topology `(IGNORE)` would be set.
 The first line (general conf.) is composed by the following item:
-- `ID`                  [**Mandatory**] : The Worm ID. It is accepted to provide a range (like 1-5), so 5 worms(1,2,3,4,5) would be deployed **WITH THE SAME** configuration, but diferent ID.
-- `Program_Name`        [**Mandatory**] : [The program name](#how-worms-are-deployed)
-- `Deploy_IP`           [**Mandatory**] : The IP address where the worm would be deployed
-- `Affinity_hex_mask`   [**Mandatory**] : The core-affinity of the worm. -1 means that there is no affinity
-- `SSL`                 [**Optional**]  : If SSL is present in a Worm definition, that worm would encript thougt TLS1.2 the communications **with any other worm** (input and output). Also, SSL would check if is an authorized worm.
+- `ID`                  [**Mandatory**] : The Hole ID. It is accepted to provide a range (like 1-5), so 5 Holes(1,2,3,4,5) would be deployed **WITH THE SAME** configuration, but diferent ID.
+- `Program_Name`        [**Mandatory**] : [The program name](#how-Holes-are-deployed)
+- `Deploy_IP`           [**Mandatory**] : The IP address where the Hole would be deployed
+- `Affinity_hex_mask`   [**Mandatory**] : The core-affinity of the Hole. -1 means that there is no affinity
+- `SSL`                 [**Optional**]  : If SSL is present in a Hole definition, that Hole would encript thougt TLS1.2 the communications **with any other Hole** (input and output). Also, SSL would check if is an authorized Hole.
 
 If present, the second line must has a tab. in the begining. Then a S-Expression defines how the routing would be. There are 4 possible operators:
 - `DUP`    : This operator duplicates each message between each following item. If no operator is defined, DUP operator would be supposed. Example: `(DUP 1 2 3)`
@@ -44,29 +44,29 @@ A configuration file looks like:
 ```
 
 ## Known Issues and problems
-- A worm does not allowed loopback messages. It will be sometime fixed
+- A Hole does not allowed loopback messages. It will be sometime fixed
 
-###### How worms are deployed
-Each program name would be tried to be find in the current directory adding the extension `.tgz`. This file should content all the necesary data to deploy a worm application, that must have :
-- `lib/`    : All the lib/ folder of the compiled WormHole library for the correct architecture where the worm would be deployed.
+###### How Holes are deployed
+Each program name would be tried to be find in the current directory adding the extension `.tgz`. This file should content all the necesary data to deploy a Hole application, that must have :
+- `lib/`    : All the lib/ folder of the compiled WormHole library for the correct architecture where the Hole would be deployed.
 - `myApp`   : The application itself, no matters its name.
-- `run.sh`  : This script will be executed by Einstein to run the application. This script allows to execute an application indepently on wich language it is written (compiled, java, python, etc). Also, this script can have arguments, that can be passed to the finnal application.
+- `run.sh`  : This script will be executed by Zeus to run the application. This script allows to execute an application indepently on wich language it is written (compiled, java, python, etc). Also, this script can have arguments, that can be passed to the finnal application.
 
-#### Worm
-Each worm is a program that sends/receives messages using the WormHole Streaming Library. The language program **does not matter**.
+#### Hole
+Each Hole is a program that sends/receives messages using the WormHole Streaming Library. The language program **does not matter**.
 
-Each worm:
+Each Hole:
 - Is identified by an `ID`.
 - Is deployed in a `IP` thought ssh/scp connection.
 - Can encrypt thought TLS1.2 any income and output message.
-- If MANUAL flag is specified, the worm won't be deployed. User should.
-- One or more PARAM flags may be specified. If so, each param would be passed to the worm's starter script.
+- If MANUAL flag is specified, the Hole won't be deployed. User should.
+- One or more PARAM flags may be specified. If so, each param would be passed to the Hole's starter script.
 
 ### Security and Certificates
 
-To use SSL between two worms, there should be the SSL param in the configuration.
+To use SSL between two Holes, there should be the SSL param in the configuration.
 
-**NOT YET IMPLEMENTED** To use SSL connection between Einstein and any Worm, the parameter -SSL should be passed to the Einstein starter program.
+**NOT YET IMPLEMENTED** To use SSL connection between Zeus and any Hole, the parameter -SSL should be passed to the Zeus starter program.
 
-In order to work with SSL properly, there must be in each .tgz a copy of: `cert/ca.pem` `cert/einstein.pem` `cert/worm.pem`
+In order to work with SSL properly, there must be in each .tgz a copy of: `cert/ca.pem` `cert/Zeus.pem` `cert/worm.pem`
 
